@@ -1,16 +1,29 @@
 import { useState } from "react";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import { readFileContent } from "../../lib/tauri_api";
-import { Clipboard, ChevronDown, ChevronUp } from "lucide-react";
+import { Clipboard, ChevronDown, ChevronUp, Check } from "lucide-react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
-import { buildAiderStylePrompt } from "../../lib/prompt_builder";
+import { buildPrompt } from "../../lib/prompt_builder";
 import { useSettingsStore } from "../../store/settingsStore";
+import type { EditFormat } from "../../types";
+
+const editFormatOptions: { value: EditFormat; label: string }[] = [
+  { value: "udiff", label: "Unified Diff" },
+  { value: "diff-fenced", label: "Search/Replace" },
+  { value: "whole", label: "Whole File" },
+];
 
 export function PromptComposer() {
   const [instructions, setInstructions] = useState("");
   const [isSystemPromptVisible, setIsSystemPromptVisible] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const { selectedFilePaths, rootPath } = useWorkspaceStore();
-  const { customSystemPrompt, setCustomSystemPrompt } = useSettingsStore();
+  const {
+    customSystemPrompt,
+    setCustomSystemPrompt,
+    editFormat,
+    setEditFormat,
+  } = useSettingsStore();
 
   const generatePrompt = async () => {
     if (!rootPath) return;
@@ -27,18 +40,47 @@ export function PromptComposer() {
       }
     }
 
-    const fullPrompt = buildAiderStylePrompt(
+    const fullPrompt = buildPrompt(
       files,
       instructions,
-      customSystemPrompt
+      customSystemPrompt,
+      editFormat
     );
     await writeText(fullPrompt);
-    alert("Prompt copied to clipboard!");
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
 
   return (
     <div className="p-4 flex flex-col h-full bg-gray-50 text-gray-800">
-      <h2 className="font-bold mb-2">Prompt Composer</h2>
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="font-bold">Prompt Composer</h2>
+      </div>
+
+      <div className="mb-2">
+        <label className="text-sm font-semibold mb-1 block">Edit Format</label>
+        <div className="flex bg-gray-200 rounded-md p-0.5">
+          {editFormatOptions.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setEditFormat(value)}
+              className={`flex-1 text-center text-xs px-2 py-1 rounded-md transition-colors ${
+                editFormat === value
+                  ? "bg-white shadow-sm text-gray-800 font-medium"
+                  : "bg-transparent text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-gray-500 mt-1">
+          {editFormat === "udiff" && "Best for GPT models."}
+          {editFormat === "diff-fenced" && "Best for Gemini models."}
+          {editFormat === "whole" && "Universal, but can be verbose."}
+        </p>
+      </div>
+
       <div className="mb-2">
         <h3 className="text-sm font-semibold mb-1">
           Selected Files ({selectedFilePaths.length})
@@ -66,7 +108,11 @@ export function PromptComposer() {
           className="flex items-center justify-between w-full text-sm font-semibold mb-1"
         >
           <span>Custom System Prompt</span>
-          {isSystemPromptVisible ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {isSystemPromptVisible ? (
+            <ChevronUp size={16} />
+          ) : (
+            <ChevronDown size={16} />
+          )}
         </button>
         {isSystemPromptVisible && (
           <textarea
@@ -89,8 +135,8 @@ export function PromptComposer() {
         className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-500 rounded-md disabled:bg-gray-400"
         disabled={selectedFilePaths.length === 0 || !instructions}
       >
-        <Clipboard size={16} />
-        Generate & Copy Prompt
+        {isCopied ? <Check size={16} /> : <Clipboard size={16} />}
+        {isCopied ? "Copied!" : "Generate & Copy Prompt"}
       </button>
     </div>
   );

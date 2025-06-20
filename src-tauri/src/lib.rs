@@ -30,6 +30,13 @@ async fn read_file_content(path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+async fn write_file_content(path: String, content: String) -> Result<(), String> {
+    fs_utils::write_file_content(&PathBuf::from(path), &content)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn apply_patch(file_path: String, patch_str: String) -> Result<(), String> {
     patcher::apply_patch(&PathBuf::from(file_path), &patch_str)
         .await
@@ -85,6 +92,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             list_directory_recursive,
             read_file_content,
+            write_file_content,
             apply_patch,
             delete_file,
             move_file,

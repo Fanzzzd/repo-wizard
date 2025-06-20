@@ -17,6 +17,13 @@ export const readFileContent = (path: string): Promise<string> => {
   return invoke("read_file_content", { path });
 };
 
+export const writeFileContent = (
+  path: string,
+  content: string
+): Promise<void> => {
+  return invoke("write_file_content", { path, content });
+};
+
 export const applyPatch = (
   filePath: string,
   patchStr: string

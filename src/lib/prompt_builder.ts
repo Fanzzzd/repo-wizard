@@ -1,17 +1,11 @@
+import type { EditFormat } from "../types";
+
 interface File {
   path: string;
   content: string;
 }
 
-const mainSystemPrompt = `Act as an expert software developer.
-Always use best practices when coding.
-Respect and use existing conventions, libraries, etc that are already present in the code base.
-
-Take requests for changes to the supplied code.
-If the request is ambiguous, ask questions.
-`;
-
-const formattingRules = `# File editing rules:
+const udiffFormattingRules = `# File editing rules:
 
 Return edits similar to unified diffs that \`diff -U0\` would produce.
 
@@ -49,22 +43,123 @@ To move or rename a file, output a single line:
 MOVE path/from/old.ext TO path/to/new.ext
 `;
 
-export const buildAiderStylePrompt = (
+const diffFencedFormattingRules = `# File editing rules:
+
+Return edits in search/replace blocks. Each block must be in a fenced code block, starting with the file path on the first line.
+
+path/to/file.py
+\`\`\`
+<<<<<<< SEARCH
+// original code to be replaced
+=======
+// new code to replace the original
+>>>>>>> REPLACE
+\`\`\`
+
+When generating SEARCH/REPLACE blocks, the SEARCH block must contain only the exact, original lines of code to be replaced. Do not include +, -, @@, or any diff-like syntax in the SEARCH block; it must be a literal copy of the existing code section.
+
+### Example 1: Single Line Change
+
+**CORRECT:**
+path/to/file.py
+\`\`\`
+<<<<<<< SEARCH
+old_variable = 10
+=======
+new_variable = 20
+>>>>>>> REPLACE
+\`\`\`
+
+**INCORRECT:**
+path/to/file.py
+\`\`\`
+<<<<<<< SEARCH
+-old_variable = 10
++new_variable = 20
+=======
+new_variable = 20
+>>>>>>> REPLACE
+\`\`\`
+
+### Example 2: Changing Indentation/Structure
+
+**CORRECT:** (The SEARCH block is the literal original, even with 'wrong' indentation)
+path/to/file.py
+\`\`\`
+<<<<<<< SEARCH
+  value = calculate_value()
+if value > 100:
+    process_high_value(value)
+=======
+  value = calculate_value()
+  if value > 100:
+      process_high_value(value) // Indentation fixed
+>>>>>>> REPLACE
+\`\`\`
+
+To make a new file, use a search/replace block where the SEARCH block is empty.
+path/to/new_file.ext
+\`\`\`
+<<<<<<< SEARCH
+=======
+// content of the new file
+>>>>>>> REPLACE
+\`\`\`
+
+To delete a file, output a single line:
+DELETE path/to/file.ext
+
+To move or rename a file, output a single line:
+MOVE path/from/old.ext TO path/to/new.ext
+`;
+
+const wholeFileFormattingRules = `# File editing rules:
+
+For each file you need to modify, output the complete, updated content of the file within a fenced code block.
+The file path must be on the line immediately preceding the code block.
+
+path/to/file.py
+\`\`\`python
+// full updated content of file.py
+// ...
+\`\`\`
+
+To create a new file, follow the same format. Provide the full content for the new file.
+path/to/new_file.ext
+\`\`\`
+// content of the new file
+\`\`\`
+
+To delete a file, output a single line:
+DELETE path/to/file.ext
+
+To move or rename a file, output a single line:
+MOVE path/from/old.ext TO path/to/new.ext
+`;
+
+const formattingRulesMap = {
+  udiff: udiffFormattingRules,
+  "diff-fenced": diffFencedFormattingRules,
+  whole: wholeFileFormattingRules,
+};
+
+export const buildPrompt = (
   files: File[],
   instructions: string,
-  customSystemPrompt?: string
+  customSystemPrompt: string,
+  editFormat: EditFormat
 ): string => {
   let prompt = "";
 
-  prompt += customSystemPrompt || mainSystemPrompt;
+  prompt += customSystemPrompt;
   prompt += "\n\n";
-  prompt += formattingRules;
+  prompt += formattingRulesMap[editFormat];
   prompt += "\n\n";
 
   prompt += "Here are the files to work with:\n\n";
 
   for (const file of files) {
-    prompt += `--- ${file.path} ---\n\`\`\`\n${file.content}\n\`\`\`\n\n`;
+    prompt += `${file.path}\n\`\`\`\n${file.content}\n\`\`\`\n\n`;
   }
 
   prompt += `My instructions are:\n\n${instructions}`;

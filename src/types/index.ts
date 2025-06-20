@@ -7,8 +7,11 @@ export interface FileNode {
   isDirectory: boolean;
 }
 
+export type EditFormat = "udiff" | "diff-fenced" | "whole";
+
 export type ChangeOperation =
   | { type: "modify"; filePath: string; diff: string; isNewFile: boolean }
+  | { type: "rewrite"; filePath: string; content: string }
   | { type: "delete"; filePath: string }
   | { type: "move"; fromPath: string; toPath: string };
 

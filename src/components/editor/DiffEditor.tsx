@@ -21,19 +21,28 @@ export function DiffEditor() {
     setModifiedContent("");
 
     if (!activeChange || !rootPath) return;
-    
+
     const { operation } = activeChange;
 
-    if (operation.type !== 'modify') {
+    if (operation.type === 'delete' || operation.type === 'move') {
       let msg = `This change is a ${operation.type} operation.`;
       if(operation.type === 'delete') msg += `\nFile to be deleted: ${operation.filePath}`;
       if(operation.type === 'move') msg += `\nMoving from: ${operation.fromPath}\nMoving to: ${operation.toPath}`;
       setMessage(msg);
       return;
     }
-
+    
     const absolutePath = `${rootPath}/${operation.filePath}`;
+    
+    if (operation.type === 'rewrite') {
+      setModifiedContent(operation.content);
+      readFileContent(absolutePath)
+        .then(setOriginalContent)
+        .catch(() => setOriginalContent(`// File does not exist, will be created.`));
+      return;
+    }
 
+    // Handle 'modify' operation
     const applyDiff = (original: string) => {
       try {
         const patched = applyPatch(original, operation.diff);

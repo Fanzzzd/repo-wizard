@@ -1,6 +1,6 @@
 import { useReviewStore } from "../../store/reviewStore";
 import { FileTypeIcon } from "../workspace/FileTypeIcon";
-import { Check, X, CircleDot, Trash2, Move } from "lucide-react";
+import { Check, X, CircleDot, Trash2, Move, PencilRuler } from "lucide-react";
 import type { ReviewChange } from "../../types";
 
 const ChangeItem = ({ change }: { change: ReviewChange }) => {
@@ -43,6 +43,18 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
                 NEW
               </span>
             )}
+          </>
+        );
+      case "rewrite":
+        return (
+          <>
+            <PencilRuler size={14} className="text-purple-500" />
+            <span className="truncate" title={operation.filePath}>
+              {operation.filePath}
+            </span>
+             <span className="text-xs text-purple-600 font-medium ml-auto mr-2">
+                REWRITE
+              </span>
           </>
         );
       case "delete":
