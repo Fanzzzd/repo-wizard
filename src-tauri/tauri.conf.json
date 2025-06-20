@@ -1,5 +1,5 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
+  "$schema": "https://schema.tauri.app/config/2.json",
   "productName": "repo-wizard",
   "version": "0.1.0",
   "identifier": "com.repo-wizard.app",
@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "repo-wizard",
-        "width": 800,
-        "height": 600
+        "title": "Repo Wizard",
+        "width": 1200,
+        "height": 800
       }
     ],
     "security": {
@@ -31,5 +31,8 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    
   }
 }
