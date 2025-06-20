@@ -3,29 +3,26 @@ import { parseChangesFromMarkdown } from "../../lib/diff_parser";
 import {
   applyPatch,
   backupFiles,
-  restoreFromBackup,
   deleteFile,
   moveFile,
   writeFileContent,
 } from "../../lib/tauri_api";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useState } from "react";
+import { useHistoryStore } from "../../store/historyStore";
+import { message } from "@tauri-apps/plugin-dialog";
 
 export function ReviewPanel() {
   const [markdown, setMarkdown] = useState("");
   const { rootPath, triggerFileTreeRefresh } = useWorkspaceStore();
-  const {
-    startReview,
-    endReview,
-    changes,
-    isReviewing,
-    backupId,
-    setBackupId,
-  } = useReviewStore();
+  const { startReview, endReview, changes, isReviewing } = useReviewStore();
+  const { addEntry: addHistoryEntry } = useHistoryStore();
 
-  const handleReview = () => {
+  const handleReview = async () => {
     if (!rootPath) {
-      alert("Please open a project folder first.");
+      await message("Please open a project folder first.", {
+        title: "Project Not Found",
+      });
       return;
     }
     const parsedChanges = parseChangesFromMarkdown(markdown);
@@ -44,7 +41,7 @@ export function ReviewPanel() {
       });
 
     if (approvedChanges.length === 0) {
-      alert("No approved changes to apply.");
+      console.warn("No approved changes to apply.");
       return;
     }
 
@@ -57,13 +54,23 @@ export function ReviewPanel() {
         acc.push(`${rootPath}/${operation.filePath}`);
       } else if (operation.type === "move") {
         acc.push(`${rootPath}/${operation.fromPath}`);
+      } else if (operation.type === "delete") {
+        acc.push(`${rootPath}/${operation.filePath}`);
       }
       return acc;
     }, [] as string[]);
+    
+    const newFilePaths = approvedChanges.reduce((acc, change) => {
+      if (change.operation.type === 'modify' && change.operation.isNewFile) {
+          acc.push(change.operation.filePath);
+      }
+      // Note: `rewrite` operations on new files are not currently tracked as "new".
+      return acc;
+    }, [] as string[]);
+
 
     try {
       const newBackupId = await backupFiles(rootPath, filesToBackup);
-      setBackupId(newBackupId);
 
       for (const change of approvedChanges) {
         const { operation } = change;
@@ -91,28 +98,23 @@ export function ReviewPanel() {
         }
       }
 
-      alert(
+      addHistoryEntry({
+        backupId: newBackupId,
+        description: `Applied ${approvedChanges.length} change(s)`,
+        rootPath,
+        newFilePaths,
+      });
+
+      console.log(
         `Successfully applied ${approvedChanges.length} approved changes.`
       );
       triggerFileTreeRefresh();
     } catch (e) {
-      console.error(`Failed to apply changes`, e);
-      alert(
-        `Failed to apply changes: ${e}.\n\nYou can undo the changes that were applied.`
+      console.error(
+        `Failed to apply changes:`,
+        e,
+        `You may need to use the History panel to restore to a previous state.`
       );
-    }
-  };
-
-  const handleUndo = async () => {
-    if (!rootPath || !backupId) return;
-    try {
-      await restoreFromBackup(rootPath, backupId);
-      alert("Changes have been successfully undone.");
-      setBackupId(null); // Prevent multiple undos
-      triggerFileTreeRefresh();
-    } catch (e) {
-      console.error(`Failed to undo changes`, e);
-      alert(`Failed to undo changes: ${e}`);
     }
   };
 
@@ -143,14 +145,6 @@ export function ReviewPanel() {
             >
               Apply Approved
             </button>
-            {backupId && (
-              <button
-                onClick={handleUndo}
-                className="px-4 py-2 bg-yellow-500 text-white hover:bg-yellow-400 rounded-md"
-              >
-                Undo Applied
-              </button>
-            )}
             <button
               onClick={endReview}
               className="px-4 py-2 bg-gray-600 text-white hover:bg-gray-500 rounded-md"

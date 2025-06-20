@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import { readFileContent } from "../../lib/tauri_api";
 import { Clipboard, ChevronDown, ChevronUp, Check } from "lucide-react";
@@ -17,6 +17,7 @@ export function PromptComposer() {
   const [instructions, setInstructions] = useState("");
   const [isSystemPromptVisible, setIsSystemPromptVisible] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [estimatedTokens, setEstimatedTokens] = useState(0);
   const { selectedFilePaths, rootPath } = useWorkspaceStore();
   const {
     customSystemPrompt,
@@ -24,6 +25,47 @@ export function PromptComposer() {
     editFormat,
     setEditFormat,
   } = useSettingsStore();
+
+  const estimateTokens = (text: string) => {
+    // A common heuristic: average token length is ~4 chars for English text.
+    return Math.ceil(text.length / 4);
+  };
+
+  useEffect(() => {
+    const calculate = async () => {
+      if (!rootPath) {
+        const prompt = buildPrompt([], instructions, customSystemPrompt, editFormat);
+        setEstimatedTokens(estimateTokens(prompt));
+        return;
+      }
+
+      const files = [];
+      if (selectedFilePaths.length > 0) {
+        for (const path of selectedFilePaths) {
+          try {
+            const content = await readFileContent(path);
+            const relativePath = path.replace(rootPath + "/", "");
+            files.push({ path: relativePath, content });
+          } catch (error) {
+            console.error(`Failed to read file for token count ${path}:`, error);
+          }
+        }
+      }
+      
+      const fullPrompt = buildPrompt(files, instructions, customSystemPrompt, editFormat);
+      setEstimatedTokens(estimateTokens(fullPrompt));
+    };
+    
+    // Debounce with setTimeout
+    const handler = setTimeout(() => {
+        calculate();
+    }, 300);
+
+    return () => {
+        clearTimeout(handler);
+    };
+  }, [selectedFilePaths, instructions, customSystemPrompt, editFormat, rootPath]);
+
 
   const generatePrompt = async () => {
     if (!rootPath) return;
@@ -36,7 +78,6 @@ export function PromptComposer() {
         files.push({ path: relativePath, content });
       } catch (error) {
         console.error(`Failed to read file ${path}:`, error);
-        // Maybe alert user about this failure
       }
     }
 
@@ -125,11 +166,14 @@ export function PromptComposer() {
       </div>
 
       <textarea
-        className="w-full flex-grow bg-white p-2 rounded-md mb-4 font-mono text-sm border border-gray-200"
+        className="w-full flex-grow bg-white p-2 rounded-md mb-2 font-mono text-sm border border-gray-200"
         placeholder="Enter your refactoring instructions here..."
         value={instructions}
         onChange={(e) => setInstructions(e.target.value)}
       ></textarea>
+      <div className="text-right text-xs text-gray-500 mb-2">
+        Estimated Tokens: ~{estimatedTokens.toLocaleString()}
+      </div>
       <button
         onClick={generatePrompt}
         className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-500 rounded-md disabled:bg-gray-400"

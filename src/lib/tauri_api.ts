@@ -48,11 +48,16 @@ export const backupFiles = (
 
 export const restoreFromBackup = (
   rootPath: string,
-  backupId: string
+  backupId: string,
+  newFilePaths: string[]
 ): Promise<void> => {
-  return invoke("restore_from_backup", { rootPath, backupId });
+  return invoke("restore_from_backup", { rootPath, backupId, newFilePaths });
 };
 
 export const deleteBackup = (backupId: string): Promise<void> => {
   return invoke("delete_backup", { backupId });
+};
+
+export const deleteAllBackups = (): Promise<void> => {
+  return invoke("delete_all_backups");
 };

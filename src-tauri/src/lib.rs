@@ -67,10 +67,18 @@ async fn backup_files(root_path: String, file_paths: Vec<String>) -> Result<Stri
 }
 
 #[tauri::command]
-async fn restore_from_backup(root_path: String, backup_id: String) -> Result<(), String> {
-    fs_utils::restore_from_backup(&PathBuf::from(root_path), &backup_id)
-        .await
-        .map_err(|e| e.to_string())
+async fn restore_from_backup(
+    root_path: String,
+    backup_id: String,
+    new_file_paths: Vec<String>,
+) -> Result<(), String> {
+    fs_utils::restore_from_backup(
+        &PathBuf::from(root_path),
+        &backup_id,
+        new_file_paths,
+    )
+    .await
+    .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -80,6 +88,12 @@ async fn delete_backup(backup_id: String) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn delete_all_backups() -> Result<(), String> {
+    fs_utils::delete_all_backups()
+        .await
+        .map_err(|e| e.to_string())
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -98,7 +112,8 @@ pub fn run() {
             move_file,
             backup_files,
             restore_from_backup,
-            delete_backup
+            delete_backup,
+            delete_all_backups
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

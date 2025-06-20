@@ -112,11 +112,29 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
 };
 
 export function ChangeList() {
-  const { changes } = useReviewStore();
+  const { changes, approveAllChanges, discardAllChanges } = useReviewStore();
 
   return (
     <div className="p-2 text-gray-800 overflow-auto h-full bg-gray-50">
-      <h2 className="font-bold mb-2 p-1 text-lg">Changes ({changes.length})</h2>
+      <div className="flex justify-between items-center mb-2 p-1">
+        <h2 className="font-bold text-lg">Changes ({changes.length})</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={approveAllChanges}
+            className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded hover:bg-green-200"
+            title="Approve all changes"
+          >
+            Approve All
+          </button>
+          <button
+            onClick={discardAllChanges}
+            className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200"
+            title="Discard all changes"
+          >
+            Discard All
+          </button>
+        </div>
+      </div>
       <div className="flex flex-col gap-1">
         {changes.map((change) => (
           <ChangeItem key={change.id} change={change} />

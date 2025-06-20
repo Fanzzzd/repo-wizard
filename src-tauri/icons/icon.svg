@@ -1,0 +1,26 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+    <linearGradient id="hatGradient" x1="256" y1="64" x2="256" y2="320" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#A78BFA"/>
+        <stop offset="1" stop-color="#6D28D9"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="2" dy="4" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.5"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+</defs>
+<g filter="url(#shadow)">
+    <path d="M256 64L100 320H412L256 64Z" fill="url(#hatGradient)"/>
+    <path d="M462 320H50C22.3858 320 0 342.386 0 370C0 397.614 22.3858 420 50 420H462C489.614 420 512 397.614 512 370C512 342.386 489.614 320 462 320Z" fill="#C4B5FD"/>
+</g>
+<path d="M211.647 203.882L160 256L211.647 308.118L229.294 290.471L195.294 256L229.294 221.529L211.647 203.882Z" fill="white" fill-opacity="0.9"/>
+<path d="M300.353 203.882L282.706 221.529L316.706 256L282.706 290.471L300.353 308.118L352 256L300.353 203.882Z" fill="white" fill-opacity="0.9"/>
+<path d="M272.71 189L239.29 323L259.29 323L292.71 189H272.71Z" fill="#DDD6FE"/>
+</svg>

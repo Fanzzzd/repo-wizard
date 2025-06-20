@@ -1,5 +1,6 @@
 use crate::IgnoreSettings;
 use anyhow::{anyhow, Result};
+use async_recursion::async_recursion;
 use ignore::overrides::OverrideBuilder;
 use ignore::WalkBuilder;
 use serde::Serialize;
@@ -160,8 +161,12 @@ pub async fn move_file(from: &PathBuf, to: &PathBuf) -> Result<()> {
     fs::rename(from, to).await.map_err(anyhow::Error::from)
 }
 
+fn get_backup_root_dir() -> PathBuf {
+    std::env::temp_dir().join("repo-wizard-backups")
+}
+
 fn get_backup_dir(backup_id: &str) -> PathBuf {
-    std::env::temp_dir().join("repo-wizard-backups").join(backup_id)
+    get_backup_root_dir().join(backup_id)
 }
 
 pub async fn backup_files(root_path: &Path, paths: Vec<PathBuf>) -> Result<String> {
@@ -170,12 +175,14 @@ pub async fn backup_files(root_path: &Path, paths: Vec<PathBuf>) -> Result<Strin
     fs::create_dir_all(&backup_root).await?;
 
     for path in paths {
-        if !path.exists() { continue; }
-        
+        if !path.exists() {
+            continue;
+        }
+
         let relative_path = path
             .strip_prefix(root_path)
             .map_err(|_| anyhow!("File path is not within the root directory"))?;
-        
+
         let backup_path = backup_root.join(relative_path);
 
         if let Some(parent) = backup_path.parent() {
@@ -186,23 +193,52 @@ pub async fn backup_files(root_path: &Path, paths: Vec<PathBuf>) -> Result<Strin
     Ok(backup_id)
 }
 
-pub async fn restore_from_backup(root_path: &Path, backup_id: &str) -> Result<()> {
+#[async_recursion]
+async fn restore_directory_recursively(from_dir: &Path, to_dir: &Path) -> Result<()> {
+    if !from_dir.is_dir() {
+        return Ok(());
+    }
+
+    if !to_dir.exists() {
+        fs::create_dir_all(to_dir).await?;
+    }
+
+    let mut entries = fs::read_dir(from_dir).await?;
+    while let Some(entry) = entries.next_entry().await? {
+        let from_path = entry.path();
+        let file_name = from_path
+            .file_name()
+            .ok_or_else(|| anyhow!("Failed to get file name for {:?}", from_path))?;
+        let to_path = to_dir.join(file_name);
+
+        if from_path.is_dir() {
+            restore_directory_recursively(&from_path, &to_path).await?;
+        } else if from_path.is_file() {
+            fs::copy(&from_path, &to_path).await?;
+        }
+    }
+    Ok(())
+}
+
+pub async fn restore_from_backup(
+    root_path: &Path,
+    backup_id: &str,
+    new_file_paths: Vec<String>,
+) -> Result<()> {
     let backup_root = get_backup_dir(backup_id);
     if !backup_root.exists() {
         return Err(anyhow!("Backup ID not found: {}", backup_id));
     }
 
-    let mut entries = fs::read_dir(backup_root).await?;
-    while let Some(entry) = entries.next_entry().await? {
-        let backup_path = entry.path();
-        let relative_path = backup_path.strip_prefix(get_backup_dir(backup_id))?;
-        let original_path = root_path.join(relative_path);
-        
-        if let Some(parent) = original_path.parent() {
-            fs::create_dir_all(parent).await?;
+    restore_directory_recursively(&backup_root, root_path).await?;
+
+    for rel_path_str in new_file_paths {
+        let path_to_delete = root_path.join(rel_path_str);
+        if path_to_delete.is_file() {
+            fs::remove_file(path_to_delete).await?;
         }
-        fs::copy(&backup_path, &original_path).await?;
     }
+
     Ok(())
 }
 
@@ -210,6 +246,14 @@ pub async fn delete_backup(backup_id: &str) -> Result<()> {
     let backup_root = get_backup_dir(backup_id);
     if backup_root.exists() {
         fs::remove_dir_all(backup_root).await?;
+    }
+    Ok(())
+}
+
+pub async fn delete_all_backups() -> Result<()> {
+    let backups_dir = get_backup_root_dir();
+    if backups_dir.exists() {
+        fs::remove_dir_all(backups_dir).await?;
     }
     Ok(())
 }

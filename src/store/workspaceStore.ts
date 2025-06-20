@@ -48,7 +48,11 @@ export const useWorkspaceStore = create<WorkspaceState>()(
     }),
     {
       name: "repo-wizard-workspace",
-      partialize: (state) => ({ rootPath: state.rootPath }),
+      partialize: (state) => ({
+        rootPath: state.rootPath,
+        activeFilePath: state.activeFilePath,
+        selectedFilePaths: state.selectedFilePaths,
+      }),
     }
   )
 );
