@@ -1,40 +1,89 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { restoreFromBackup, deleteAllBackups } from "../lib/tauri_api";
+import { deleteAllBackups, restoreState } from "../lib/tauri_api";
+import type { HistoryState } from "../types";
+import { v4 as uuidv4 } from "uuid";
 
-export interface HistoryEntry {
-  backupId: string;
-  timestamp: number;
-  description: string;
-  rootPath: string;
-  newFilePaths: string[];
-}
-
-interface HistoryState {
-  entries: HistoryEntry[];
-  addEntry: (entry: Omit<HistoryEntry, "timestamp">) => void;
-  restore: (
-    backupId: string,
-    rootPath: string,
-    newFilePaths: string[]
-  ) => Promise<void>;
+interface HistoryStore {
+  history: Record<string, HistoryState[]>; // rootPath -> HistoryState[]
+  head: Record<string, number>; // rootPath -> index of the current state
+  addState: (entry: Omit<HistoryState, "id" | "timestamp">) => void;
+  checkout: (rootPath: string, targetIndex: number) => Promise<void>;
   clearAllHistory: () => Promise<void>;
 }
 
-export const useHistoryStore = create<HistoryState>()(
+export const useHistoryStore = create<HistoryStore>()(
   persist(
-    (set) => ({
-      entries: [],
-      addEntry: (entry) => {
-        const newEntry: HistoryEntry = { ...entry, timestamp: Date.now() };
-        set((state) => ({ entries: [newEntry, ...state.entries] }));
+    (set, get) => ({
+      history: {},
+      head: {},
+
+      addState: (partialEntry) => {
+        set((state) => {
+          const { rootPath } = partialEntry;
+          const projectHistory = state.history[rootPath] ?? [];
+          const currentHead = state.head[rootPath] ?? -1;
+
+          const baseHistory =
+            currentHead === -1
+              ? projectHistory
+              : projectHistory.slice(0, currentHead + 1);
+
+          const newEntry: HistoryState = {
+            ...partialEntry,
+            id: uuidv4(),
+            timestamp: Date.now(),
+          };
+
+          const newProjectHistory = [...baseHistory, newEntry];
+
+          return {
+            history: {
+              ...state.history,
+              [rootPath]: newProjectHistory,
+            },
+            head: {
+              ...state.head,
+              [rootPath]: newProjectHistory.length - 1,
+            },
+          };
+        });
       },
-      restore: async (backupId, rootPath, newFilePaths) => {
-        await restoreFromBackup(rootPath, backupId, newFilePaths);
+
+      checkout: async (rootPath, targetIndex) => {
+        const { history, head } = get();
+        const projectHistory = history[rootPath];
+        const currentHeadIndex = head[rootPath];
+
+        if (
+          !projectHistory ||
+          targetIndex < 0 ||
+          targetIndex >= projectHistory.length
+        ) {
+          throw new Error("Invalid checkout index");
+        }
+
+        const targetState = projectHistory[targetIndex];
+        const currentState = projectHistory[currentHeadIndex];
+
+        if (targetState.id === currentState.id) {
+          return; // Already at the target state
+        }
+
+        const filesToDelete = currentState.files.filter(
+          (file) => !targetState.files.includes(file)
+        );
+
+        await restoreState(rootPath, targetState.backupId, filesToDelete);
+
+        set((state) => ({
+          head: { ...state.head, [rootPath]: targetIndex },
+        }));
       },
+
       clearAllHistory: async () => {
         await deleteAllBackups();
-        set({ entries: [] });
+        set({ history: {}, head: {} });
       },
     }),
     {

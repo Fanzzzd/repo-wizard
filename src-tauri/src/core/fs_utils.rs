@@ -175,20 +175,17 @@ pub async fn backup_files(root_path: &Path, paths: Vec<PathBuf>) -> Result<Strin
     fs::create_dir_all(&backup_root).await?;
 
     for path in paths {
-        if !path.exists() {
+        let full_path = root_path.join(&path);
+        if !full_path.exists() {
             continue;
         }
 
-        let relative_path = path
-            .strip_prefix(root_path)
-            .map_err(|_| anyhow!("File path is not within the root directory"))?;
-
-        let backup_path = backup_root.join(relative_path);
+        let backup_path = backup_root.join(&path);
 
         if let Some(parent) = backup_path.parent() {
             fs::create_dir_all(parent).await?;
         }
-        fs::copy(&path, &backup_path).await?;
+        fs::copy(&full_path, &backup_path).await?;
     }
     Ok(backup_id)
 }
@@ -214,30 +211,35 @@ async fn restore_directory_recursively(from_dir: &Path, to_dir: &Path) -> Result
         if from_path.is_dir() {
             restore_directory_recursively(&from_path, &to_path).await?;
         } else if from_path.is_file() {
+            if let Some(p) = to_path.parent() {
+                if !p.exists() {
+                    fs::create_dir_all(p).await?;
+                }
+            }
             fs::copy(&from_path, &to_path).await?;
         }
     }
     Ok(())
 }
 
-pub async fn restore_from_backup(
+pub async fn restore_state(
     root_path: &Path,
     backup_id: &str,
-    new_file_paths: Vec<String>,
+    files_to_delete: Vec<String>,
 ) -> Result<()> {
+    for rel_path_str in files_to_delete {
+        let path_to_delete = root_path.join(rel_path_str);
+        if path_to_delete.is_file() {
+            fs::remove_file(path_to_delete).await?;
+        }
+    }
+
     let backup_root = get_backup_dir(backup_id);
     if !backup_root.exists() {
         return Err(anyhow!("Backup ID not found: {}", backup_id));
     }
 
     restore_directory_recursively(&backup_root, root_path).await?;
-
-    for rel_path_str in new_file_paths {
-        let path_to_delete = root_path.join(rel_path_str);
-        if path_to_delete.is_file() {
-            fs::remove_file(path_to_delete).await?;
-        }
-    }
 
     Ok(())
 }

@@ -1,0 +1,31 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simplified version for small sizes -->
+  <g>
+    <!-- Left bracket -->
+    <path d="M50 80 C50 80 40 80 40 90 L40 126 C40 136 50 136 50 136"
+          stroke="#71717A" stroke-width="8" stroke-linecap="round" fill="none"/>
+    
+    <!-- Wizard hat (simplified) -->
+    <path d="M128 40 L80 160 L176 160 Z"
+          fill="url(#iconGradient)" stroke="#71717A" stroke-width="4" stroke-linejoin="round"/>
+    
+    <!-- Hat star -->
+    <path d="M128 70 L131 78 L139 78 L133 83 L136 91 L128 86 L120 91 L123 83 L117 78 L125 78 Z"
+          fill="#FFFFFF"/>
+    
+    <!-- Right bracket -->
+    <path d="M206 80 C206 80 216 80 216 90 L216 126 C216 136 206 136 206 136"
+          stroke="#71717A" stroke-width="8" stroke-linecap="round" fill="none"/>
+    
+    <!-- Bottom line/brim -->
+    <rect x="64" y="160" width="128" height="8" rx="4" fill="#71717A"/>
+  </g>
+  
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="iconGradient" x1="128" y1="40" x2="128" y2="160" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+</svg>

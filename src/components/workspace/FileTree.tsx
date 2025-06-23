@@ -1,4 +1,4 @@
-import { FolderOpen, Home, ChevronRight, ChevronDown, X } from "lucide-react";
+import { FolderOpen, ChevronRight, ChevronDown, X } from "lucide-react";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useEffect, useState, useMemo, useRef } from "react";
@@ -213,7 +213,7 @@ export function FileTree() {
     <div className="p-2 text-gray-800 overflow-auto h-full bg-gray-50">
       <div className="flex items-center justify-between gap-2 font-bold mb-2 p-1">
         <div className="flex items-center gap-2 truncate">
-          <Home size={16} />
+          <FileTypeIcon filename={fileTree.name} isDirectory={true} />
           <h2 className="truncate" title={fileTree.name}>
             {fileTree.name}
           </h2>

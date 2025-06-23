@@ -67,15 +67,15 @@ async fn backup_files(root_path: String, file_paths: Vec<String>) -> Result<Stri
 }
 
 #[tauri::command]
-async fn restore_from_backup(
+async fn restore_state(
     root_path: String,
     backup_id: String,
-    new_file_paths: Vec<String>,
+    files_to_delete: Vec<String>,
 ) -> Result<(), String> {
-    fs_utils::restore_from_backup(
+    fs_utils::restore_state(
         &PathBuf::from(root_path),
         &backup_id,
-        new_file_paths,
+        files_to_delete,
     )
     .await
     .map_err(|e| e.to_string())
@@ -111,7 +111,7 @@ pub fn run() {
             delete_file,
             move_file,
             backup_files,
-            restore_from_backup,
+            restore_state,
             delete_backup,
             delete_all_backups
         ])

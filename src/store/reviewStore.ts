@@ -14,7 +14,7 @@ interface ReviewState {
   discardAllChanges: () => void;
 }
 
-export const useReviewStore = create<ReviewState>((set) => ({
+export const useReviewStore = create<ReviewState>((set, get) => ({
   changes: [],
   isReviewing: false,
   activeChangeId: null,
@@ -32,12 +32,15 @@ export const useReviewStore = create<ReviewState>((set) => ({
       activeChangeId: changes[0]?.id ?? null,
     }),
   endReview: () => {
-    // Backups are no longer deleted upon finishing a review.
-    // They are now persisted as part of the project history.
+    const { activeChangeId } = get();
+    // If the active change is part of the review that's ending, clear it.
+    const changeIds = new Set(get().changes.map(c => c.id));
+    const shouldClearActive = activeChangeId && changeIds.has(activeChangeId);
+
     set({
       changes: [],
       isReviewing: false,
-      activeChangeId: null,
+      activeChangeId: shouldClearActive ? null : activeChangeId,
     });
   },
   setActiveChangeId: (id) => set({ activeChangeId: id }),

@@ -1,0 +1,37 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle for dark mode -->
+  <rect width="512" height="512" rx="128" fill="#18181B"/>
+  
+  <!-- Wizard hat shape with code bracket integration -->
+  <g>
+    <!-- Left bracket -->
+    <path d="M140 200 C140 200 120 200 120 220 L120 292 C120 312 140 312 140 312"
+          stroke="#A1A1AA" stroke-width="16" stroke-linecap="round" fill="none"/>
+    
+    <!-- Wizard hat -->
+    <path d="M256 120 L180 320 L332 320 Z"
+          fill="url(#gradientDark)" stroke="#A1A1AA" stroke-width="8" stroke-linejoin="round"/>
+    
+    <!-- Hat star/sparkle -->
+    <path d="M256 160 L262 174 L276 174 L264 184 L270 198 L256 188 L242 198 L248 184 L236 174 L250 174 Z"
+          fill="#18181B"/>
+    
+    <!-- Right bracket -->
+    <path d="M372 200 C372 200 392 200 392 220 L392 292 C392 312 372 312 372 312"
+          stroke="#A1A1AA" stroke-width="16" stroke-linecap="round" fill="none"/>
+    
+    <!-- Magic sparkles -->
+    <circle cx="160" cy="160" r="4" fill="#C4B5FD"/>
+    <circle cx="352" cy="160" r="4" fill="#C4B5FD"/>
+    <circle cx="180" cy="360" r="4" fill="#C4B5FD"/>
+    <circle cx="332" cy="360" r="4" fill="#C4B5FD"/>
+  </g>
+  
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="gradientDark" x1="256" y1="120" x2="256" y2="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#9333EA"/>
+      <stop offset="100%" stop-color="#7E22CE"/>
+    </linearGradient>
+  </defs>
+</svg>

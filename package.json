@@ -1,7 +1,7 @@
 {
   "name": "repo-wizard",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,6 +22,7 @@
     "lucide-react": "^0.411.0",
     "material-icon-theme": "^5.23.0",
     "monaco-editor": "^0.50.0",
+    "motion": "^12.18.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-resizable-panels": "^2.1.9",
