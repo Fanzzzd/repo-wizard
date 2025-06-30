@@ -13,7 +13,7 @@ interface LayoutProps {
 export function Layout({ leftPanel, mainPanel, rightPanel }: LayoutProps) {
   return (
     <PanelGroup direction="horizontal" className="h-full w-full bg-white">
-      <Panel defaultSize={20} minSize={15}>
+      <Panel defaultSize={25} minSize={15}>
         {leftPanel}
       </Panel>
       <PanelResizeHandle className="w-px bg-gray-200 hover:bg-blue-500 transition-colors" />

@@ -101,7 +101,7 @@ function FileNodeComponent({
   const isActive = activeFilePath === node.path;
 
   return (
-    <div style={{ paddingLeft: `${level * 1}rem` }}>
+    <div style={{ paddingLeft: `${level * 0.75}rem` }}>
       <div
         className={`flex items-center gap-2 p-1 rounded text-sm group ${
           isActive
