@@ -152,16 +152,21 @@ export const buildPrompt = (
 ): string => {
   let prompt = "";
 
+  if (customSystemPrompt) {
+    prompt += customSystemPrompt;
+    prompt += "\n\n";
+  }
+
   const enabledMetaPrompts = metaPrompts.filter((p) => p.enabled);
   if (enabledMetaPrompts.length > 0) {
+    prompt += "In addition to my instructions, you must also follow the rules in these blocks:\n\n";
     for (const metaPrompt of enabledMetaPrompts) {
+      prompt += `--- BEGIN META PROMPT: "${metaPrompt.name}" ---\n`;
       prompt += metaPrompt.content;
-      prompt += "\n\n";
+      prompt += `\n--- END META PROMPT ---\n\n`;
     }
   }
 
-  prompt += customSystemPrompt;
-  prompt += "\n\n";
   prompt += formattingRulesMap[editFormat];
   prompt += "\n\n";
 
