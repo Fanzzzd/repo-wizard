@@ -1,4 +1,4 @@
-import type { EditFormat } from "../types";
+import type { EditFormat, MetaPrompt } from "../types";
 
 interface File {
   path: string;
@@ -147,9 +147,18 @@ export const buildPrompt = (
   files: File[],
   instructions: string,
   customSystemPrompt: string,
-  editFormat: EditFormat
+  editFormat: EditFormat,
+  metaPrompts: MetaPrompt[]
 ): string => {
   let prompt = "";
+
+  const enabledMetaPrompts = metaPrompts.filter((p) => p.enabled);
+  if (enabledMetaPrompts.length > 0) {
+    for (const metaPrompt of enabledMetaPrompts) {
+      prompt += metaPrompt.content;
+      prompt += "\n\n";
+    }
+  }
 
   prompt += customSystemPrompt;
   prompt += "\n\n";

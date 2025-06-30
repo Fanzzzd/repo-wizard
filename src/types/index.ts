@@ -43,3 +43,10 @@ export interface HistoryState {
   files: string[]; // List of all relative file paths in this state
   isInitialState?: boolean;
 }
+
+export interface MetaPrompt {
+  id: string;
+  name: string;
+  content: string;
+  enabled: boolean;
+}
