@@ -95,13 +95,13 @@ jobs:
       matrix:
         include:
           - platform: 'macos-latest'
-            target: aarch64-apple-darwin
+            args: '--target aarch64-apple-darwin'
           - platform: 'macos-latest'
-            target: x86_64-apple-darwin
+            args: '--target x86_64-apple-darwin'
           - platform: 'ubuntu-22.04'
-            target: x86_64-unknown-linux-gnu
+            args: ''
           - platform: 'windows-latest'
-            target: x86_64-pc-windows-msvc
+            args: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -139,12 +139,12 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
-          key: ${{ matrix.platform }}-${{ matrix.target }}-${{ needs.release.outputs.tag_name }}
+          key: ${{ matrix.platform }}-${{ matrix.args }}-${{ needs.release.outputs.tag_name }}
 
       - name: Build and Upload Assets
-        uses: tauri-apps/tauri-action@v2
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           releaseId: ${{ needs.release.outputs.release_id }}
-          target: ${{ matrix.target }}
+          args: ${{ matrix.args }}
