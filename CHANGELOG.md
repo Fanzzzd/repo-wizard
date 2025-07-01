@@ -1,3 +1,10 @@
+# [1.1.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.4...app-v1.1.0-next.1) (2025-07-01)
+
+
+### Features
+
+* update GitHub Actions workflow to use 'target' instead of 'args' for platform builds and add macOS signing identity ([0437b62](https://github.com/Fanzzzd/repo-wizard/commit/0437b625c09e975dd38286c7cf35347ebb7b6c75))
+
 ## [1.0.4](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.3...app-v1.0.4) (2025-07-01)
 
 
