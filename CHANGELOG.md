@@ -1,3 +1,11 @@
+## [1.0.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.0...app-v1.0.1) (2025-07-01)
+
+
+### Bug Fixes
+
+* update GitHub Actions workflow to trigger on release creation and improve asset upload process ([f3c60bd](https://github.com/Fanzzzd/repo-wizard/commit/f3c60bd053bee48679b389ed82449e61a31e5512))
+* update logo image path in README.md ([1b04755](https://github.com/Fanzzzd/repo-wizard/commit/1b0475568c7c2216a920eb1ea6dd1487e100f205))
+
 ## [1.0.1-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.0...app-v1.0.1-next.1) (2025-07-01)
 
 
