@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.1...app-v1.0.2) (2025-07-01)
+
+
+### Bug Fixes
+
+* update GitHub Actions workflow to trigger on successful completion of the Auto Release workflow and improve asset upload process ([cf0671f](https://github.com/Fanzzzd/repo-wizard/commit/cf0671f2b4d01624345fefffbd9c0fe31f3c55ed))
+
 ## [1.0.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.0...app-v1.0.1) (2025-07-01)
 
 
