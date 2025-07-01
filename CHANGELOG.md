@@ -1,3 +1,12 @@
+# 1.0.0 (2025-07-01)
+
+
+### Features
+
+* add meta prompt management to PromptComposer; enhance prompt building with meta prompts ([85de14e](https://github.com/Fanzzzd/repo-wizard/commit/85de14e8e6ab6bbc46648008627d1a9bae47cd67))
+* introduce MetaPromptsManagerModal for managing meta prompts; integrate with PromptComposer for enhanced prompt building ([d9a33d6](https://github.com/Fanzzzd/repo-wizard/commit/d9a33d6ba220ab59c0ffc746077a27ec2ea14a0e))
+* whole edit works ([a60acce](https://github.com/Fanzzzd/repo-wizard/commit/a60accedf682ff0bcbb8486413c7de872f8317df))
+
 # Changelog (变更日志)
 
 All notable changes to this project will be documented in this file.
