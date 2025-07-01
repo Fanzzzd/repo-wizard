@@ -1,3 +1,10 @@
+## [1.0.1-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.0...app-v1.0.1-next.1) (2025-07-01)
+
+
+### Bug Fixes
+
+* update logo image path in README.md ([1b04755](https://github.com/Fanzzzd/repo-wizard/commit/1b0475568c7c2216a920eb1ea6dd1487e100f205))
+
 # 1.0.0 (2025-07-01)
 
 
