@@ -1,3 +1,10 @@
+# [1.1.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.1...app-v1.1.0-next.2) (2025-07-01)
+
+
+### Bug Fixes
+
+* update GitHub Actions workflow to use 'args' for platform builds and bump repo-wizard version to 1.0.4 ([c527c0d](https://github.com/Fanzzzd/repo-wizard/commit/c527c0d92dfc820b7bcc78f0f230b2d375da77ac))
+
 # [1.1.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.4...app-v1.1.0-next.1) (2025-07-01)
 
 
