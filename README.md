@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="src-tauri/icons/icon.svg" alt="Repo Wizard Logo" width="128" height="128">
-  <h1>Repo Wizard</h1>
+  <img src="src-tauri/icons/512x512.svg" alt="Repo Wizard Logo" width="128" height="128">
+  <h1>Repo Wizard </h1>
 </div>
 
 <div align="center">
