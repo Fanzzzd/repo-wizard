@@ -1,13 +1,49 @@
 name: 'Build & Upload Assets'
 
 on:
-  release:
-    types: [created]
+  workflow_run:
+    workflows: ["Auto Release"]
+    types:
+      - completed
 
 jobs:
+  get-release-info:
+    name: Get Release Info
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.get_release.outputs.release_id }}
+      tag_name: ${{ steps.get_tag.outputs.tag_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0 # Necessary to fetch all tags
+
+      - name: Get tag from commit SHA
+        id: get_tag
+        run: |
+          TAG=$(git describe --tags --exact-match ${{ github.event.workflow_run.head_sha }})
+          echo "tag_name=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Get Release by Tag
+        id: get_release
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const tag_name = "${{ steps.get_tag.outputs.tag_name }}";
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: tag_name,
+            });
+            core.setOutput('release_id', release.id);
+            
   build-tauri:
-    # This job will run when a release is created by semantic-release
-    if: github.event.release.author.login == 'github-actions[bot]' && startsWith(github.event.release.tag_name, 'app-v')
+    name: Build & Upload
+    needs: get-release-info
     permissions:
       contents: write
     strategy:
@@ -28,7 +64,7 @@ jobs:
       - name: Checkout code for the specific release tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ needs.get-release-info.outputs.tag_name }}
 
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -59,12 +95,12 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
-          key: ${{ matrix.args }}
+          key: ${{ matrix.args }}-${{ needs.get-release-info.outputs.tag_name }}
 
       - name: Build and Upload Assets
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          releaseId: ${{ github.event.release.id }}
+          releaseId: ${{ needs.get-release-info.outputs.release_id }}
           args: ${{ matrix.args }}
