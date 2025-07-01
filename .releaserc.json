@@ -1,6 +1,10 @@
 {
   "branches": [
-    "main"
+    "main",
+    {
+      "name": "next",
+      "prerelease": true
+    }
   ],
   "tagFormat": "app-v${version}",
   "plugins": [

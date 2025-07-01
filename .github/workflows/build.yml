@@ -3,7 +3,7 @@ name: 'Build & Upload Assets'
 on:
   push:
     tags:
-      - 'app-v*.*.*'
+      - 'app-v*'
 
 jobs:
   build-tauri:
@@ -62,10 +62,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          releaseId: ${{ needs.create-release.outputs.release_id }}
           tagName: ${{ github.ref_name }}
           releaseName: 'App ${{ github.ref_name }}'
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
           args: ${{ matrix.args }}
