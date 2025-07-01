@@ -51,6 +51,8 @@ pub async fn list_directory_recursive(
     let mut parent_map: HashMap<PathBuf, Vec<PathBuf>> = HashMap::new();
     let mut is_dir_map: HashMap<PathBuf, bool> = HashMap::new();
 
+    is_dir_map.insert(root_path.to_path_buf(), true);
+
     for result in walker {
         let entry = match result {
             Ok(entry) => entry,
@@ -83,10 +85,20 @@ pub async fn list_directory_recursive(
 
         let children = if is_directory {
             parent_map.get(path).map(|child_paths| {
-                child_paths
+                let mut children_nodes: Vec<FileNode> = child_paths
                     .iter()
                     .map(|child_path| build_tree_from_map(child_path, parent_map, is_dir_map))
-                    .collect()
+                    .collect();
+
+                children_nodes.sort_by(|a, b| {
+                    if a.is_directory != b.is_directory {
+                        b.is_directory.cmp(&a.is_directory)
+                    } else {
+                        a.name.to_lowercase().cmp(&b.name.to_lowercase())
+                    }
+                });
+
+                children_nodes
             })
         } else {
             None
@@ -104,33 +116,12 @@ pub async fn list_directory_recursive(
         }
     }
 
-    let root_children = parent_map.get(root_path).map(|child_paths| {
-        child_paths
-            .iter()
-            .map(|p| build_tree_from_map(p, &parent_map, &is_dir_map))
-            .collect::<Vec<_>>()
-    });
+    let mut root_node = build_tree_from_map(root_path, &parent_map, &is_dir_map);
 
-    let mut root_node = FileNode {
-        path: root_path.to_string_lossy().to_string(),
-        name: root_path
-            .file_name()
-            .unwrap_or_default()
-            .to_string_lossy()
-            .to_string(),
-        children: root_children,
-        is_directory: true,
-    };
-
-    if let Some(children) = root_node.children.as_mut() {
-        children.sort_by(|a, b| {
-            if a.is_directory != b.is_directory {
-                b.is_directory.cmp(&a.is_directory)
-            } else {
-                a.name.cmp(&b.name)
-            }
-        });
-    }
+    root_node.name = root_path
+        .file_name()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_else(|| root_path.to_string_lossy().to_string());
 
     Ok(root_node)
 }

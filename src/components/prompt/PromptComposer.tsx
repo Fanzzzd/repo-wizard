@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import { readFileContent } from "../../lib/tauri_api";
 import {
@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ChevronUp,
   Check,
-  Search,
   SlidersHorizontal,
 } from "lucide-react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
@@ -15,7 +14,6 @@ import { useSettingsStore } from "../../store/settingsStore";
 import type { EditFormat, MetaPrompt } from "../../types";
 import { useReviewStore } from "../../store/reviewStore";
 import { parseChangesFromMarkdown } from "../../lib/diff_parser";
-import { useDialogStore } from "../../store/dialogStore";
 import { usePromptStore } from "../../store/promptStore";
 import { MetaPromptsManagerModal } from "./MetaPromptsManagerModal";
 
@@ -36,7 +34,6 @@ export function PromptComposer() {
 
   const { selectedFilePaths, rootPath } = useWorkspaceStore();
   const { startReview } = useReviewStore();
-  const { open: openDialog } = useDialogStore();
   const {
     customSystemPrompt,
     setCustomSystemPrompt,
@@ -132,28 +129,31 @@ export function PromptComposer() {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const handleReview = async () => {
+  const handleReview = useCallback(async () => {
     if (!rootPath) {
-      await openDialog({
-        title: "Project Not Found",
-        content: "Please open a project folder first.",
-        status: "warning",
-      });
       return;
     }
-    const parsedChanges = parseChangesFromMarkdown(markdownResponse);
-    if (parsedChanges.length === 0) {
-      await openDialog({
-        title: "No Changes Found",
-        content:
-          "Could not find any valid change blocks in the provided text. Please check the format and try again.",
-        status: "error",
-      });
+    const currentMarkdownResponse = usePromptStore.getState().markdownResponse;
+    if (!currentMarkdownResponse.trim()) {
       return;
+    }
+
+    const parsedChanges = parseChangesFromMarkdown(currentMarkdownResponse);
+    if (parsedChanges.length === 0) {
+      return; // Silently fail if no changes are parsed
     }
     startReview(parsedChanges);
     setMarkdownResponse("");
-  };
+  }, [rootPath, startReview, setMarkdownResponse]);
+
+  useEffect(() => {
+    if (markdownResponse.trim() && rootPath) {
+      const timer = setTimeout(() => {
+        handleReview();
+      }, 500); // Debounce for 500ms
+      return () => clearTimeout(timer);
+    }
+  }, [markdownResponse, rootPath, handleReview]);
 
   const handleUpdateMetaPrompt = (
     id: string,
@@ -197,7 +197,7 @@ export function PromptComposer() {
 
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-semibold">Meta Prompts</label>
+            <label className="text-sm font-semibold ">Meta Prompts</label>
             <button
               onClick={() => setIsMetaPromptsManagerOpen(true)}
               className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded-md hover:bg-blue-100 transition-colors"
@@ -208,29 +208,24 @@ export function PromptComposer() {
             </button>
           </div>
           {metaPrompts.length > 0 ? (
-            <div className="bg-white border border-gray-200 rounded-md p-2 flex flex-col gap-1">
+            <div className="flex overflow-x-auto gap-2 pb-2 -mx-4 px-4">
               {metaPrompts.map((prompt) => (
-                <label
+                <button
                   key={prompt.id}
-                  className="flex items-center gap-3 cursor-pointer p-2 rounded-md hover:bg-gray-100 transition-colors"
+                  onClick={() =>
+                    handleUpdateMetaPrompt(prompt.id, {
+                      enabled: !prompt.enabled,
+                    })
+                  }
+                  className={`px-3 py-1.5 mt-1.5 text-sm rounded-lg whitespace-nowrap transition-colors flex-shrink-0 ${
+                    prompt.enabled
+                      ? "bg-blue-100 text-blue-800 font-semibold ring-1 ring-blue-300"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                  title={prompt.name}
                 >
-                  <input
-                    type="checkbox"
-                    className="form-checkbox h-4 w-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                    checked={prompt.enabled}
-                    onChange={(e) =>
-                      handleUpdateMetaPrompt(prompt.id, {
-                        enabled: e.target.checked,
-                      })
-                    }
-                  />
-                  <span
-                    className="text-sm text-gray-700 truncate"
-                    title={prompt.name}
-                  >
-                    {prompt.name}
-                  </span>
-                </label>
+                  {prompt.name}
+                </button>
               ))}
             </div>
           ) : (
@@ -287,19 +282,19 @@ export function PromptComposer() {
       <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col">
         <h2 className="font-bold mb-2">2. Paste Response & Review</h2>
         <textarea
-          className="w-full h-48 bg-white p-2 rounded-md font-mono text-sm border border-gray-200 mb-2"
-          placeholder="Paste full markdown response from your LLM here..."
+          className="w-full h-24 bg-white p-2 rounded-md font-mono text-sm border border-gray-200 mb-2"
+          placeholder="Paste full markdown response from your LLM here to automatically start review..."
           value={markdownResponse}
           onChange={(e) => setMarkdownResponse(e.target.value)}
         ></textarea>
-        <button
+        {/* <button
           onClick={handleReview}
           className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-blue-600 text-white hover:bg-blue-500 rounded-md disabled:bg-gray-400"
           disabled={!markdownResponse || !rootPath}
         >
           <Search size={16} />
           Review Changes
-        </button>
+        </button> */}
       </div>
       <MetaPromptsManagerModal
         isOpen={isMetaPromptsManagerOpen}

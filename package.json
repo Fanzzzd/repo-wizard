@@ -4,10 +4,13 @@
   "version": "0.1.2",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "tauri": "tauri"
+    "dev": "cross-env RUST_BACKTRACE=1 tauri dev",
+    "build": "cross-env RUST_BACKTRACE=1 tauri build",
+    "tauri": "tauri",
+    "web:dev": "vite",
+    "web:build": "tsc --noEmit && vite build",
+    "web:serve": "vite preview",
+    "semantic-release": "semantic-release"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
@@ -31,6 +34,12 @@
     "zustand": "^4.5.7"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.0",
+    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^10.0.6",
+    "@semantic-release/release-notes-generator": "^14.0.1",
     "@tailwindcss/vite": "^4.1.10",
     "@tauri-apps/cli": "^2.5.0",
     "@types/diff": "^5.2.3",
@@ -39,6 +48,8 @@
     "@types/react-dom": "^18.3.7",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.5.2",
+    "cross-env": "^7.0.3",
+    "semantic-release": "^24.0.0",
     "typescript": "~5.5.4",
     "vite": "^5.4.19"
   }

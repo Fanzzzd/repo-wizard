@@ -1,6 +1,14 @@
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import { X } from "lucide-react";
 
+const shortenPath = (path: string) => {
+  const parts = path.split('/');
+  if (parts.length > 2) {
+    return `.../${parts.slice(-2).join('/')}`;
+  }
+  return path;
+};
+
 export function SelectedFilesPanel() {
   const { selectedFilePaths, rootPath, removeSelectedFilePath } = useWorkspaceStore();
 
@@ -19,7 +27,7 @@ export function SelectedFilesPanel() {
             {selectedFilePaths.map((path) => (
               <li key={path} className="flex items-center justify-between p-1 rounded hover:bg-gray-100 group">
                 <span className="truncate" title={path}>
-                  {rootPath ? path.replace(rootPath + "/", "") : path}
+                  {shortenPath(rootPath ? path.replace(rootPath + "/", "") : path)}
                 </span>
                 <button
                   onClick={() => removeSelectedFilePath(path)}

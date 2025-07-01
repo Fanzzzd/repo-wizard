@@ -101,7 +101,7 @@ function FileNodeComponent({
   const isActive = activeFilePath === node.path;
 
   return (
-    <div style={{ paddingLeft: `${level * 0.75}rem` }}>
+    <div>
       <div
         className={`flex items-center gap-2 p-1 rounded text-sm group ${
           isActive
@@ -109,6 +109,7 @@ function FileNodeComponent({
             : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
         }`}
         title={node.path}
+        style={{ paddingLeft: `${level * 1.25}rem` }}
       >
         <input
           type="checkbox"

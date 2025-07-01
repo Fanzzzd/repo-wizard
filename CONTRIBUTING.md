@@ -13,58 +13,47 @@
 1.  **Fork & Clone**: 在 GitHub 上 Fork 本仓库，然后将你的 Fork 克隆到本地。
 2.  **创建分支**: 从 `main` 分支创建一个新的特性分支 (`git checkout -b my-awesome-feature`)。
 3.  **编码**: 进行你的代码修改。
-4.  **提交**: 使用清晰、描述性的信息提交你的更改。
+4.  **遵循提交规范**: 这是自动化发布流程的关键。你的提交信息**必须**遵循 [**Conventional Commits**](https://www.conventionalcommits.org/zh-hans/v1.0.0/) 规范。
+    *   `feat: ...` 用于新功能 (将触发 MINOR 版本更新, e.g., `1.2.3` -> `1.3.0`)。
+    *   `fix: ...` 用于修复 Bug (将触发 PATCH 版本更新, e.g., `1.2.3` -> `1.2.4`)。
+    *   `docs:`, `style:`, `refactor:`, `perf:`, `test:`, `chore:` 用于其他不会直接影响用户的功能性变更。
+    *   要进行重大变更 (Breaking Change)，请在提交信息的页脚部分添加 `BREAKING CHANGE: <description>`，这将触发 MAJOR 版本更新 (`1.2.3` -> `2.0.0`)。
 5.  **推送**: 将你的特性分支推送到你的 Fork 仓库。
-6.  **发起 Pull Request**: 从你的特性分支向原始仓库的 `main` 分支发起一个 Pull Request。
+6.  **发起 Pull Request**: 从你的特性分支向原始仓库的 `main` 分支发起一个 Pull Request。请确保你的 PR 标题和描述清晰，并且所有提交都遵循了约定式提交规范。
 
 ### 版本发布工作流 (针对维护者)
 
-发布新版本由 GitHub Action 自动处理，但需要一些手动步骤来准备。
+感谢 [semantic-release](https://github.com/semantic-release/semantic-release)，我们的发布流程是全自动的。
 
-#### 1. 准备发布
+#### 1. 合并 Pull Request
 
-1.  **创建发布分支**: 从 `main` 分支创建一个名为 `release/vX.Y.Z` 的新分支 (例如, `release/v0.2.0`)。
-    ```bash
-    git checkout main
-    git pull origin main
-    git checkout -b release/v0.2.0
-    ```
+作为维护者，你的主要职责是审查和合并 Pull Request。
+- **审查提交信息**: 在合并 PR 之前，请确保其中的所有提交信息都遵循 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/v1.0.0/) 规范。如果需要，可以使用 "Squash and merge" 功能将多个提交合并为一个符合规范的提交。
+- **合并到 `main`**: 将 PR 合并到 `main` 分支。
 
-2.  **提升版本号**: 手动将以下文件中的版本号更新为你的新版本 (例如, `0.2.0`):
-    *   `package.json` (`"version": "0.2.0"`)
-    *   `src-tauri/Cargo.toml` (`version = "0.2.0"`)
-    *   `src-tauri/tauri.conf.json` (`"version": "0.2.0"`)
+#### 2. 自动化流程
 
-3.  **更新变更日志**: 在 `CHANGELOG.md` 中为新版本添加一个条目，详细说明所做的更改。
+一旦代码合并到 `main` 分支，GitHub Actions 将自动触发：
 
-4.  **提交变更**: 提交这些版本和变更日志的更新。
-    ```bash
-    git add .
-    git commit -m "chore: release v0.2.0"
-    ```
+1.  **创建发布**: `semantic-release` 会分析新的提交，确定下一个版本号，并自动：
+    -   更新 `CHANGELOG.md`。
+    -   更新 `package.json`, `Cargo.toml`, 和 `tauri.conf.json` 中的版本号。
+    -   创建一个新的 Git 标签 (例如 `app-v0.2.0`)。
+    -   在 GitHub Releases 中创建一个**草稿版本**，其中包含自动生成的发行说明。
 
-#### 2. 触发构建
-
-1.  **合并到 `main`**: 创建一个 Pull Request，将你的发布分支 (`release/v0.2.0`) 合并回 `main`。合并后，确保你的本地 `main` 分支是最新状态。
-
-2.  **推送到 `release` 分支**: `.github/workflows/publish.yml` 中的 GitHub Action 由推送到 `release` 分支的动作触发。现在，将 `main` 分支合并到 `release` 分支并推送。
-    ```bash
-    git checkout release
-    git pull origin release
-    git merge main
-    git push origin release
-    ```
-    这个操作会启动 GitHub 上的 "Publish Release" 工作流。
+2.  **构建产物**: 新的 Git 标签会触发另一个工作流，该工作流将：
+    -   为所有目标平台 (macOS, Windows, Linux) 并行构建应用程序。
+    -   将所有构建好的二进制文件和安装包上传到之前创建的草稿版本中。
 
 #### 3. 发布版本
 
-1.  **检查工作流**: 进入你的 GitHub 仓库的 "Actions" 标签页，监控 "Publish Release" 工作流的进度。它将为 macOS, Windows, 和 Linux 构建应用程序。
+1.  **检查工作流**: 进入仓库的 "Actions" 标签页，监控工作流的进度。
+2.  **审核并发布**: 所有构建和上传操作完成后，进入 "Releases" 页面。
+    -   找到最新的草稿版本。
+    -   仔细检查自动生成的发行说明和上传的产物。
+    -   一切就绪后，手动点击 **"Publish release"**。
 
-2.  **编辑草稿版本**: 工作流完成后，它将在你仓库的 "Releases" 部分创建一个**草稿版本**。
-
-3.  **发布**: 找到该草稿版本 (例如, "App v0.2.0")。编辑它，检查打包好的文件 (`.dmg`, `.app.tar.gz`, `.msi`, `.AppImage`等)，编写一些精美的发行说明 (可以从 `CHANGELOG.md` 复制)，最后点击 **"Publish release"**。
-
-就这样！新版本现在已公开发布。
+就这样！新版本现在已公开发布。这个流程将所有繁琐的工作都交给了机器，让我们可以专注于编码。
 
 ---
 
@@ -77,55 +66,45 @@ First off, thank you for considering contributing to Repo Wizard! It's people li
 1.  **Fork & Clone**: Fork the repository on GitHub and clone your fork locally.
 2.  **Branch**: Create a new feature branch from `main` for your changes (`git checkout -b my-awesome-feature`).
 3.  **Code**: Make your changes.
-4.  **Commit**: Commit your changes with a clear and descriptive message.
+4.  **Follow Commit Convention**: This is crucial for the automated release process. Your commit messages **MUST** follow the [**Conventional Commits**](https://www.conventionalcommits.org/en/v1.0.0/) specification.
+    *   `feat: ...` for a new feature (triggers a MINOR release, e.g., `1.2.3` -> `1.3.0`).
+    *   `fix: ...` for a bug fix (triggers a PATCH release, e.g., `1.2.3` -> `1.2.4`).
+    *   `docs:`, `style:`, `refactor:`, `perf:`, `test:`, `chore:` for other changes that don't affect the user-facing functionality.
+    *   For a breaking change, include `BREAKING CHANGE: <description>` in the footer of your commit message. This will trigger a MAJOR release (`1.2.3` -> `2.0.0`).
 5.  **Push**: Push your feature branch to your fork.
-6.  **Pull Request**: Open a pull request from your feature branch to the `main` branch of the original repository.
+6.  **Pull Request**: Open a pull request from your feature branch to the `main` branch of the original repository. Ensure your PR has a clear title and description, and that all commits follow the convention.
 
 ### Release Workflow (for maintainers)
 
-Publishing a new version is handled by a GitHub Action, but requires a few manual steps to prepare.
+Thanks to [semantic-release](https://github.com/semantic-release/semantic-release), our release process is fully automated.
 
-#### 1. Prepare for Release
+#### 1. Merge a Pull Request
 
-1.  **Create a release branch**: From the `main` branch, create a new branch named `release/vX.Y.Z` (e.g., `release/v0.2.0`).
-    ```bash
-    git checkout main
-    git pull origin main
-    git checkout -b release/v0.2.0
-    ```
+As a maintainer, your main job is to review and merge pull requests.
+- **Review Commit Messages**: Before merging a PR, ensure its commits adhere to the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) spec. If not, use "Squash and merge" to combine them into a single, well-formatted commit.
+- **Merge to `main`**: Merge the PR into the `main` branch.
 
-2.  **Bump Version Numbers**: Manually update the version number in the following files to your new version (e.g., `0.2.0`):
-    *   `package.json` (`"version": "0.2.0"`)
-    *   `src-tauri/Cargo.toml` (`version = "0.2.0"`)
-    *   `src-tauri/tauri.conf.json` (`"version": "0.2.0"`)
+#### 2. The Automation Kicks In
 
-3.  **Update Changelog**: Add a new entry in `CHANGELOG.md` for the new version, detailing the changes.
+As soon as code is merged into `main`, GitHub Actions will trigger automatically:
 
-4.  **Commit Changes**: Commit these versioning and changelog updates.
-    ```bash
-    git add .
-    git commit -m "chore: release v0.2.0"
-    ```
+1.  **Create Release**: `semantic-release` analyzes the new commits and automatically:
+    -   Determines the next version number.
+    -   Updates `CHANGELOG.md`.
+    -   Bumps the version in `package.json`, `Cargo.toml`, and `tauri.conf.json`.
+    -   Creates a new Git tag (e.g., `app-v0.2.0`).
+    -   Creates a **draft release** on GitHub Releases with auto-generated release notes.
 
-#### 2. Trigger the Build
-
-1.  **Merge to `main`**: Create a pull request to merge your release branch (`release/v0.2.0`) back into `main`. Once merged, ensure your local `main` is up-to-date.
-
-2.  **Push to `release` branch**: The GitHub Action in `.github/workflows/publish.yml` is triggered by a push to the `release` branch. Merge `main` into `release` and push.
-    ```bash
-    git checkout release
-    git pull origin release
-    git merge main
-    git push origin release
-    ```
-    This will start the "Publish Release" workflow on GitHub.
+2.  **Build Artifacts**: The new Git tag triggers a second workflow that:
+    -   Builds the application in parallel for all target platforms (macOS, Windows, Linux).
+    -   Uploads all the built binaries and installers to the draft release created in the previous step.
 
 #### 3. Publish the Release
 
-1.  **Check Workflow**: Go to the "Actions" tab in your GitHub repository and monitor the "Publish Release" workflow. It will build the application for macOS, Windows, and Linux.
+1.  **Check Workflows**: Go to the "Actions" tab in your GitHub repository to monitor the progress.
+2.  **Review and Publish**: Once all builds and uploads are complete, go to the "Releases" page.
+    -   Find the latest draft release.
+    -   Review the auto-generated notes and the uploaded artifacts.
+    -   When you're ready, manually click **"Publish release"**.
 
-2.  **Edit Draft Release**: Once the workflow is complete, it will create a **draft release**. Go to the "Releases" section of your repository.
-
-3.  **Publish**: Find the draft release (e.g., "App v0.2.0"). Edit it, review the bundled assets (`.dmg`, `.app.tar.gz`, `.msi`, `.AppImage`), write some nice release notes (you can copy them from `CHANGELOG.md`), and finally, click **"Publish release"**.
-
-That's it! The new version is now publicly available.
+That's it! The new version is now publicly available. This process lets the machines do the tedious work so we can focus on coding.

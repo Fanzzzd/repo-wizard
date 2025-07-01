@@ -4,9 +4,9 @@
   "version": "0.1.2",
   "identifier": "com.repo-wizard.app",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "pnpm run web:dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
+    "beforeBuildCommand": "pnpm run web:build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -25,11 +25,10 @@
     "active": true,
     "targets": "all",
     "icon": [
-      "icons/icon.svg",
+      "icons/icon.icns",
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
-      "icons/icon.icns",
       "icons/icon.ico"
     ]
   },

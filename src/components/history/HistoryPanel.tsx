@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import { useHistoryStore } from "../../store/historyStore";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import {
@@ -14,6 +14,7 @@ import {
 import type { FileChangeInfo, HistoryState } from "../../types";
 import { motion, AnimatePresence } from "motion/react";
 import { useDialogStore } from "../../store/dialogStore";
+import { ShortenedPath } from "../common/ShortenedPath";
 
 const FileChangeDisplay = ({ change }: { change: FileChangeInfo }) => {
   const Icon = {
@@ -30,21 +31,28 @@ const FileChangeDisplay = ({ change }: { change: FileChangeInfo }) => {
     renamed: "text-purple-600",
   }[change.type];
 
-  const pathDisplay =
-    change.type === "renamed" ? (
-      <>
-        {change.path} <span className="mx-1 font-sans">→</span> {change.newPath}
-      </>
-    ) : (
-      change.path
+  if (change.type === "renamed") {
+    return (
+      <div
+        className={`flex items-baseline gap-2 text-xs ${color}`}
+        title={`${change.path} → ${change.newPath}`}
+      >
+        <Icon size={14} className="flex-shrink-0" />
+        <span className="truncate min-w-0">
+          <ShortenedPath path={change.path} className="font-mono" />
+        </span>
+        <span className="mx-1 font-sans flex-shrink-0">→</span>
+        <span className="truncate min-w-0">
+          <ShortenedPath path={change.newPath!} className="font-mono" />
+        </span>
+      </div>
     );
+  }
 
   return (
     <div className={`flex items-center gap-2 text-xs ${color}`}>
       <Icon size={14} className="flex-shrink-0" />
-      <span className="truncate font-mono" title={change.path}>
-        {pathDisplay}
-      </span>
+      <ShortenedPath path={change.path} className="truncate font-mono" />
     </div>
   );
 };
@@ -55,14 +63,40 @@ const HistoryNode = ({
   isCurrent,
   isFuture,
   onCheckout,
+  scrollContainerRef,
 }: {
   entry: HistoryState;
   isLast: boolean;
   isCurrent: boolean;
   isFuture: boolean;
   onCheckout: () => void;
+  scrollContainerRef: React.RefObject<HTMLDivElement>;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (isHovered && popoverRef.current && scrollContainerRef.current) {
+      const popover = popoverRef.current;
+      const container = scrollContainerRef.current;
+
+      // Reset style to get original position for calculation
+      popover.style.marginTop = "0px";
+
+      const popoverRect = popover.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const PADDING = 8; // Keep popover within container with some padding
+
+      if (popoverRect.top < containerRect.top) {
+        const offset = containerRect.top - popoverRect.top + PADDING;
+        popover.style.marginTop = `${offset}px`;
+      } else if (popoverRect.bottom > containerRect.bottom) {
+        const offset = popoverRect.bottom - containerRect.bottom + PADDING;
+        popover.style.marginTop = `${-offset}px`;
+      }
+    }
+  }, [isHovered, scrollContainerRef]);
+
 
   return (
     <motion.div
@@ -95,11 +129,12 @@ const HistoryNode = ({
       <AnimatePresence>
         {isHovered && (
           <motion.div
+            ref={popoverRef}
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-10 top-1/2 -translate-y-1/2 w-80 bg-white rounded-lg shadow-2xl z-10 p-3 border border-gray-200"
+            className="absolute left-12 top-1/2 -translate-y-1/2 w-max max-w-[18rem] bg-white rounded-lg shadow-2xl z-10 p-3 border border-gray-200"
           >
             <p className="text-sm font-bold mb-2">Changes in this state</p>
             <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto mb-3 pr-1">
@@ -133,6 +168,7 @@ export function HistoryPanel() {
   const { rootPath, triggerFileTreeRefresh } = useWorkspaceStore();
   const { history, head, checkout, clearAllHistory } = useHistoryStore();
   const { open: openDialog } = useDialogStore();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   if (!rootPath) {
     return (
@@ -206,7 +242,7 @@ export function HistoryPanel() {
           <p>No history for this project yet. Apply a change to start tracking.</p>
         </div>
       ) : (
-        <div className="flex-grow overflow-y-auto pr-2">
+        <div className="flex-grow overflow-y-auto pr-2" ref={scrollContainerRef}>
           <div className="relative">
             <AnimatePresence>
                 {projectHistory.map((entry, index) => {
@@ -219,6 +255,7 @@ export function HistoryPanel() {
                         isCurrent={chronologicalIndex === chronologicalHeadIndex}
                         isFuture={chronologicalHeadIndex !== -1 && chronologicalIndex > chronologicalHeadIndex}
                         onCheckout={() => handleCheckout(index)}
+                        scrollContainerRef={scrollContainerRef}
                     />
                   )
                 })}

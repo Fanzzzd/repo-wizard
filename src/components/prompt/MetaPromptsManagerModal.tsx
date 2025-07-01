@@ -88,34 +88,51 @@ export function MetaPromptsManagerModal({
               </button>
             </header>
 
-            <main className="flex-grow p-4 overflow-y-auto space-y-3 bg-gray-50">
+            <main className="flex-grow p-4 overflow-y-auto space-y-4 bg-gray-50">
               {localPrompts.map((prompt) => (
                 <div
                   key={prompt.id}
-                  className="p-3 border rounded-md bg-white shadow-sm"
+                  className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-3"
                 >
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <input
                       type="text"
                       value={prompt.name}
                       onChange={(e) =>
                         handleUpdatePrompt(prompt.id, { name: e.target.value })
                       }
-                      className="font-semibold text-sm p-1 border-b flex-grow bg-transparent focus:outline-none focus:border-blue-500"
+                      className="font-semibold text-sm p-2 border border-gray-300 rounded-md flex-grow bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Meta Prompt Name"
                     />
-                    <button
-                      onClick={() => handleDeletePrompt(prompt.id)}
-                      className="p-1 text-gray-400 hover:text-red-600"
-                      title="Delete Prompt"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex items-center justify-between sm:justify-end gap-4 flex-shrink-0">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={prompt.enabled}
+                          onChange={(e) =>
+                            handleUpdatePrompt(prompt.id, {
+                              enabled: e.target.checked,
+                            })
+                          }
+                          className="form-checkbox h-4 w-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <span>Enabled</span>
+                      </label>
+                      <button
+                        onClick={() => handleDeletePrompt(prompt.id)}
+                        className="p-1.5 text-gray-500 hover:text-red-600 rounded-full hover:bg-gray-100 transition-colors"
+                        title="Delete Prompt"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                   <textarea
                     value={prompt.content}
                     onChange={(e) =>
-                      handleUpdatePrompt(prompt.id, { content: e.target.value })
+                      handleUpdatePrompt(prompt.id, {
+                        content: e.target.value,
+                      })
                     }
                     className="w-full bg-gray-50 p-2 rounded-md font-mono text-xs border border-gray-200 h-32 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter meta prompt content..."

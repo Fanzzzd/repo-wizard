@@ -2,6 +2,7 @@ import { useReviewStore } from "../../store/reviewStore";
 import { FileTypeIcon } from "../workspace/FileTypeIcon";
 import { Check, X, CircleDot, Trash2, Move, PencilRuler } from "lucide-react";
 import type { ReviewChange } from "../../types";
+import { ShortenedPath } from "../common/ShortenedPath";
 
 const ChangeItem = ({ change }: { change: ReviewChange }) => {
   const { activeChangeId, setActiveChangeId, updateChangeStatus } =
@@ -35,9 +36,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
         return (
           <>
             <FileTypeIcon filename={operation.filePath} isDirectory={false} />
-            <span className="truncate" title={operation.filePath}>
-              {operation.filePath}
-            </span>
+            <ShortenedPath path={operation.filePath} className="truncate" />
             {operation.isNewFile && (
               <span className="text-xs text-green-600 font-medium ml-auto mr-2">
                 NEW
@@ -49,9 +48,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
         return (
           <>
             <PencilRuler size={14} className="text-purple-500" />
-            <span className="truncate" title={operation.filePath}>
-              {operation.filePath}
-            </span>
+            <ShortenedPath path={operation.filePath} className="truncate" />
              <span className="text-xs text-purple-600 font-medium ml-auto mr-2">
                 REWRITE
               </span>
@@ -61,9 +58,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
         return (
           <>
             <Trash2 size={14} className="text-red-500" />
-            <span className="truncate line-through" title={operation.filePath}>
-              {operation.filePath}
-            </span>
+            <ShortenedPath path={operation.filePath} className="truncate line-through" />
           </>
         );
       case "move":
@@ -71,7 +66,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
           <>
             <Move size={14} className="text-blue-500" />
             <span className="truncate" title={`${operation.fromPath} → ${operation.toPath}`}>
-              {operation.fromPath.split('/').pop()} → {operation.toPath.split('/').pop()}
+              <ShortenedPath path={operation.fromPath} /> → <ShortenedPath path={operation.toPath} />
             </span>
           </>
         );

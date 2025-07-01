@@ -9,6 +9,7 @@ import { HistoryPanel } from "./components/history/HistoryPanel";
 import { WorkspaceSidebar } from "./components/workspace/WorkspaceSidebar";
 import { ApplyChangesPanel } from "./components/review/ApplyChangesPanel";
 import { ModalDialog } from "./components/common/ModalDialog";
+import { Tooltip } from "./components/common/Tooltip";
 
 function App() {
   const { isReviewing } = useReviewStore();
@@ -36,6 +37,7 @@ function App() {
         />
       </div>
       <ModalDialog />
+      <Tooltip />
     </div>
   );
 }
