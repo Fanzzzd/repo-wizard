@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.2...app-v1.0.3) (2025-07-01)
+
+
+### Bug Fixes
+
+* enhance GitHub Actions workflows to manage release artifacts and versioning to fix build error ([8e9de39](https://github.com/Fanzzzd/repo-wizard/commit/8e9de3913e577590a7a7578d8b3d5937ef32e01c))
+
 ## [1.0.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.1...app-v1.0.2) (2025-07-01)
 
 
