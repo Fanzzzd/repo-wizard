@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.3...app-v1.0.4) (2025-07-01)
+
+
+### Bug Fixes
+
+* remove obsolete build workflow and integrate build steps into the Auto Release workflow for improved asset management ([0161f87](https://github.com/Fanzzzd/repo-wizard/commit/0161f87def7c6d1bc968104259bcdb60e8bdb174))
+
 ## [1.0.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.2...app-v1.0.3) (2025-07-01)
 
 
