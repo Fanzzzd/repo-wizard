@@ -1,4 +1,4 @@
-name: 'Auto Release'
+name: 'Auto Release and Build'
 
 on:
   push:
@@ -9,17 +9,21 @@ on:
 jobs:
   release:
     name: Create Release
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       issues: write
       pull-requests: write
-      # Permission to upload artifacts
-      actions: write
-    runs-on: ubuntu-latest
+    outputs:
+      released: ${{ steps.check_release.outputs.released }}
+      tag_name: app-v${{ steps.get_version_after.outputs.version }}
+      release_id: ${{ steps.get_release.outputs.id }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0 # semantic-release 需要完整的 git 历史
           persist-credentials: false
 
       - name: Setup pnpm
@@ -49,17 +53,98 @@ jobs:
         id: get_version_after
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: Create release-info artifact
-        if: steps.get_version_before.outputs.version != steps.get_version_after.outputs.version
+      - name: Check if a release was created
+        id: check_release
         run: |
-          TAG="app-v${{ steps.get_version_after.outputs.version }}"
-          echo "{\"tag_name\":\"$TAG\"}" > release-info.json
-          echo "New release detected. Creating artifact for tag: $TAG"
+          if [ "${{ steps.get_version_before.outputs.version }}" != "${{ steps.get_version_after.outputs.version }}" ]; then
+            echo "released=true" >> $GITHUB_OUTPUT
+            echo "New release detected. Version changed from ${{ steps.get_version_before.outputs.version }} to ${{ steps.get_version_after.outputs.version }}"
+          else
+            echo "released=false" >> $GITHUB_OUTPUT
+            echo "No new release."
+          fi
 
-      - name: Upload release info artifact
-        if: steps.get_version_before.outputs.version != steps.get_version_after.outputs.version
-        uses: actions/upload-artifact@v4
+      - name: Get Release by Tag
+        if: steps.check_release.outputs.released == 'true'
+        id: get_release
+        uses: actions/github-script@v7
         with:
-          name: release-info
-          path: release-info.json
-          retention-days: 1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const tag_name = "app-v${{ steps.get_version_after.outputs.version }}";
+            try {
+              const { data: release } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: tag_name,
+              });
+              core.setOutput('id', release.id);
+              console.log(`Found release with ID ${release.id} for tag ${tag_name}.`);
+            } catch (error) {
+              core.setFailed(`Could not find release for tag ${tag_name}. Error: ${error.message}`);
+            }
+
+  build:
+    name: Build & Upload Assets
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    permissions:
+      contents: write # 允许 tauri-action 上传产物
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest'
+            args: '--target x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04'
+            args: ''
+          - platform: 'windows-latest'
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout code for the specific release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.tag_name }}
+
+      - name: Install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'pnpm'
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+          key: ${{ matrix.platform }}-${{ matrix.args }}-${{ needs.release.outputs.tag_name }}
+
+      - name: Build and Upload Assets
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.release.outputs.release_id }}
+          args: ${{ matrix.args }}
