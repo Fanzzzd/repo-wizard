@@ -13,6 +13,8 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+      # Permission to upload artifacts
+      actions: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,7 +36,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Get version before release
+        id: get_version_before
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
       - name: Run semantic-release
         run: pnpm semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get version after release
+        id: get_version_after
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Create release-info artifact
+        if: steps.get_version_before.outputs.version != steps.get_version_after.outputs.version
+        run: |
+          TAG="app-v${{ steps.get_version_after.outputs.version }}"
+          echo "{\"tag_name\":\"$TAG\"}" > release-info.json
+          echo "New release detected. Creating artifact for tag: $TAG"
+
+      - name: Upload release info artifact
+        if: steps.get_version_before.outputs.version != steps.get_version_after.outputs.version
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-info
+          path: release-info.json
+          retention-days: 1

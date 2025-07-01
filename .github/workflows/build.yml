@@ -15,17 +15,19 @@ jobs:
       release_id: ${{ steps.get_release.outputs.release_id }}
       tag_name: ${{ steps.get_tag.outputs.tag_name }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Download release info artifact
+        uses: actions/download-artifact@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-          fetch-depth: 0 # Necessary to fetch all tags
+          name: release-info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
 
-      - name: Get tag from commit SHA
+      - name: Read tag from artifact
         id: get_tag
         run: |
-          TAG=$(git describe --tags --exact-match ${{ github.event.workflow_run.head_sha }})
+          TAG=$(jq -r .tag_name release-info.json)
           echo "tag_name=$TAG" >> $GITHUB_OUTPUT
+          echo "Found tag from artifact: $TAG"
 
       - name: Get Release by Tag
         id: get_release
@@ -40,10 +42,11 @@ jobs:
               tag: tag_name,
             });
             core.setOutput('release_id', release.id);
-            
+
   build-tauri:
     name: Build & Upload
     needs: get-release-info
+    if: needs.get-release-info.outputs.tag_name != ''
     permissions:
       contents: write
     strategy:
