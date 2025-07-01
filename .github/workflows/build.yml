@@ -1,12 +1,13 @@
 name: 'Build & Upload Assets'
 
 on:
-  push:
-    tags:
-      - 'app-v*'
+  release:
+    types: [created]
 
 jobs:
   build-tauri:
+    # This job will run when a release is created by semantic-release
+    if: github.event.release.author.login == 'github-actions[bot]' && startsWith(github.event.release.tag_name, 'app-v')
     permissions:
       contents: write
     strategy:
@@ -24,7 +25,10 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code for the specific release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
 
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -57,14 +61,10 @@ jobs:
           workspaces: './src-tauri -> target'
           key: ${{ matrix.args }}
 
-      - name: Build and release
+      - name: Build and Upload Assets
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'App ${{ github.ref_name }}'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          releaseId: ${{ github.event.release.id }}
           args: ${{ matrix.args }}
