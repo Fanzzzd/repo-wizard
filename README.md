@@ -5,7 +5,7 @@
 
 <div align="center">
   <a href="CONTRIBUTING.md#release-workflow-for-maintainers">
-    <img src="https://img.shields.io/github/v/release/fanzhende/repo-wizard?display_name=tag&sort=semver" alt="Latest release">
+    <img src="https://img.shields.io/github/v/release/Fanzzzd/repo-wizard?display_name=tag&sort=semver" alt="Latest release">
   </a>
 </div>
 

@@ -39,7 +39,7 @@
       "@semantic-release/github",
       {
         "addReleases": "bottom",
-        "draft": true
+        "draftRelease": true
       }
     ]
   ]
