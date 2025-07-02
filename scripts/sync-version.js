@@ -34,7 +34,7 @@ async function syncVersions() {
     console.log(`Updated ${path.basename(tauriConfPath)} to version ${tauriVersion}`);
 
     console.log('Tauri versions synced successfully.');
-  } catch (err)
+  } catch (err) {
     console.error('Failed to sync versions:', err);
     process.exit(1);
   }
