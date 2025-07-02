@@ -1,3 +1,11 @@
+# [1.1.0-next.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.2...app-v1.1.0-next.3) (2025-07-02)
+
+
+### Bug Fixes
+
+* correct error handling in sync-version.js for improved version synchronization ([b308aa8](https://github.com/Fanzzzd/repo-wizard/commit/b308aa8b3d674b824fc7a6203895021953f8bf9d))
+* resolve Windows build failure and enhance release workflow ([2d1111d](https://github.com/Fanzzzd/repo-wizard/commit/2d1111d2266f56bac7172496de39504b6b2e7fd3))
+
 # [1.1.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.1...app-v1.1.0-next.2) (2025-07-01)
 
 
