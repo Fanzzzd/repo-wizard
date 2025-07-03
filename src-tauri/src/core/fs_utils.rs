@@ -65,7 +65,7 @@ pub async fn list_directory_recursive(
 
         is_dir_map.insert(
             path.to_path_buf(),
-            entry.file_type().map_or(false, |ft| ft.is_dir()),
+            entry.file_type().is_some_and(|ft| ft.is_dir()),
         );
 
         if let Some(parent) = path.parent() {

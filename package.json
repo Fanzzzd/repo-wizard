@@ -8,8 +8,11 @@
     "build": "cross-env RUST_BACKTRACE=1 tauri build",
     "tauri": "tauri",
     "web:dev": "vite",
-    "web:build": "tsc --noEmit && vite build",
+    "web:build": "pnpm check:web && vite build",
     "web:serve": "vite preview",
+    "check": "pnpm check:web && pnpm check:rust",
+    "check:web": "tsc --noEmit",
+    "check:rust": "cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings",
     "semantic-release": "semantic-release"
   },
   "dependencies": {
