@@ -1,3 +1,11 @@
+# [1.1.0-next.6](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.5...app-v1.1.0-next.6) (2025-07-03)
+
+
+### Bug Fixes
+
+* **ci:** update release workflow to use ESM and remove deprecated script ([8a4ab30](https://github.com/Fanzzzd/repo-wizard/commit/8a4ab305829d4af9d3f111b97f3dfab3dadd788c))
+* streamline release.mjs by removing deprecated code ([6e7ab5c](https://github.com/Fanzzzd/repo-wizard/commit/6e7ab5c846972223e334708556060e0b02c94e63))
+
 # [1.1.0-next.5](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.4...app-v1.1.0-next.5) (2025-07-03)
 
 
