@@ -1,16 +1,31 @@
-# [1.1.0-next.7](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.6...app-v1.1.0-next.7) (2025-07-03)
+# [1.1.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.4...app-v1.1.0) (2025-07-03)
 
-
-### Bug Fixes
-
-* **core:** resolve missing file icons and default to light theme ([f0c5dd8](https://github.com/Fanzzzd/repo-wizard/commit/f0c5dd82ddf53f115466224d44e84d74e76a70b0))
-
-
-### Features
+### Additional Features from Next Branch
 
 * **FileTree:** enhance file node component with animation and improved structure ([a832163](https://github.com/Fanzzzd/repo-wizard/commit/a832163f7c39a57a36850e597c6c0fcb6aa3b2bc))
 * **Header, PromptComposer:** enhance UI with animations and settings adjustments ([3463021](https://github.com/Fanzzzd/repo-wizard/commit/3463021129f834cf6c12a2cbe3f978c93571fc9f))
 * **review:** enhance review workflow with auto-start, session history, and state snapshots ([66696a4](https://github.com/Fanzzzd/repo-wizard/commit/66696a49db9eb55a60cb0425aacf955d22b0949c))
+
+### Additional Bug Fixes from Next Branch
+
+* **core:** resolve missing file icons and default to light theme ([f0c5dd8](https://github.com/Fanzzzd/repo-wizard/commit/f0c5dd82ddf53f115466224d44e84d74e76a70b0))
+
+
+### Bug Fixes
+
+* **ci:** add retry logic to prevent release lookup race condition ([a446f67](https://github.com/Fanzzzd/repo-wizard/commit/a446f67d9f9455d60a8476f7c80c95181e489829))
+* **ci:** Correct `semantic-release` import in programmatic script ([6984581](https://github.com/Fanzzzd/repo-wizard/commit/69845815883d1d158126a4da959cd7dc2bd0db3f))
+* **ci:** Resolve release race condition by running semantic-release programmatically ([66abb03](https://github.com/Fanzzzd/repo-wizard/commit/66abb032a8ac7c16eb0b4c79f44de05a43d4a849))
+* **ci:** update release workflow to use ESM and remove deprecated script ([8a4ab30](https://github.com/Fanzzzd/repo-wizard/commit/8a4ab305829d4af9d3f111b97f3dfab3dadd788c))
+* correct error handling in sync-version.js for improved version synchronization ([b308aa8](https://github.com/Fanzzzd/repo-wizard/commit/b308aa8b3d674b824fc7a6203895021953f8bf9d))
+* resolve Windows build failure and enhance release workflow ([2d1111d](https://github.com/Fanzzzd/repo-wizard/commit/2d1111d2266f56bac7172496de39504b6b2e7fd3))
+* streamline release.mjs by removing deprecated code ([6e7ab5c](https://github.com/Fanzzzd/repo-wizard/commit/6e7ab5c846972223e334708556060e0b02c94e63))
+* update GitHub Actions workflow to use 'args' for platform builds and bump repo-wizard version to 1.0.4 ([c527c0d](https://github.com/Fanzzzd/repo-wizard/commit/c527c0d92dfc820b7bcc78f0f230b2d375da77ac))
+
+
+### Features
+
+* update GitHub Actions workflow to use 'target' instead of 'args' for platform builds and add macOS signing identity ([0437b62](https://github.com/Fanzzzd/repo-wizard/commit/0437b625c09e975dd38286c7cf35347ebb7b6c75))
 
 # [1.1.0-next.6](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.5...app-v1.1.0-next.6) (2025-07-03)
 
