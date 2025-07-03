@@ -6,6 +6,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { listDirectoryRecursive } from "../../lib/tauri_api";
 import type { FileNode } from "../../types";
 import { FileTypeIcon } from "./FileTypeIcon";
+import { AnimatePresence, motion } from "motion/react";
 
 function collectFilePaths(node: FileNode): string[] {
   if (!node.isDirectory) {
@@ -103,7 +104,7 @@ function FileNodeComponent({
   return (
     <div>
       <div
-        className={`flex items-center gap-2 p-1 rounded text-sm group ${
+        className={`flex items-center p-1 rounded text-sm group ${
           isActive
             ? "bg-blue-100 text-blue-900"
             : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -111,34 +112,35 @@ function FileNodeComponent({
         title={node.path}
         style={{ paddingLeft: `${level * 1.25}rem` }}
       >
+        <div
+          onClick={
+            isDirectory
+              ? (e) => {
+                  e.stopPropagation();
+                  setIsOpen(!isOpen);
+                }
+              : undefined
+          }
+          className={`w-4 h-4 flex-shrink-0 flex items-center justify-center ${
+            isDirectory ? "cursor-pointer" : ""
+          }`}
+        >
+          {isDirectory &&
+            (isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
+        </div>
+
         <input
           type="checkbox"
           ref={checkboxRef}
-          className="form-checkbox h-4 w-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
+          className="form-checkbox h-4 w-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0 ml-1"
           checked={isSelected}
           onChange={handleCheckboxChange}
           onClick={(e) => e.stopPropagation()}
         />
 
-        <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
-          {isDirectory ? (
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsOpen(!isOpen);
-              }}
-              className="cursor-pointer"
-            >
-              {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-            </div>
-          ) : (
-            <div className="w-4 h-4" />
-          )}
-        </div>
-
         <div
           onClick={handleContainerClick}
-          className="flex items-center gap-2 cursor-pointer flex-grow overflow-hidden"
+          className="flex items-center gap-2 cursor-pointer flex-grow overflow-hidden ml-2"
         >
           <FileTypeIcon
             filename={node.name}
@@ -148,17 +150,25 @@ function FileNodeComponent({
           <span className="truncate">{node.name}</span>
         </div>
       </div>
-      {isDirectory && isOpen && node.children && (
-        <div>
-          {node.children.map((child) => (
-            <FileNodeComponent
-              key={child.path}
-              node={child}
-              level={level + 1}
-            />
-          ))}
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {isDirectory && isOpen && node.children && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ overflow: "hidden" }}
+          >
+            {node.children.map((child) => (
+              <FileNodeComponent
+                key={child.path}
+                node={child}
+                level={level + 1}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
