@@ -1,3 +1,11 @@
+# [1.1.0-next.5](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.4...app-v1.1.0-next.5) (2025-07-03)
+
+
+### Bug Fixes
+
+* **ci:** Correct `semantic-release` import in programmatic script ([6984581](https://github.com/Fanzzzd/repo-wizard/commit/69845815883d1d158126a4da959cd7dc2bd0db3f))
+* **ci:** Resolve release race condition by running semantic-release programmatically ([66abb03](https://github.com/Fanzzzd/repo-wizard/commit/66abb032a8ac7c16eb0b4c79f44de05a43d4a849))
+
 # [1.1.0-next.4](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.3...app-v1.1.0-next.4) (2025-07-03)
 
 
