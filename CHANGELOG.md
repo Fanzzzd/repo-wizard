@@ -1,3 +1,17 @@
+# [1.1.0-next.7](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.6...app-v1.1.0-next.7) (2025-07-03)
+
+
+### Bug Fixes
+
+* **core:** resolve missing file icons and default to light theme ([f0c5dd8](https://github.com/Fanzzzd/repo-wizard/commit/f0c5dd82ddf53f115466224d44e84d74e76a70b0))
+
+
+### Features
+
+* **FileTree:** enhance file node component with animation and improved structure ([a832163](https://github.com/Fanzzzd/repo-wizard/commit/a832163f7c39a57a36850e597c6c0fcb6aa3b2bc))
+* **Header, PromptComposer:** enhance UI with animations and settings adjustments ([3463021](https://github.com/Fanzzzd/repo-wizard/commit/3463021129f834cf6c12a2cbe3f978c93571fc9f))
+* **review:** enhance review workflow with auto-start, session history, and state snapshots ([66696a4](https://github.com/Fanzzzd/repo-wizard/commit/66696a49db9eb55a60cb0425aacf955d22b0949c))
+
 # [1.1.0-next.6](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.5...app-v1.1.0-next.6) (2025-07-03)
 
 
