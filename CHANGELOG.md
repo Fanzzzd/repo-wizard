@@ -1,3 +1,48 @@
+# [1.1.0-next.6](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.5...app-v1.1.0-next.6) (2025-07-03)
+
+
+### Bug Fixes
+
+* **ci:** update release workflow to use ESM and remove deprecated script ([8a4ab30](https://github.com/Fanzzzd/repo-wizard/commit/8a4ab305829d4af9d3f111b97f3dfab3dadd788c))
+* streamline release.mjs by removing deprecated code ([6e7ab5c](https://github.com/Fanzzzd/repo-wizard/commit/6e7ab5c846972223e334708556060e0b02c94e63))
+
+# [1.1.0-next.5](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.4...app-v1.1.0-next.5) (2025-07-03)
+
+
+### Bug Fixes
+
+* **ci:** Correct `semantic-release` import in programmatic script ([6984581](https://github.com/Fanzzzd/repo-wizard/commit/69845815883d1d158126a4da959cd7dc2bd0db3f))
+* **ci:** Resolve release race condition by running semantic-release programmatically ([66abb03](https://github.com/Fanzzzd/repo-wizard/commit/66abb032a8ac7c16eb0b4c79f44de05a43d4a849))
+
+# [1.1.0-next.4](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.3...app-v1.1.0-next.4) (2025-07-03)
+
+
+### Bug Fixes
+
+* **ci:** add retry logic to prevent release lookup race condition ([a446f67](https://github.com/Fanzzzd/repo-wizard/commit/a446f67d9f9455d60a8476f7c80c95181e489829))
+
+# [1.1.0-next.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.2...app-v1.1.0-next.3) (2025-07-02)
+
+
+### Bug Fixes
+
+* correct error handling in sync-version.js for improved version synchronization ([b308aa8](https://github.com/Fanzzzd/repo-wizard/commit/b308aa8b3d674b824fc7a6203895021953f8bf9d))
+* resolve Windows build failure and enhance release workflow ([2d1111d](https://github.com/Fanzzzd/repo-wizard/commit/2d1111d2266f56bac7172496de39504b6b2e7fd3))
+
+# [1.1.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.1...app-v1.1.0-next.2) (2025-07-01)
+
+
+### Bug Fixes
+
+* update GitHub Actions workflow to use 'args' for platform builds and bump repo-wizard version to 1.0.4 ([c527c0d](https://github.com/Fanzzzd/repo-wizard/commit/c527c0d92dfc820b7bcc78f0f230b2d375da77ac))
+
+# [1.1.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.4...app-v1.1.0-next.1) (2025-07-01)
+
+
+### Features
+
+* update GitHub Actions workflow to use 'target' instead of 'args' for platform builds and add macOS signing identity ([0437b62](https://github.com/Fanzzzd/repo-wizard/commit/0437b625c09e975dd38286c7cf35347ebb7b6c75))
+
 ## [1.0.4](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.0.3...app-v1.0.4) (2025-07-01)
 
 
