@@ -9,9 +9,11 @@ export function Header() {
     respectGitignore,
     customIgnorePatterns,
     autoReviewOnPaste,
+    customSystemPrompt,
     setRespectGitignore,
     setCustomIgnorePatterns,
     setAutoReviewOnPaste,
+    setCustomSystemPrompt,
   } = useSettingsStore();
   const settingsPanelRef = useRef<HTMLDivElement>(null);
 
@@ -84,6 +86,19 @@ export function Header() {
                     Auto-review on paste
                   </span>
                 </label>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Custom System Prompt
+                  </label>
+                  <textarea
+                    rows={6}
+                    className="w-full p-2 border border-gray-300 rounded-md font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your custom system prompt..."
+                    value={customSystemPrompt}
+                    onChange={(e) => setCustomSystemPrompt(e.target.value)}
+                  />
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">

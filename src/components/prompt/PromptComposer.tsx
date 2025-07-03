@@ -3,8 +3,6 @@ import { useWorkspaceStore } from "../../store/workspaceStore";
 import { readFileContent } from "../../lib/tauri_api";
 import {
   Clipboard,
-  ChevronDown,
-  ChevronUp,
   Check,
   SlidersHorizontal,
   History,
@@ -35,7 +33,6 @@ export function PromptComposer() {
     processedMarkdownResponse,
     markMarkdownAsProcessed,
   } = usePromptStore();
-  const [isSystemPromptVisible, setIsSystemPromptVisible] = useState(false);
   const [isMetaPromptsManagerOpen, setIsMetaPromptsManagerOpen] =
     useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -45,7 +42,6 @@ export function PromptComposer() {
   const { startReview, lastReview, reenterReview } = useReviewStore();
   const {
     customSystemPrompt,
-    setCustomSystemPrompt,
     editFormat,
     setEditFormat,
     metaPrompts,
@@ -262,10 +258,10 @@ export function PromptComposer() {
                       enabled: !prompt.enabled,
                     })
                   }
-                  className={`px-3 py-1.5 mt-1.5 text-sm rounded-lg whitespace-nowrap transition-flex-shrink-0 ${
+                  className={`px-3 py-1.5 mt-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex-shrink-0 ring-1 ${
                     prompt.enabled
-                      ? "bg-blue-100 text-blue-800 font-semibold ring-1 ring-blue-300"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-blue-100 text-blue-800 ring-blue-300"
+                      : "bg-gray-100 text-gray-700 ring-transparent hover:bg-gray-200 hover:ring-gray-300"
                   }`}
                   title={prompt.name}
                 >
@@ -280,28 +276,6 @@ export function PromptComposer() {
             >
               No meta prompts defined. Click here to create one.
             </div>
-          )}
-        </div>
-
-        <div className="mb-4">
-          <button
-            onClick={() => setIsSystemPromptVisible(!isSystemPromptVisible)}
-            className="flex items-center justify-between w-full text-sm font-semibold mb-1"
-          >
-            <span>Custom System Prompt</span>
-            {isSystemPromptVisible ? (
-              <ChevronUp size={16} />
-            ) : (
-              <ChevronDown size={16} />
-            )}
-          </button>
-          {isSystemPromptVisible && (
-            <textarea
-              className="w-full bg-white p-2 rounded-md font-mono text-xs border border-gray-200 h-24"
-              placeholder="Enter your custom system prompt..."
-              value={customSystemPrompt}
-              onChange={(e) => setCustomSystemPrompt(e.target.value)}
-            ></textarea>
           )}
         </div>
 
