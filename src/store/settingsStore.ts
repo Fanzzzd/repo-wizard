@@ -31,7 +31,7 @@ export const useSettingsStore = create<SettingsState>()(
       respectGitignore: true,
       customIgnorePatterns: "",
       customSystemPrompt: defaultSystemPrompt,
-      editFormat: "udiff",
+      editFormat: "whole",
       metaPrompts: [],
       autoReviewOnPaste: true,
       setRespectGitignore: (value) => set({ respectGitignore: value }),

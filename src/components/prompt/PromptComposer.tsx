@@ -10,6 +10,7 @@ import {
   History,
   FileSearch2,
 } from "lucide-react";
+import { motion } from "motion/react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { buildPrompt } from "../../lib/prompt_builder";
 import { useSettingsStore } from "../../store/settingsStore";
@@ -20,9 +21,9 @@ import { usePromptStore } from "../../store/promptStore";
 import { MetaPromptsManagerModal } from "./MetaPromptsManagerModal";
 
 const editFormatOptions: { value: EditFormat; label: string }[] = [
-  { value: "udiff", label: "Unified Diff" },
-  { value: "diff-fenced", label: "Search/Replace" },
   { value: "whole", label: "Whole File" },
+  { value: "udiff", label: "Unified Diff" },
+  { value: "diff-fenced", label: "Fenced Diff" },
 ];
 
 export function PromptComposer() {
@@ -187,32 +188,56 @@ export function PromptComposer() {
   return (
     <div className="p-4 flex flex-col h-full bg-gray-50 text-gray-800 overflow-y-auto">
       <div className="flex-grow flex flex-col min-h-0">
-        <h2 className="font-bold mb-2">1. Compose Prompt</h2>
+        <h2 className="font-bold mb-2">Compose Prompt</h2>
 
         <div className="mb-4">
           <label className="text-sm font-semibold mb-1 block">
             Edit Format
           </label>
-          <div className="flex bg-gray-200 rounded-md p-0.5">
+          <div className="relative z-0 flex bg-gray-200 rounded-md p-0.5">
             {editFormatOptions.map(({ value, label }) => (
               <button
                 key={value}
                 onClick={() => setEditFormat(value)}
-                className={`flex-1 text-center text-xs px-2 py-1 rounded-md transition-colors ${
+                className={`relative flex-1 text-center text-xs px-2 py-1 font-medium transition-colors duration-200 ${
                   editFormat === value
-                    ? "bg-white shadow-sm text-gray-800 font-medium"
-                    : "bg-transparent text-gray-600 hover:bg-gray-100"
+                    ? "text-gray-900"
+                    : "text-gray-600 hover:text-gray-800"
                 }`}
               >
-                {label}
+                {editFormat === value && (
+                  <motion.div
+                    layoutId="edit-format-slider"
+                    className="absolute inset-0 bg-white shadow-sm rounded-md"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10">{label}</span>
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            {editFormat === "udiff" && "Best for GPT models."}
-            {editFormat === "diff-fenced" && "Best for Gemini models."}
-            {editFormat === "whole" && "Universal, but can be verbose."}
-          </p>
+          <div className="text-xs text-gray-500 mt-1">
+            {editFormat === "whole" && (
+              <div>
+                <span className="font-semibold text-green-700">Recommended:</span>
+                <span> Universal and reliable, but can be verbose.</span>
+              </div>
+            )}
+            {editFormat === "udiff" && (
+              <div>
+                <span className="font-semibold text-yellow-700">Experimental:</span>
+                <span> Best for GPT models. </span>
+                <span> Use 'Whole File' for best results.</span>
+              </div>
+            )}
+            {editFormat === "diff-fenced" && (
+              <div>
+                <span className="font-semibold text-yellow-700">Experimental:</span>
+                <span> Best for Gemini models. </span>
+                <span> Use 'Whole File' for best results.</span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="mb-4">
@@ -301,7 +326,7 @@ export function PromptComposer() {
 
       <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col">
         <div className="flex items-center justify-between mb-2">
-            <h2 className="font-bold">2. Paste Response & Review</h2>
+            <h2 className="font-bold">Paste Response & Review</h2>
             <div className="flex items-center gap-2">
               {lastReview && (
                   <button
