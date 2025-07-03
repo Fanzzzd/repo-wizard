@@ -1,14 +1,20 @@
 import { create } from "zustand";
-import type { ChangeOperation, ReviewChange } from "../types";
+import type { ChangeOperation, FileChangeInfo, FileNode, ReviewChange } from "../types";
 import {
   applyPatch,
   backupFiles,
   deleteFile,
+  listDirectoryRecursive,
   moveFile,
   revertFileFromBackup,
   writeFileContent,
+  readFileContent,
+  readFileFromBackup,
 } from "../lib/tauri_api";
 import { useWorkspaceStore } from "./workspaceStore";
+import { useHistoryStore } from "./historyStore";
+import { useSettingsStore } from "./settingsStore";
+import { applyPatch as applyJsPatch } from "diff";
 
 /**
  * Updates workspace state after a file operation to prevent stale paths.
@@ -52,14 +58,89 @@ const updateWorkspaceOnFileChange = (
   triggerFileTreeRefresh();
 };
 
+function collectAllRelativePaths(node: FileNode, root: string): string[] {
+  const relativePath = node.path.replace(root, "").replace(/^\//, "");
+  if (!node.isDirectory) {
+      return relativePath ? [relativePath] : [];
+  }
+  let paths: string[] = [];
+  if (node.children) {
+      for (const child of node.children) {
+          paths.push(...collectAllRelativePaths(child, root));
+      }
+  }
+  return paths;
+}
+
+async function detectAndSnapshotWorkspaceChanges(rootPath: string): Promise<boolean> {
+    const { history, head, addState } = useHistoryStore.getState();
+    const headIndex = head[rootPath] ?? -1;
+    const headSnapshot = headIndex !== -1 ? history[rootPath][headIndex] : null;
+    if (!headSnapshot) return false;
+
+    const { respectGitignore, customIgnorePatterns } = useSettingsStore.getState();
+    const currentFileTree = await listDirectoryRecursive(rootPath, { respectGitignore, customIgnorePatterns });
+    
+    const currentFiles = new Set(collectAllRelativePaths(currentFileTree, rootPath));
+    const snapshotFiles = new Set(headSnapshot.files);
+  
+    const addedFiles = [...currentFiles].filter(f => !snapshotFiles.has(f));
+    const deletedFiles = [...snapshotFiles].filter(f => !currentFiles.has(f));
+  
+    const modifiedFiles: string[] = [];
+    const commonFiles = [...currentFiles].filter(f => snapshotFiles.has(f));
+  
+    for (const file of commonFiles) {
+      try {
+        const currentContent = await readFileContent(`${rootPath}/${file}`);
+        const snapshotContent = await readFileFromBackup(headSnapshot.backupId, file);
+        if (currentContent !== snapshotContent) {
+          modifiedFiles.push(file);
+        }
+      } catch(e) {
+        console.warn(`Could not compare file ${file}, assuming modified.`, e);
+        modifiedFiles.push(file);
+      }
+    }
+  
+    const workspaceChanges: FileChangeInfo[] = [
+      ...addedFiles.map(p => ({ path: p, type: 'added' as const })),
+      ...deletedFiles.map(p => ({ path: p, type: 'deleted' as const })),
+      ...modifiedFiles.map(p => ({ path: p, type: 'modified' as const }))
+    ];
+  
+    if (workspaceChanges.length > 0) {
+      const allFilesForBackup = Array.from(currentFiles);
+      const newBackupId = await backupFiles(rootPath, allFilesForBackup);
+      addState({
+        backupId: newBackupId,
+        description: 'Workspace changes detected',
+        rootPath,
+        changedFiles: workspaceChanges,
+        files: allFilesForBackup,
+      });
+      return true;
+    }
+  
+    return false;
+}
+
+interface LastReview {
+  changes: ReviewChange[];
+  sessionBaseBackupId: string | null;
+}
+
 interface ReviewState {
   changes: ReviewChange[];
   isReviewing: boolean;
   activeChangeId: string | null;
-  reviewBackupId: string | null;
-  errors: Record<string, string>; // change.id -> error message
+  sessionBaseBackupId: string | null;
+  errors: Record<string, string>;
+  lastReview: LastReview | null;
   startReview: (changes: ReviewChange[]) => Promise<void>;
   endReview: () => void;
+  reenterReview: () => void;
+  clearReviewSession: () => void;
   setActiveChangeId: (id: string | null) => void;
   applyChange: (id: string) => Promise<void>;
   revertChange: (id: string) => Promise<void>;
@@ -72,50 +153,105 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   changes: [],
   isReviewing: false,
   activeChangeId: null,
-  reviewBackupId: null,
+  sessionBaseBackupId: null,
   errors: {},
+  lastReview: null,
 
-  startReview: async (changes) => {
+  startReview: async (initialChanges) => {
     const rootPath = useWorkspaceStore.getState().rootPath;
     if (!rootPath) return;
 
-    const filesToBackup = new Set<string>();
-    for (const change of changes) {
-      const { operation } = change;
-      switch (operation.type) {
-        case "modify":
-          if (!operation.isNewFile) filesToBackup.add(operation.filePath);
-          break;
-        case "rewrite": // We assume rewrite is on existing files for backup purposes. Backend handles non-existent files.
-        case "delete":
-          filesToBackup.add(operation.filePath);
-          break;
-        case "move":
-          filesToBackup.add(operation.fromPath);
-          break;
-      }
-    }
+    await detectAndSnapshotWorkspaceChanges(rootPath);
+    
+    const { history, head } = useHistoryStore.getState();
+    const projectHistory = history[rootPath] ?? [];
+    const headIndex = head[rootPath] ?? -1;
+    const headSnapshot = headIndex !== -1 ? projectHistory[headIndex] : null;
 
-    const backupId = await backupFiles(rootPath, Array.from(filesToBackup));
+    let baseBackupId = get().sessionBaseBackupId;
+    if (!baseBackupId) {
+        baseBackupId = headSnapshot?.backupId ?? null;
+        if (baseBackupId) {
+            set({ sessionBaseBackupId: baseBackupId });
+        } else {
+            console.error("Could not establish a base snapshot for the review session.");
+            return;
+        }
+    }
+    
+    const changes = await Promise.all(
+      initialChanges.map(async (change): Promise<ReviewChange> => {
+        const { operation } = change;
+        
+        const getBaseFileContent = async (filePath: string) => {
+            try {
+                return await readFileFromBackup(baseBackupId!, filePath);
+            } catch (e) {
+                return null;
+            }
+        };
+
+        if (operation.type === "modify") {
+          const originalContent = await getBaseFileContent(operation.filePath);
+          if (originalContent === null) return change;
+          try {
+            const modifiedContent = applyJsPatch(originalContent, operation.diff);
+            if (modifiedContent !== false && originalContent === modifiedContent) {
+              return { ...change, status: "identical" };
+            }
+          } catch (e) { /* ignore, not identical */ }
+        } else if (operation.type === "rewrite") {
+           const originalContent = await getBaseFileContent(operation.filePath);
+            if (originalContent !== null && originalContent === operation.content) {
+                return { ...change, status: "identical" };
+            }
+        }
+        return change;
+      })
+    );
 
     set({
       changes,
       isReviewing: true,
-      activeChangeId: changes[0]?.id ?? null,
-      reviewBackupId: backupId,
+      activeChangeId: changes.find(c => c.status === 'pending')?.id ?? changes[0]?.id ?? null,
       errors: {},
+      lastReview: null,
     });
   },
 
   endReview: () => {
-    set({
-      changes: [],
-      isReviewing: false,
-      activeChangeId: null,
-      reviewBackupId: null,
-      errors: {},
+    set((state) => {
+      if (state.changes.length === 0) {
+        return { isReviewing: false };
+      }
+      return {
+        isReviewing: false,
+        lastReview: {
+          changes: state.changes,
+          sessionBaseBackupId: state.sessionBaseBackupId,
+        },
+        changes: [],
+        activeChangeId: null,
+        errors: {},
+      };
     });
   },
+
+  reenterReview: () => {
+    set((state) => {
+      if (!state.lastReview) return state;
+      const { changes, sessionBaseBackupId } = state.lastReview;
+      return {
+        isReviewing: true,
+        changes,
+        sessionBaseBackupId,
+        activeChangeId: changes.find(c => c.status !== 'identical')?.id ?? changes[0]?.id ?? null,
+        lastReview: null,
+      };
+    });
+  },
+  
+  clearReviewSession: () => set({ sessionBaseBackupId: null }),
 
   setActiveChangeId: (id) => set({ activeChangeId: id }),
 
@@ -172,11 +308,11 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   },
 
   revertChange: async (id: string) => {
-    const { changes, reviewBackupId } = get();
+    const { changes, sessionBaseBackupId } = get();
     const change = changes.find((c) => c.id === id);
     const rootPath = useWorkspaceStore.getState().rootPath;
 
-    if (!change || change.status !== "applied" || !rootPath || !reviewBackupId)
+    if (!change || change.status !== "applied" || !rootPath || !sessionBaseBackupId)
       return;
 
     try {
@@ -184,28 +320,30 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       switch (operation.type) {
         case "modify":
         case "rewrite":
-          if ("isNewFile" in operation && operation.isNewFile) {
-            await deleteFile(`${rootPath}/${operation.filePath}`);
-          } else {
-            await revertFileFromBackup(
-              rootPath,
-              reviewBackupId,
-              operation.filePath
-            );
-          }
-          break;
+            // We need to know if the file was new relative to the base snapshot.
+            // We can check if it exists in the backup.
+            try {
+                await revertFileFromBackup(rootPath, sessionBaseBackupId, operation.filePath);
+            } catch (e) {
+                // Assuming error means file did not exist in backup, so it was new.
+                await deleteFile(`${rootPath}/${operation.filePath}`);
+            }
+            break;
         case "delete":
           await revertFileFromBackup(
             rootPath,
-            reviewBackupId,
+            sessionBaseBackupId,
             operation.filePath
           );
           break;
         case "move":
+          // Reverting a move means moving it back. We don't need backup for this.
           await moveFile(
             `${rootPath}/${operation.toPath}`,
             `${rootPath}/${operation.fromPath}`
           );
+          // And we need to restore original content if it was also modified... but `move` is separate.
+          // The user's spec treats them as separate. Let's stick to that.
           break;
       }
       set((state) => ({
@@ -216,7 +354,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       updateWorkspaceOnFileChange(operation, "revert");
     } catch (e: any) {
       console.error(`Failed to revert change ${id}:`, e);
-      // Potentially set a new "revert_error" status or show a dialog
+      // Optionally set an error state on the change item
     }
   },
 
@@ -230,7 +368,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
 
   revertAllAppliedChanges: async () => {
     const { changes } = get();
-    const appliedChanges = changes.filter((c) => c.status === "applied");
+    const appliedChanges = [...changes].reverse().filter((c) => c.status === "applied");
     for (const change of appliedChanges) {
       await get().revertChange(change.id);
     }

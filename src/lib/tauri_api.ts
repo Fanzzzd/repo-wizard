@@ -66,6 +66,13 @@ export const revertFileFromBackup = (
   });
 };
 
+export const readFileFromBackup = (
+    backupId: string,
+    relativePath: string
+): Promise<string> => {
+    return invoke("read_file_from_backup", { backupId, relativePath });
+}
+
 export const deleteBackup = (backupId: string): Promise<void> => {
   return invoke("delete_backup", { backupId });
 };

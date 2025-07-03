@@ -49,6 +49,12 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
           text: "Applied",
           style: "bg-green-100 text-green-800 hover:bg-green-200",
         };
+      case "identical":
+        return {
+          icon: <Check size={14} />,
+          text: "Identical",
+          style: "bg-green-100 text-green-800",
+        };
       case "error":
         return {
           icon: <AlertTriangle size={14} />,
@@ -132,8 +138,9 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
       <div className="flex items-center gap-1.5 flex-shrink-0">
         <button
           onClick={handleClick}
+          disabled={change.status === 'identical'}
           title="Cycle Status (Pending -> Applied)"
-          className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full transition-colors ${style}`}
+          className={`flex items-center justify-center w-24 gap-1.5 py-1 text-xs font-semibold rounded-full transition-colors ${style} disabled:cursor-default disabled:hover:bg-green-100`}
         >
           {icon}
           <span>{text}</span>
@@ -151,7 +158,7 @@ export function ChangeList() {
     revertAllAppliedChanges,
   } = useReviewStore();
   const { rootPath, triggerFileTreeRefresh } = useWorkspaceStore();
-  const { history, head, addState } = useHistoryStore();
+  const { history, head, addState, amendState } = useHistoryStore();
   const { open: openDialog } = useDialogStore();
 
   const appliedChanges = changes.filter((c) => c.status === "applied");
@@ -166,17 +173,9 @@ export function ChangeList() {
 
     const projectHistory = history[rootPath] ?? [];
     const headIndex = head[rootPath] ?? -1;
-    const currentState = headIndex !== -1 ? projectHistory[headIndex] : null;
-    const isFirstCommit = projectHistory.length === 0;
+    const headSnapshot = headIndex !== -1 ? projectHistory[headIndex] : null;
 
     try {
-      if (isFirstCommit) {
-        // This case is now handled by the initial backup in startReview
-        // but we might need to create an "Initial State" history entry
-        // if one doesn't exist. The reviewStore does not handle this part.
-        // For simplicity, we assume a pre-existing initial state or handle it on first ever change.
-      }
-
       const changedFiles: FileChangeInfo[] = appliedChanges.map((change) => {
         const { operation } = change;
         switch (operation.type) {
@@ -186,8 +185,6 @@ export function ChangeList() {
               type: operation.isNewFile ? "added" : "modified",
             };
           case "rewrite":
-            // We can't know if it was a new file here. We'll mark it as modified.
-            // A more robust solution would check existence before the review session.
             return { path: operation.filePath, type: "modified" };
           case "delete":
             return { path: operation.filePath, type: "deleted" };
@@ -200,12 +197,12 @@ export function ChangeList() {
         }
       });
 
-      const newFileSet = new Set<string>(currentState?.files ?? []);
+      const newFileSet = new Set<string>(headSnapshot?.files ?? []);
       appliedChanges.forEach((change) => {
         const { operation } = change;
         if (operation.type === "modify" && operation.isNewFile)
           newFileSet.add(operation.filePath);
-        if (operation.type === "rewrite") newFileSet.add(operation.filePath); // Assume it can be a new file
+        if (operation.type === "rewrite") newFileSet.add(operation.filePath);
         if (operation.type === "delete") newFileSet.delete(operation.filePath);
         if (operation.type === "move") {
           newFileSet.delete(operation.fromPath);
@@ -216,21 +213,26 @@ export function ChangeList() {
 
       const newStateBackupId = await backupFiles(rootPath, newFiles);
 
-      addState({
+      const newStateData = {
         backupId: newStateBackupId,
         description: `Applied ${appliedChanges.length} change(s)`,
         rootPath,
         changedFiles,
         files: newFiles,
-      });
+      };
+
+      const shouldAmend = headSnapshot &&
+        !headSnapshot.isInitialState &&
+        !headSnapshot.description.includes("Workspace changes detected");
+
+      if (shouldAmend) {
+        await amendState(newStateData);
+      } else {
+        addState(newStateData);
+      }
 
       triggerFileTreeRefresh();
       endReview();
-      await openDialog({
-        title: "Review Finished",
-        content: `Successfully applied ${appliedChanges.length} changes and saved to history.`,
-        status: "success",
-      });
     } catch (e) {
       console.error(`Failed to finalize review:`, e);
       await openDialog({

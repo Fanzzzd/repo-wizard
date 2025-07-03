@@ -7,6 +7,8 @@ import {
   ChevronUp,
   Check,
   SlidersHorizontal,
+  History,
+  FileSearch2,
 } from "lucide-react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { buildPrompt } from "../../lib/prompt_builder";
@@ -24,8 +26,14 @@ const editFormatOptions: { value: EditFormat; label: string }[] = [
 ];
 
 export function PromptComposer() {
-  const { instructions, setInstructions, markdownResponse, setMarkdownResponse } =
-    usePromptStore();
+  const {
+    instructions,
+    setInstructions,
+    markdownResponse,
+    setMarkdownResponse,
+    processedMarkdownResponse,
+    markMarkdownAsProcessed,
+  } = usePromptStore();
   const [isSystemPromptVisible, setIsSystemPromptVisible] = useState(false);
   const [isMetaPromptsManagerOpen, setIsMetaPromptsManagerOpen] =
     useState(false);
@@ -33,7 +41,7 @@ export function PromptComposer() {
   const [estimatedTokens, setEstimatedTokens] = useState(0);
 
   const { selectedFilePaths, rootPath } = useWorkspaceStore();
-  const { startReview } = useReviewStore();
+  const { startReview, lastReview, reenterReview } = useReviewStore();
   const {
     customSystemPrompt,
     setCustomSystemPrompt,
@@ -41,6 +49,7 @@ export function PromptComposer() {
     setEditFormat,
     metaPrompts,
     setMetaPrompts,
+    autoReviewOnPaste,
   } = useSettingsStore();
 
   const estimateTokens = (text: string) => {
@@ -73,7 +82,6 @@ export function PromptComposer() {
               `Failed to read file for token count ${path}:`,
               error
             );
-            // Self-healing: if a file doesn't exist, remove it from selection.
             if (typeof error === 'string' && error.includes('No such file')) {
               console.warn(`Removing non-existent file from selection: ${path}`);
               useWorkspaceStore.getState().removeSelectedFilePath(path);
@@ -145,20 +153,25 @@ export function PromptComposer() {
 
     const parsedChanges = parseChangesFromMarkdown(currentMarkdownResponse);
     if (parsedChanges.length === 0) {
-      return; // Silently fail if no changes are parsed
+      markMarkdownAsProcessed(); // Mark as processed even if no changes found
+      return;
     }
-    startReview(parsedChanges);
-    setMarkdownResponse("");
-  }, [rootPath, startReview, setMarkdownResponse]);
+    await startReview(parsedChanges);
+    markMarkdownAsProcessed();
+  }, [rootPath, startReview, markMarkdownAsProcessed]);
 
   useEffect(() => {
-    if (markdownResponse.trim() && rootPath) {
+    if (autoReviewOnPaste && markdownResponse.trim() && markdownResponse !== processedMarkdownResponse && rootPath) {
       const timer = setTimeout(() => {
         handleReview();
       }, 500); // Debounce for 500ms
       return () => clearTimeout(timer);
     }
-  }, [markdownResponse, rootPath, handleReview]);
+  }, [markdownResponse, processedMarkdownResponse, rootPath, autoReviewOnPaste, handleReview]);
+  
+  const handleReenterReview = () => {
+    reenterReview();
+  };
 
   const handleUpdateMetaPrompt = (
     id: string,
@@ -169,6 +182,8 @@ export function PromptComposer() {
     );
   };
 
+  const hasUnprocessedResponse = markdownResponse.trim() !== "" && markdownResponse !== processedMarkdownResponse;
+  
   return (
     <div className="p-4 flex flex-col h-full bg-gray-50 text-gray-800 overflow-y-auto">
       <div className="flex-grow flex flex-col min-h-0">
@@ -222,7 +237,7 @@ export function PromptComposer() {
                       enabled: !prompt.enabled,
                     })
                   }
-                  className={`px-3 py-1.5 mt-1.5 text-sm rounded-lg whitespace-nowrap transition-colors flex-shrink-0 ${
+                  className={`px-3 py-1.5 mt-1.5 text-sm rounded-lg whitespace-nowrap transition-flex-shrink-0 ${
                     prompt.enabled
                       ? "bg-blue-100 text-blue-800 font-semibold ring-1 ring-blue-300"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -285,21 +300,37 @@ export function PromptComposer() {
       </div>
 
       <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col">
-        <h2 className="font-bold mb-2">2. Paste Response & Review</h2>
+        <div className="flex items-center justify-between mb-2">
+            <h2 className="font-bold">2. Paste Response & Review</h2>
+            <div className="flex items-center gap-2">
+              {lastReview && (
+                  <button
+                      onClick={handleReenterReview}
+                      disabled={hasUnprocessedResponse}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 font-semibold disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+                      title={hasUnprocessedResponse ? "A new response is waiting for review" : "Go back to last review session"}
+                  >
+                      <History size={14} />
+                      Last Review
+                  </button>
+              )}
+              <button
+                  onClick={handleReview}
+                  disabled={!hasUnprocessedResponse}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200 font-semibold disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+                  title={!hasUnprocessedResponse ? "Paste a response to enable review" : "Start review for the pasted response"}
+              >
+                  <FileSearch2 size={14} />
+                  Start Review
+              </button>
+            </div>
+        </div>
         <textarea
           className="w-full h-24 bg-white p-2 rounded-md font-mono text-sm border border-gray-200 mb-2"
           placeholder="Paste full markdown response from your LLM here to automatically start review..."
           value={markdownResponse}
           onChange={(e) => setMarkdownResponse(e.target.value)}
         ></textarea>
-        {/* <button
-          onClick={handleReview}
-          className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-blue-600 text-white hover:bg-blue-500 rounded-md disabled:bg-gray-400"
-          disabled={!markdownResponse || !rootPath}
-        >
-          <Search size={16} />
-          Review Changes
-        </button> */}
       </div>
       <MetaPromptsManagerModal
         isOpen={isMetaPromptsManagerOpen}

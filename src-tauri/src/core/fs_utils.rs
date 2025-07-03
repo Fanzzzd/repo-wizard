@@ -259,6 +259,18 @@ pub async fn revert_file_from_backup(
     Ok(())
 }
 
+pub async fn read_file_from_backup(backup_id: &str, relative_path: &Path) -> Result<String> {
+    let backup_file_path = get_backup_dir(backup_id).join(relative_path);
+    if !backup_file_path.exists() {
+        return Err(anyhow!(
+            "File {} not found in backup {}",
+            relative_path.display(),
+            backup_id
+        ));
+    }
+    fs::read_to_string(&backup_file_path).await.map_err(anyhow::Error::from)
+}
+
 pub async fn delete_backup(backup_id: &str) -> Result<()> {
     let backup_root = get_backup_dir(backup_id);
     if backup_root.exists() {

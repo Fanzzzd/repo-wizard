@@ -7,8 +7,10 @@ export function Header() {
   const {
     respectGitignore,
     customIgnorePatterns,
+    autoReviewOnPaste,
     setRespectGitignore,
     setCustomIgnorePatterns,
+    setAutoReviewOnPaste,
   } = useSettingsStore();
   const settingsPanelRef = useRef<HTMLDivElement>(null);
 
@@ -56,6 +58,16 @@ export function Header() {
                   onChange={(e) => setRespectGitignore(e.target.checked)}
                 />
                 <span className="text-sm text-gray-700">Respect .gitignore</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="form-checkbox h-4 w-4 text-blue-600 rounded"
+                  checked={autoReviewOnPaste}
+                  onChange={(e) => setAutoReviewOnPaste(e.target.checked)}
+                />
+                <span className="text-sm text-gray-700">Auto-review on paste</span>
               </label>
 
               <div>
