@@ -1,82 +1,94 @@
 import {
   generateManifest,
+  ManifestConfig,
   type Manifest,
 } from "material-icon-theme";
-
-type IconDefinition = {
-  iconPath: string;
-};
+import { iconManifestConfig } from "./iconManifestConfig";
 
 class IconService {
-  private manifest: Manifest | undefined;
+  private manifest: Manifest;
 
   constructor() {
-    this.manifest = generateManifest();
+    this.manifest = generateManifest(iconManifestConfig as ManifestConfig);
   }
 
-  private getIconDefinition(iconName: string): IconDefinition | undefined {
-    if (!this.manifest?.iconDefinitions) return undefined;
-    return this.manifest.iconDefinitions[iconName];
+  private stripSVGExtension(iconPath: string): string {
+    return iconPath.replace(/\.svg$/, "");
   }
 
-  private getIconName(
+  private getAssociation(
     associations: Record<string, string> | undefined,
     key: string
   ): string | undefined {
     if (!associations) return undefined;
     return associations[key.toLowerCase()];
   }
-  
-  private stripSVGExtension(iconPath: string): string {
-    return iconPath.replace(/\.svg$/, "");
+
+  private getIconPath(
+    identifier: string,
+    manifest?: Manifest
+  ): string | undefined {
+    if (!manifest?.iconDefinitions?.[identifier]) return undefined;
+    const iconPath = manifest.iconDefinitions[identifier].iconPath;
+    return this.stripSVGExtension(iconPath);
+  }
+
+  private resolveIcon(identifier: string | undefined): string | undefined {
+    if (!identifier) return undefined;
+    // Prefer light theme definition if available, otherwise fallback to dark theme.
+    return (
+      this.getIconPath(identifier, this.manifest.light) ??
+      this.getIconPath(identifier, this.manifest)
+    );
   }
 
   public getIconNameForFile(filename: string): string {
-    if (!this.manifest) return 'file';
+    if (!this.manifest) return "file";
 
     const lowerFilename = filename.toLowerCase();
-    const fileExtension = "." + lowerFilename.split(".").pop();
+    const fileExtension = lowerFilename.split(".").pop() ?? "";
 
-    const iconFromFileName = this.getIconName(this.manifest.fileNames, lowerFilename);
-    if (iconFromFileName) {
-      const def = this.getIconDefinition(iconFromFileName);
-      if (def) return this.stripSVGExtension(def.iconPath);
-    }
+    const identifier =
+      this.getAssociation(this.manifest.light?.fileNames, lowerFilename) ??
+      this.getAssociation(this.manifest.fileNames, lowerFilename) ??
+      this.getAssociation(this.manifest.light?.fileExtensions, fileExtension) ??
+      this.getAssociation(this.manifest.fileExtensions, fileExtension);
 
-    const iconFromFileExt = this.getIconName(this.manifest.fileExtensions, fileExtension.substring(1));
-    if (iconFromFileExt) {
-      const def = this.getIconDefinition(iconFromFileExt);
-      if (def) return this.stripSVGExtension(def.iconPath);
-    }
-    
-    if (this.manifest.file) {
-      const def = this.getIconDefinition(this.manifest.file);
-      return def ? this.stripSVGExtension(def.iconPath) : 'file';
-    }
-    return 'file';
+    const resolvedIcon = this.resolveIcon(identifier);
+    if (resolvedIcon) return resolvedIcon;
+
+    const defaultIdentifier = this.manifest.light?.file ?? this.manifest.file;
+    return this.resolveIcon(defaultIdentifier) ?? "file";
   }
 
   public getIconNameForFolder(folderName: string, isOpen: boolean): string {
-    if (!this.manifest) return isOpen ? 'folder-open' : 'folder';
+    if (!this.manifest) return isOpen ? "folder-open" : "folder";
 
     const lowerFolderName = folderName.toLowerCase();
-    const manifest = this.manifest;
 
-    const iconName = isOpen
-      ? this.getIconName(manifest.folderNamesExpanded, lowerFolderName) ?? this.getIconName(manifest.folderNames, lowerFolderName)
-      : this.getIconName(manifest.folderNames, lowerFolderName) ?? this.getIconName(manifest.folderNamesExpanded, lowerFolderName);
-      
-    if (iconName) {
-      const def = this.getIconDefinition(iconName);
-      if (def) return this.stripSVGExtension(def.iconPath);
-    }
+    const primaryAssoc = isOpen ? "folderNamesExpanded" : "folderNames";
+    const secondaryAssoc = isOpen ? "folderNames" : "folderNamesExpanded";
 
-    const defaultIconName = isOpen ? manifest.folderExpanded : manifest.folder;
-    if (defaultIconName) {
-      const def = this.getIconDefinition(defaultIconName);
-      return def ? this.stripSVGExtension(def.iconPath) : (isOpen ? 'folder-open' : 'folder');
-    }
-    return isOpen ? 'folder-open' : 'folder';
+    const identifier =
+      this.getAssociation(
+        this.manifest.light?.[primaryAssoc],
+        lowerFolderName
+      ) ??
+      this.getAssociation(this.manifest[primaryAssoc], lowerFolderName) ??
+      this.getAssociation(
+        this.manifest.light?.[secondaryAssoc],
+        lowerFolderName
+      ) ??
+      this.getAssociation(this.manifest[secondaryAssoc], lowerFolderName);
+
+    const resolvedIcon = this.resolveIcon(identifier);
+    if (resolvedIcon) return resolvedIcon;
+
+    const defaultIdentifier = isOpen
+      ? this.manifest.light?.folderExpanded ?? this.manifest.folderExpanded
+      : this.manifest.light?.folder ?? this.manifest.folder;
+
+    return this.resolveIcon(defaultIdentifier) ?? (isOpen ? "folder-open" : "folder");
   }
 }
 

@@ -65,7 +65,7 @@ pub async fn list_directory_recursive(
 
         is_dir_map.insert(
             path.to_path_buf(),
-            entry.file_type().map_or(false, |ft| ft.is_dir()),
+            entry.file_type().is_some_and(|ft| ft.is_dir()),
         );
 
         if let Some(parent) = path.parent() {
@@ -233,6 +233,42 @@ pub async fn restore_state(
     restore_directory_recursively(&backup_root, root_path).await?;
 
     Ok(())
+}
+
+pub async fn revert_file_from_backup(
+    root_path: &Path,
+    backup_id: &str,
+    relative_path: &Path,
+) -> Result<()> {
+    let backup_file_path = get_backup_dir(backup_id).join(relative_path);
+    if !backup_file_path.exists() {
+        return Err(anyhow!(
+            "Backup for file {} not found in backup {}",
+            relative_path.display(),
+            backup_id
+        ));
+    }
+
+    let dest_path = root_path.join(relative_path);
+    if let Some(parent) = dest_path.parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent).await?;
+        }
+    }
+    fs::copy(&backup_file_path, &dest_path).await?;
+    Ok(())
+}
+
+pub async fn read_file_from_backup(backup_id: &str, relative_path: &Path) -> Result<String> {
+    let backup_file_path = get_backup_dir(backup_id).join(relative_path);
+    if !backup_file_path.exists() {
+        return Err(anyhow!(
+            "File {} not found in backup {}",
+            relative_path.display(),
+            backup_id
+        ));
+    }
+    fs::read_to_string(&backup_file_path).await.map_err(anyhow::Error::from)
 }
 
 pub async fn delete_backup(backup_id: &str) -> Result<()> {

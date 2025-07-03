@@ -3,11 +3,12 @@ import { useWorkspaceStore } from "../../store/workspaceStore";
 import { readFileContent } from "../../lib/tauri_api";
 import {
   Clipboard,
-  ChevronDown,
-  ChevronUp,
   Check,
   SlidersHorizontal,
+  History,
+  FileSearch2,
 } from "lucide-react";
+import { motion } from "motion/react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { buildPrompt } from "../../lib/prompt_builder";
 import { useSettingsStore } from "../../store/settingsStore";
@@ -18,29 +19,34 @@ import { usePromptStore } from "../../store/promptStore";
 import { MetaPromptsManagerModal } from "./MetaPromptsManagerModal";
 
 const editFormatOptions: { value: EditFormat; label: string }[] = [
-  { value: "udiff", label: "Unified Diff" },
-  { value: "diff-fenced", label: "Search/Replace" },
   { value: "whole", label: "Whole File" },
+  { value: "udiff", label: "Unified Diff" },
+  { value: "diff-fenced", label: "Fenced Diff" },
 ];
 
 export function PromptComposer() {
-  const { instructions, setInstructions, markdownResponse, setMarkdownResponse } =
-    usePromptStore();
-  const [isSystemPromptVisible, setIsSystemPromptVisible] = useState(false);
+  const {
+    instructions,
+    setInstructions,
+    markdownResponse,
+    setMarkdownResponse,
+    processedMarkdownResponse,
+    markMarkdownAsProcessed,
+  } = usePromptStore();
   const [isMetaPromptsManagerOpen, setIsMetaPromptsManagerOpen] =
     useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [estimatedTokens, setEstimatedTokens] = useState(0);
 
   const { selectedFilePaths, rootPath } = useWorkspaceStore();
-  const { startReview } = useReviewStore();
+  const { startReview, lastReview, reenterReview } = useReviewStore();
   const {
     customSystemPrompt,
-    setCustomSystemPrompt,
     editFormat,
     setEditFormat,
     metaPrompts,
     setMetaPrompts,
+    autoReviewOnPaste,
   } = useSettingsStore();
 
   const estimateTokens = (text: string) => {
@@ -73,6 +79,10 @@ export function PromptComposer() {
               `Failed to read file for token count ${path}:`,
               error
             );
+            if (typeof error === 'string' && error.includes('No such file')) {
+              console.warn(`Removing non-existent file from selection: ${path}`);
+              useWorkspaceStore.getState().removeSelectedFilePath(path);
+            }
           }
         }
       }
@@ -140,20 +150,25 @@ export function PromptComposer() {
 
     const parsedChanges = parseChangesFromMarkdown(currentMarkdownResponse);
     if (parsedChanges.length === 0) {
-      return; // Silently fail if no changes are parsed
+      markMarkdownAsProcessed(); // Mark as processed even if no changes found
+      return;
     }
-    startReview(parsedChanges);
-    setMarkdownResponse("");
-  }, [rootPath, startReview, setMarkdownResponse]);
+    await startReview(parsedChanges);
+    markMarkdownAsProcessed();
+  }, [rootPath, startReview, markMarkdownAsProcessed]);
 
   useEffect(() => {
-    if (markdownResponse.trim() && rootPath) {
+    if (autoReviewOnPaste && markdownResponse.trim() && markdownResponse !== processedMarkdownResponse && rootPath) {
       const timer = setTimeout(() => {
         handleReview();
       }, 500); // Debounce for 500ms
       return () => clearTimeout(timer);
     }
-  }, [markdownResponse, rootPath, handleReview]);
+  }, [markdownResponse, processedMarkdownResponse, rootPath, autoReviewOnPaste, handleReview]);
+  
+  const handleReenterReview = () => {
+    reenterReview();
+  };
 
   const handleUpdateMetaPrompt = (
     id: string,
@@ -164,35 +179,61 @@ export function PromptComposer() {
     );
   };
 
+  const hasUnprocessedResponse = markdownResponse.trim() !== "" && markdownResponse !== processedMarkdownResponse;
+  
   return (
     <div className="p-4 flex flex-col h-full bg-gray-50 text-gray-800 overflow-y-auto">
       <div className="flex-grow flex flex-col min-h-0">
-        <h2 className="font-bold mb-2">1. Compose Prompt</h2>
+        <h2 className="font-bold mb-2">Compose Prompt</h2>
 
         <div className="mb-4">
           <label className="text-sm font-semibold mb-1 block">
             Edit Format
           </label>
-          <div className="flex bg-gray-200 rounded-md p-0.5">
+          <div className="relative z-0 flex bg-gray-200 rounded-md p-0.5">
             {editFormatOptions.map(({ value, label }) => (
               <button
                 key={value}
                 onClick={() => setEditFormat(value)}
-                className={`flex-1 text-center text-xs px-2 py-1 rounded-md transition-colors ${
+                className={`relative flex-1 text-center text-xs px-2 py-1 font-medium transition-colors duration-200 ${
                   editFormat === value
-                    ? "bg-white shadow-sm text-gray-800 font-medium"
-                    : "bg-transparent text-gray-600 hover:bg-gray-100"
+                    ? "text-gray-900"
+                    : "text-gray-600 hover:text-gray-800"
                 }`}
               >
-                {label}
+                {editFormat === value && (
+                  <motion.div
+                    layoutId="edit-format-slider"
+                    className="absolute inset-0 bg-white shadow-sm rounded-md"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10">{label}</span>
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            {editFormat === "udiff" && "Best for GPT models."}
-            {editFormat === "diff-fenced" && "Best for Gemini models."}
-            {editFormat === "whole" && "Universal, but can be verbose."}
-          </p>
+          <div className="text-xs text-gray-500 mt-1">
+            {editFormat === "whole" && (
+              <div>
+                <span className="font-semibold text-green-700">Recommended:</span>
+                <span> Universal and reliable, but can be verbose.</span>
+              </div>
+            )}
+            {editFormat === "udiff" && (
+              <div>
+                <span className="font-semibold text-yellow-700">Experimental:</span>
+                <span> Best for GPT models. </span>
+                <span> Use 'Whole File' for best results.</span>
+              </div>
+            )}
+            {editFormat === "diff-fenced" && (
+              <div>
+                <span className="font-semibold text-yellow-700">Experimental:</span>
+                <span> Best for Gemini models. </span>
+                <span> Use 'Whole File' for best results.</span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="mb-4">
@@ -217,10 +258,10 @@ export function PromptComposer() {
                       enabled: !prompt.enabled,
                     })
                   }
-                  className={`px-3 py-1.5 mt-1.5 text-sm rounded-lg whitespace-nowrap transition-colors flex-shrink-0 ${
+                  className={`px-3 py-1.5 mt-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex-shrink-0 ring-1 ${
                     prompt.enabled
-                      ? "bg-blue-100 text-blue-800 font-semibold ring-1 ring-blue-300"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-blue-100 text-blue-800 ring-blue-300"
+                      : "bg-gray-100 text-gray-700 ring-transparent hover:bg-gray-200 hover:ring-gray-300"
                   }`}
                   title={prompt.name}
                 >
@@ -235,28 +276,6 @@ export function PromptComposer() {
             >
               No meta prompts defined. Click here to create one.
             </div>
-          )}
-        </div>
-
-        <div className="mb-4">
-          <button
-            onClick={() => setIsSystemPromptVisible(!isSystemPromptVisible)}
-            className="flex items-center justify-between w-full text-sm font-semibold mb-1"
-          >
-            <span>Custom System Prompt</span>
-            {isSystemPromptVisible ? (
-              <ChevronUp size={16} />
-            ) : (
-              <ChevronDown size={16} />
-            )}
-          </button>
-          {isSystemPromptVisible && (
-            <textarea
-              className="w-full bg-white p-2 rounded-md font-mono text-xs border border-gray-200 h-24"
-              placeholder="Enter your custom system prompt..."
-              value={customSystemPrompt}
-              onChange={(e) => setCustomSystemPrompt(e.target.value)}
-            ></textarea>
           )}
         </div>
 
@@ -280,21 +299,37 @@ export function PromptComposer() {
       </div>
 
       <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col">
-        <h2 className="font-bold mb-2">2. Paste Response & Review</h2>
+        <div className="flex items-center justify-between mb-2">
+            <h2 className="font-bold">Paste Response & Review</h2>
+            <div className="flex items-center gap-2">
+              {lastReview && (
+                  <button
+                      onClick={handleReenterReview}
+                      disabled={hasUnprocessedResponse}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 font-semibold disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+                      title={hasUnprocessedResponse ? "A new response is waiting for review" : "Go back to last review session"}
+                  >
+                      <History size={14} />
+                      Last Review
+                  </button>
+              )}
+              <button
+                  onClick={handleReview}
+                  disabled={!hasUnprocessedResponse}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200 font-semibold disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+                  title={!hasUnprocessedResponse ? "Paste a response to enable review" : "Start review for the pasted response"}
+              >
+                  <FileSearch2 size={14} />
+                  Start Review
+              </button>
+            </div>
+        </div>
         <textarea
           className="w-full h-24 bg-white p-2 rounded-md font-mono text-sm border border-gray-200 mb-2"
           placeholder="Paste full markdown response from your LLM here to automatically start review..."
           value={markdownResponse}
           onChange={(e) => setMarkdownResponse(e.target.value)}
         ></textarea>
-        {/* <button
-          onClick={handleReview}
-          className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-blue-600 text-white hover:bg-blue-500 rounded-md disabled:bg-gray-400"
-          disabled={!markdownResponse || !rootPath}
-        >
-          <Search size={16} />
-          Review Changes
-        </button> */}
       </div>
       <MetaPromptsManagerModal
         isOpen={isMetaPromptsManagerOpen}

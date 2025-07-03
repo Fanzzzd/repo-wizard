@@ -82,6 +82,31 @@ async fn restore_state(
 }
 
 #[tauri::command]
+async fn revert_file_from_backup(
+    root_path: String,
+    backup_id: String,
+    relative_path: String,
+) -> Result<(), String> {
+    fs_utils::revert_file_from_backup(
+        &PathBuf::from(root_path),
+        &backup_id,
+        &PathBuf::from(relative_path),
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn read_file_from_backup(
+    backup_id: String,
+    relative_path: String,
+) -> Result<String, String> {
+    fs_utils::read_file_from_backup(&backup_id, &PathBuf::from(relative_path))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn delete_backup(backup_id: String) -> Result<(), String> {
     fs_utils::delete_backup(&backup_id)
         .await
@@ -112,6 +137,8 @@ pub fn run() {
             move_file,
             backup_files,
             restore_state,
+            revert_file_from_backup,
+            read_file_from_backup,
             delete_backup,
             delete_all_backups
         ])

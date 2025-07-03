@@ -16,11 +16,13 @@ interface SettingsState {
   customSystemPrompt: string;
   editFormat: EditFormat;
   metaPrompts: MetaPrompt[];
+  autoReviewOnPaste: boolean;
   setRespectGitignore: (value: boolean) => void;
   setCustomIgnorePatterns: (value: string) => void;
   setCustomSystemPrompt: (prompt: string) => void;
   setEditFormat: (format: EditFormat) => void;
   setMetaPrompts: (prompts: MetaPrompt[]) => void;
+  setAutoReviewOnPaste: (value: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -29,13 +31,15 @@ export const useSettingsStore = create<SettingsState>()(
       respectGitignore: true,
       customIgnorePatterns: "",
       customSystemPrompt: defaultSystemPrompt,
-      editFormat: "udiff",
+      editFormat: "whole",
       metaPrompts: [],
+      autoReviewOnPaste: true,
       setRespectGitignore: (value) => set({ respectGitignore: value }),
       setCustomIgnorePatterns: (value) => set({ customIgnorePatterns: value }),
       setCustomSystemPrompt: (prompt) => set({ customSystemPrompt: prompt }),
       setEditFormat: (format) => set({ editFormat: format }),
       setMetaPrompts: (prompts) => set({ metaPrompts: prompts }),
+      setAutoReviewOnPaste: (value) => set({ autoReviewOnPaste: value }),
     }),
     {
       name: "repo-wizard-settings",

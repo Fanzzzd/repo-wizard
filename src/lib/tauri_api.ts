@@ -54,6 +54,25 @@ export const restoreState = (
   return invoke("restore_state", { rootPath, backupId, filesToDelete });
 };
 
+export const revertFileFromBackup = (
+  rootPath: string,
+  backupId: string,
+  relativePath: string
+): Promise<void> => {
+  return invoke("revert_file_from_backup", {
+    rootPath,
+    backupId,
+    relativePath,
+  });
+};
+
+export const readFileFromBackup = (
+    backupId: string,
+    relativePath: string
+): Promise<string> => {
+    return invoke("read_file_from_backup", { backupId, relativePath });
+}
+
 export const deleteBackup = (backupId: string): Promise<void> => {
   return invoke("delete_backup", { backupId });
 };
