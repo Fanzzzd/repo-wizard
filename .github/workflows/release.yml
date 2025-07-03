@@ -42,7 +42,7 @@ jobs:
 
       - name: Create Release
         id: semantic_release
-        run: node scripts/release.cjs
+        run: node scripts/release.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -101,7 +101,6 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
-          key: ${{ matrix.platform }}-${{ matrix.args }}-${{ needs.release.outputs.tag_name }}
 
       - name: Build and Upload Assets
         uses: tauri-apps/tauri-action@v0
