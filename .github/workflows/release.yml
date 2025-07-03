@@ -72,16 +72,27 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const tag_name = "app-v${{ steps.get_version_after.outputs.version }}";
-            try {
-              const { data: release } = await github.rest.repos.getReleaseByTag({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                tag: tag_name,
-              });
-              core.setOutput('id', release.id);
-              console.log(`Found release with ID ${release.id} for tag ${tag_name}.`);
-            } catch (error) {
-              core.setFailed(`Could not find release for tag ${tag_name}. Error: ${error.message}`);
+            const retries = 5;
+            const delay = 5000; // 5 seconds
+            for (let i = 0; i < retries; i++) {
+              try {
+                const { data: release } = await github.rest.repos.getReleaseByTag({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  tag: tag_name,
+                });
+                core.setOutput('id', release.id);
+                console.log(`Found release with ID ${release.id} for tag ${tag_name}.`);
+                return;
+              } catch (error) {
+                if (error.status === 404 && i < retries - 1) {
+                  console.log(`Release for tag ${tag_name} not found. Retrying in ${delay / 1000}s... (${i + 1}/${retries})`);
+                  await new Promise(resolve => setTimeout(resolve, delay));
+                } else {
+                  core.setFailed(`Could not find release for tag ${tag_name}. Error: ${error.message}`);
+                  return;
+                }
+              }
             }
 
   build:
