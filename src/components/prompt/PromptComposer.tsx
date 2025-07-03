@@ -73,6 +73,11 @@ export function PromptComposer() {
               `Failed to read file for token count ${path}:`,
               error
             );
+            // Self-healing: if a file doesn't exist, remove it from selection.
+            if (typeof error === 'string' && error.includes('No such file')) {
+              console.warn(`Removing non-existent file from selection: ${path}`);
+              useWorkspaceStore.getState().removeSelectedFilePath(path);
+            }
           }
         }
       }

@@ -18,7 +18,7 @@ export type ChangeOperation =
 export interface ReviewChange {
   id: string; // unique ID for each change
   operation: ChangeOperation;
-  status: "pending" | "approved" | "discarded";
+  status: "pending" | "applied" | "error";
 }
 
 export const createReviewChange = (operation: ChangeOperation): ReviewChange => ({

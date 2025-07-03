@@ -235,6 +235,30 @@ pub async fn restore_state(
     Ok(())
 }
 
+pub async fn revert_file_from_backup(
+    root_path: &Path,
+    backup_id: &str,
+    relative_path: &Path,
+) -> Result<()> {
+    let backup_file_path = get_backup_dir(backup_id).join(relative_path);
+    if !backup_file_path.exists() {
+        return Err(anyhow!(
+            "Backup for file {} not found in backup {}",
+            relative_path.display(),
+            backup_id
+        ));
+    }
+
+    let dest_path = root_path.join(relative_path);
+    if let Some(parent) = dest_path.parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent).await?;
+        }
+    }
+    fs::copy(&backup_file_path, &dest_path).await?;
+    Ok(())
+}
+
 pub async fn delete_backup(backup_id: &str) -> Result<()> {
     let backup_root = get_backup_dir(backup_id);
     if backup_root.exists() {
