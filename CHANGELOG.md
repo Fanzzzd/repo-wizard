@@ -1,3 +1,10 @@
+# [1.1.0-next.4](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.3...app-v1.1.0-next.4) (2025-07-03)
+
+
+### Bug Fixes
+
+* **ci:** add retry logic to prevent release lookup race condition ([a446f67](https://github.com/Fanzzzd/repo-wizard/commit/a446f67d9f9455d60a8476f7c80c95181e489829))
+
 # [1.1.0-next.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0-next.2...app-v1.1.0-next.3) (2025-07-02)
 
 
