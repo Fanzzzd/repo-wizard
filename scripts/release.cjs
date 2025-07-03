@@ -1,9 +1,18 @@
-const semanticRelease = require('semantic-release');
+const semanticReleaseModule = require('semantic-release');
 const { readFile, appendFile } = require('fs/promises');
+
+// The actual function is likely on the `default` property when required in this context.
+// This handles both cases: `module.exports = fn` and `module.exports = { default: fn }`.
+const semanticRelease = semanticReleaseModule.default || semanticReleaseModule;
 
 async function main() {
   console.log('Starting semantic-release programmatically...');
   
+  if (typeof semanticRelease !== 'function') {
+    console.error('Failed to import semantic-release as a function. The imported module is:', semanticReleaseModule);
+    process.exit(1);
+  }
+
   const config = JSON.parse(await readFile('.releaserc.json', 'utf-8'));
 
   const result = await semanticRelease(config, { env: process.env });
