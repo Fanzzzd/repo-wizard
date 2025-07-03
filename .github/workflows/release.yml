@@ -15,15 +15,15 @@ jobs:
       issues: write
       pull-requests: write
     outputs:
-      released: ${{ steps.check_release.outputs.released }}
-      tag_name: app-v${{ steps.get_version_after.outputs.version }}
-      release_id: ${{ steps.get_release.outputs.id }}
+      released: ${{ steps.semantic_release.outputs.released }}
+      tag_name: ${{ steps.semantic_release.outputs.tag_name }}
+      release_id: ${{ steps.semantic_release.outputs.release_id }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # semantic-release 需要完整的 git 历史
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Setup pnpm
@@ -40,60 +40,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Get version before release
-        id: get_version_before
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-      - name: Run semantic-release
-        run: pnpm semantic-release
+      - name: Create Release
+        id: semantic_release
+        run: node scripts/release.cjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get version after release
-        id: get_version_after
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-      - name: Check if a release was created
-        id: check_release
-        run: |
-          if [ "${{ steps.get_version_before.outputs.version }}" != "${{ steps.get_version_after.outputs.version }}" ]; then
-            echo "released=true" >> $GITHUB_OUTPUT
-            echo "New release detected. Version changed from ${{ steps.get_version_before.outputs.version }} to ${{ steps.get_version_after.outputs.version }}"
-          else
-            echo "released=false" >> $GITHUB_OUTPUT
-            echo "No new release."
-          fi
-
-      - name: Get Release by Tag
-        if: steps.check_release.outputs.released == 'true'
-        id: get_release
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const tag_name = "app-v${{ steps.get_version_after.outputs.version }}";
-            const retries = 5;
-            const delay = 5000; // 5 seconds
-            for (let i = 0; i < retries; i++) {
-              try {
-                const { data: release } = await github.rest.repos.getReleaseByTag({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  tag: tag_name,
-                });
-                core.setOutput('id', release.id);
-                console.log(`Found release with ID ${release.id} for tag ${tag_name}.`);
-                return;
-              } catch (error) {
-                if (error.status === 404 && i < retries - 1) {
-                  console.log(`Release for tag ${tag_name} not found. Retrying in ${delay / 1000}s... (${i + 1}/${retries})`);
-                  await new Promise(resolve => setTimeout(resolve, delay));
-                } else {
-                  core.setFailed(`Could not find release for tag ${tag_name}. Error: ${error.message}`);
-                  return;
-                }
-              }
-            }
 
   build:
     name: Build & Upload Assets
