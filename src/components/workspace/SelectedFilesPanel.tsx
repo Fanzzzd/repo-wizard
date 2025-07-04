@@ -3,15 +3,7 @@ import { X, ArrowDownAZ, ArrowDown10 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { readFileContent } from "../../lib/tauri_api";
 import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
-
-const shortenPathDisplay = (path: string) => {
-  if (!path) return "";
-  const parts = path.split("/");
-  if (parts.length > 3) {
-    return `.../${parts.slice(-3).join("/")}`;
-  }
-  return path;
-};
+import { ShortenedPath } from "../common/ShortenedPath";
 
 export function SelectedFilesPanel() {
   const {
@@ -129,9 +121,10 @@ export function SelectedFilesPanel() {
                   }`}
                   onClick={() => setActiveFilePath(path)}
                 >
-                  <span className="truncate font-mono" title={path}>
-                    {shortenPathDisplay(shortPath)}
-                  </span>
+                  <ShortenedPath
+                    path={shortPath}
+                    className="truncate font-mono"
+                  />
                   <div className="flex items-center flex-shrink-0 ml-2">
                     <span className="text-gray-500 w-20 text-right">
                       {formatTokenCount(tokens)} tokens

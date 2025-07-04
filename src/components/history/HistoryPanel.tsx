@@ -35,16 +35,11 @@ const FileChangeDisplay = ({ change }: { change: FileChangeInfo }) => {
     return (
       <div
         className={`flex items-baseline gap-2 text-xs ${color}`}
-        title={`${change.path} → ${change.newPath}`}
       >
         <Icon size={14} className="flex-shrink-0" />
-        <span className="truncate min-w-0">
-          <ShortenedPath path={change.path} className="font-mono" />
-        </span>
+        <ShortenedPath path={change.path} className="font-mono truncate min-w-0" />
         <span className="mx-1 font-sans flex-shrink-0">→</span>
-        <span className="truncate min-w-0">
-          <ShortenedPath path={change.newPath!} className="font-mono" />
-        </span>
+        <ShortenedPath path={change.newPath!} className="font-mono truncate min-w-0" />
       </div>
     );
   }
@@ -52,7 +47,7 @@ const FileChangeDisplay = ({ change }: { change: FileChangeInfo }) => {
   return (
     <div className={`flex items-center gap-2 text-xs ${color}`}>
       <Icon size={14} className="flex-shrink-0" />
-      <ShortenedPath path={change.path} className="truncate font-mono" />
+      <ShortenedPath path={change.path} className="truncate font-mono min-w-0" />
     </div>
   );
 };

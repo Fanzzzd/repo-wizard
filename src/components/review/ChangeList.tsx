@@ -79,9 +79,9 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
         return (
           <>
             <FileTypeIcon filename={operation.filePath} isDirectory={false} />
-            <ShortenedPath path={operation.filePath} className="truncate" />
+            <ShortenedPath path={operation.filePath} className="truncate min-w-0" />
             {operation.isNewFile && (
-              <span className="text-xs text-green-600 font-medium ml-auto mr-2">
+              <span className="text-xs text-green-600 font-medium ml-auto mr-2 flex-shrink-0">
                 NEW
               </span>
             )}
@@ -91,8 +91,8 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
         return (
           <>
             <PencilRuler size={14} className="text-purple-500" />
-            <ShortenedPath path={operation.filePath} className="truncate" />
-            <span className="text-xs text-purple-600 font-medium ml-auto mr-2">
+            <ShortenedPath path={operation.filePath} className="truncate min-w-0" />
+            <span className="text-xs text-purple-600 font-medium ml-auto mr-2 flex-shrink-0">
               REWRITE
             </span>
           </>
@@ -103,7 +103,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
             <Trash2 size={14} className="text-red-500" />
             <ShortenedPath
               path={operation.filePath}
-              className="truncate line-through"
+              className="truncate line-through min-w-0"
             />
           </>
         );
@@ -111,13 +111,9 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
         return (
           <>
             <Move size={14} className="text-blue-500" />
-            <span
-              className="truncate"
-              title={`${operation.fromPath} → ${operation.toPath}`}
-            >
-              <ShortenedPath path={operation.fromPath} /> →{" "}
-              <ShortenedPath path={operation.toPath} />
-            </span>
+            <ShortenedPath path={operation.fromPath} className="truncate min-w-0" />
+            <span className="text-gray-500 flex-shrink-0">→</span>
+            <ShortenedPath path={operation.toPath} className="truncate min-w-0" />
           </>
         );
     }
