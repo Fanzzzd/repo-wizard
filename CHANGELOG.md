@@ -1,3 +1,11 @@
+# [1.3.0-next.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.3.0-next.2...app-v1.3.0-next.3) (2025-07-04)
+
+
+### Features
+
+* **common:** introduce standard form components and enhance textarea ([6c416eb](https://github.com/Fanzzzd/repo-wizard/commit/6c416ebfb0b01f990b9253fd1c27634760756df5))
+* **review:** enhance review state management with history pop functionality ([fd728cb](https://github.com/Fanzzzd/repo-wizard/commit/fd728cb39f6a1c53405ea85ae02da34cbfd0c2ce))
+
 # [1.3.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.3.0-next.1...app-v1.3.0-next.2) (2025-07-04)
 
 
