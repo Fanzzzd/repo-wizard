@@ -33,7 +33,7 @@ function App() {
   const rightPanel = isReviewing ? undefined : workspaceRightPanel;
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-gray-50">
+    <div className="h-full w-full flex flex-col bg-gray-50">
       <Header />
       <div className="flex-grow min-h-0">
         <Layout

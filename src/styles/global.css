@@ -15,17 +15,16 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
+html,
+body,
 #root {
+  height: 100%;
   width: 100%;
-  height: 100vh;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+}
+
+body {
+  min-width: 320px;
 }
