@@ -4,6 +4,9 @@ import type { MetaPrompt } from "../../types";
 import { v4 as uuidv4 } from "uuid";
 import { X, Plus, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { Input } from "../common/Input";
+import { Textarea } from "../common/Textarea";
+import { Checkbox } from "../common/Checkbox";
 
 interface MetaPromptsManagerModalProps {
   isOpen: boolean;
@@ -95,29 +98,26 @@ export function MetaPromptsManagerModal({
                   className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-3"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <input
+                    <Input
                       type="text"
                       value={prompt.name}
                       onChange={(e) =>
                         handleUpdatePrompt(prompt.id, { name: e.target.value })
                       }
-                      className="font-semibold text-sm p-2 border border-gray-300 rounded-md flex-grow bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="font-semibold flex-grow"
                       placeholder="Meta Prompt Name"
                     />
                     <div className="flex items-center justify-between sm:justify-end gap-4 flex-shrink-0">
-                      <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={prompt.enabled}
-                          onChange={(e) =>
-                            handleUpdatePrompt(prompt.id, {
-                              enabled: e.target.checked,
-                            })
-                          }
-                          className="form-checkbox h-4 w-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <span>Enabled</span>
-                      </label>
+                      <Checkbox
+                        checked={prompt.enabled}
+                        onChange={(e) =>
+                          handleUpdatePrompt(prompt.id, {
+                            enabled: e.target.checked,
+                          })
+                        }
+                      >
+                        Enabled
+                      </Checkbox>
                       <button
                         onClick={() => handleDeletePrompt(prompt.id)}
                         className="p-1.5 text-gray-500 hover:text-red-600 rounded-full hover:bg-gray-100 transition-colors"
@@ -127,14 +127,14 @@ export function MetaPromptsManagerModal({
                       </button>
                     </div>
                   </div>
-                  <textarea
+                  <Textarea
                     value={prompt.content}
                     onChange={(e) =>
                       handleUpdatePrompt(prompt.id, {
                         content: e.target.value,
                       })
                     }
-                    className="w-full bg-gray-50 p-2 rounded-md font-mono text-xs border border-gray-200 h-32 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="bg-gray-50 text-xs h-32"
                     placeholder="Enter meta prompt content..."
                   />
                 </div>

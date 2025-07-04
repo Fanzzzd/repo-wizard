@@ -18,6 +18,7 @@ import { parseChangesFromMarkdown } from "../../lib/diff_parser";
 import { usePromptStore } from "../../store/promptStore";
 import { MetaPromptsManagerModal } from "./MetaPromptsManagerModal";
 import { estimateTokens } from "../../lib/token_estimator";
+import { Textarea } from "../common/Textarea";
 
 const editFormatOptions: { value: EditFormat; label: string }[] = [
   { value: "whole", label: "Whole File" },
@@ -179,6 +180,10 @@ export function PromptComposer() {
   const hasUnprocessedResponse = markdownResponse.trim() !== "" && markdownResponse !== processedMarkdownResponse;
   const canReenterReview = !hasUnprocessedResponse && !!lastReview;
   
+  const responsePlaceholder = autoReviewOnPaste
+    ? "Paste full markdown response from your LLM here to automatically start review..."
+    : "Paste full markdown response from your LLM here. Click 'Review' to start.";
+
   return (
     <div className="p-4 flex flex-col h-full bg-gray-50 text-gray-800 overflow-y-auto">
       <div className="flex-grow flex flex-col min-h-0">
@@ -277,12 +282,12 @@ export function PromptComposer() {
           )}
         </div>
 
-        <textarea
-          className="w-full flex-grow bg-white p-2 rounded-md mb-2 font-mono text-sm border border-gray-200"
+        <Textarea
+          className="flex-grow mb-2"
           placeholder="Enter your refactoring instructions here..."
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
-        ></textarea>
+        />
         <div className="text-right text-xs text-gray-500 mb-2">
           Estimated Tokens: ~{estimatedTokens.toLocaleString()}
         </div>
@@ -328,12 +333,12 @@ export function PromptComposer() {
               </button>
             )}
         </div>
-        <textarea
-          className="w-full h-24 bg-white p-2 rounded-md font-mono text-sm border border-gray-200 mb-2"
-          placeholder="Paste full markdown response from your LLM here to automatically start review..."
+        <Textarea
+          className="h-24 mb-2"
+          placeholder={responsePlaceholder}
           value={markdownResponse}
           onChange={(e) => setMarkdownResponse(e.target.value)}
-        ></textarea>
+        />
       </div>
       <MetaPromptsManagerModal
         isOpen={isMetaPromptsManagerOpen}
