@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { check } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
 import { Layout } from "./components/Layout";
 import { MainPanel } from "./components/MainPanel";
 import { useReviewStore } from "./store/reviewStore";
@@ -8,6 +11,7 @@ import { Header } from "./components/Header";
 import { HistoryPanel } from "./components/history/HistoryPanel";
 import { WorkspaceSidebar } from "./components/workspace/WorkspaceSidebar";
 import { ModalDialog } from "./components/common/ModalDialog";
+import { useDialogStore } from "./store/dialogStore";
 import { Tooltip } from "./components/common/Tooltip";
 
 /**
@@ -16,6 +20,48 @@ import { Tooltip } from "./components/common/Tooltip";
  */
 function App() {
   const { isReviewing } = useReviewStore();
+  const { open: openDialog } = useDialogStore();
+
+  useEffect(() => {
+    const checkForUpdates = async () => {
+      // Skip update check for pre-release versions
+      if (__APP_VERSION__.includes("-")) {
+        console.log("Skipping update check for pre-release version.");
+        return;
+      }
+
+      try {
+        const update = await check();
+        if (update) {
+          const confirmed = await openDialog({
+            title: "Update Available",
+            content: (
+              <div>
+                <p>A new version ({update.version}) is available. You have {__APP_VERSION__}.</p>
+                <p className="mt-2 text-sm text-gray-500">Release Notes:</p>
+                <div className="mt-1 max-h-40 overflow-y-auto rounded-md border bg-gray-50 p-2 text-sm">
+                  <pre className="whitespace-pre-wrap font-sans">{update.body}</pre>
+                </div>
+                <p className="mt-4">Would you like to install it now and restart?</p>
+              </div>
+            ),
+            type: "confirm",
+            status: "info",
+            confirmText: "Install & Relaunch",
+          });
+
+          if (confirmed) {
+            await update.downloadAndInstall();
+            await relaunch();
+          }
+        }
+      } catch (e) {
+        console.error("Failed to check for updates:", e);
+      }
+    };
+
+    checkForUpdates();
+  }, [openDialog]);
 
   const workspaceRightPanel = (
     <TabbedPanel

@@ -268,7 +268,9 @@ pub async fn read_file_from_backup(backup_id: &str, relative_path: &Path) -> Res
             backup_id
         ));
     }
-    fs::read_to_string(&backup_file_path).await.map_err(anyhow::Error::from)
+    fs::read_to_string(&backup_file_path)
+        .await
+        .map_err(anyhow::Error::from)
 }
 
 pub async fn delete_backup(backup_id: &str) -> Result<()> {
