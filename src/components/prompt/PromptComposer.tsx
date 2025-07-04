@@ -177,6 +177,7 @@ export function PromptComposer() {
   };
 
   const hasUnprocessedResponse = markdownResponse.trim() !== "" && markdownResponse !== processedMarkdownResponse;
+  const canReenterReview = !hasUnprocessedResponse && !!lastReview;
   
   return (
     <div className="p-4 flex flex-col h-full bg-gray-50 text-gray-800 overflow-y-auto">
@@ -298,28 +299,34 @@ export function PromptComposer() {
       <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col">
         <div className="flex items-center justify-between mb-2">
             <h2 className="font-bold">Paste Response & Review</h2>
-            <div className="flex items-center gap-2">
-              {lastReview && (
-                  <button
-                      onClick={handleReenterReview}
-                      disabled={hasUnprocessedResponse}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 font-semibold disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
-                      title={hasUnprocessedResponse ? "A new response is waiting for review" : "Go back to last review session"}
-                  >
-                      <History size={14} />
-                      Last Review
-                  </button>
-              )}
+            {hasUnprocessedResponse ? (
               <button
-                  onClick={handleReview}
-                  disabled={!hasUnprocessedResponse}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200 font-semibold disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
-                  title={!hasUnprocessedResponse ? "Paste a response to enable review" : "Start review for the pasted response"}
+                onClick={handleReview}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200 font-semibold"
+                title="Start review for the pasted response"
               >
-                  <FileSearch2 size={14} />
-                  Start Review
+                <FileSearch2 size={14} />
+                <span>Review</span>
               </button>
-            </div>
+            ) : canReenterReview ? (
+              <button
+                onClick={handleReenterReview}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 font-semibold"
+                title="Go back to last review session"
+              >
+                <History size={14} />
+                <span>Review</span>
+              </button>
+            ) : (
+              <button
+                disabled
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gray-200 text-gray-500 rounded-md font-semibold cursor-not-allowed"
+                title="Paste a response to start a new review"
+              >
+                <FileSearch2 size={14} />
+                <span>Review</span>
+              </button>
+            )}
         </div>
         <textarea
           className="w-full h-24 bg-white p-2 rounded-md font-mono text-sm border border-gray-200 mb-2"
