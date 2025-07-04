@@ -17,7 +17,7 @@ import { useReviewStore } from "../../store/reviewStore";
 import { parseChangesFromMarkdown } from "../../lib/diff_parser";
 import { usePromptStore } from "../../store/promptStore";
 import { MetaPromptsManagerModal } from "./MetaPromptsManagerModal";
-import { estimateTokens } from "../../lib/token_estimator";
+import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
 import { Textarea } from "../common/Textarea";
 
 const editFormatOptions: { value: EditFormat; label: string }[] = [
@@ -289,7 +289,7 @@ export function PromptComposer() {
           onChange={(e) => setInstructions(e.target.value)}
         />
         <div className="text-right text-xs text-gray-500 mb-2">
-          Estimated Tokens: ~{estimatedTokens.toLocaleString()}
+          Estimated Tokens: ~{formatTokenCount(estimatedTokens)}
         </div>
         <button
           onClick={generatePrompt}

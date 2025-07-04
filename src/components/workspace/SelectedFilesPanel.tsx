@@ -2,7 +2,7 @@ import { useWorkspaceStore } from "../../store/workspaceStore";
 import { X, ArrowDownAZ, ArrowDown10 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { readFileContent } from "../../lib/tauri_api";
-import { estimateTokens } from "../../lib/token_estimator";
+import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
 
 const shortenPathDisplay = (path: string) => {
   if (!path) return "";
@@ -134,7 +134,7 @@ export function SelectedFilesPanel() {
                   </span>
                   <div className="flex items-center flex-shrink-0 ml-2">
                     <span className="text-gray-500 w-20 text-right">
-                      {tokens.toLocaleString()} tokens
+                      {formatTokenCount(tokens)} tokens
                     </span>
                     <button
                       onClick={(e) => {
@@ -160,7 +160,7 @@ export function SelectedFilesPanel() {
         )}
       </div>
       <div className="text-xs text-gray-600 font-medium pt-2 px-1 flex-shrink-0 text-right">
-        Total Tokens: ~{totalTokens.toLocaleString()}
+        Total Tokens: ~{formatTokenCount(totalTokens)}
       </div>
     </div>
   );
