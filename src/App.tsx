@@ -1,6 +1,4 @@
 import { useEffect } from "react";
-import { check } from "@tauri-apps/plugin-updater";
-import { relaunch } from "@tauri-apps/plugin-process";
 import { Layout } from "./components/Layout";
 import { MainPanel } from "./components/MainPanel";
 import { useReviewStore } from "./store/reviewStore";
@@ -13,6 +11,7 @@ import { WorkspaceSidebar } from "./components/workspace/WorkspaceSidebar";
 import { ModalDialog } from "./components/common/ModalDialog";
 import { useDialogStore } from "./store/dialogStore";
 import { Tooltip } from "./components/common/Tooltip";
+import { useUpdateStore } from "./store/updateStore";
 
 /**
  * The root component of the application.
@@ -21,47 +20,43 @@ import { Tooltip } from "./components/common/Tooltip";
 function App() {
   const { isReviewing } = useReviewStore();
   const { open: openDialog } = useDialogStore();
+  const { status, updateInfo, install } = useUpdateStore();
 
   useEffect(() => {
-    const checkForUpdates = async () => {
-      // Skip update check for pre-release versions
-      if (__APP_VERSION__.includes("-")) {
-        console.log("Skipping update check for pre-release version.");
-        return;
-      }
+    // Initiate update check on startup via the store
+    useUpdateStore.getState().check();
+  }, []);
 
-      try {
-        const update = await check();
-        if (update) {
-          const confirmed = await openDialog({
-            title: "Update Available",
-            content: (
-              <div>
-                <p>A new version ({update.version}) is available. You have {__APP_VERSION__}.</p>
-                <p className="mt-2 text-sm text-gray-500">Release Notes:</p>
-                <div className="mt-1 max-h-40 overflow-y-auto rounded-md border bg-gray-50 p-2 text-sm">
-                  <pre className="whitespace-pre-wrap font-sans">{update.body}</pre>
-                </div>
-                <p className="mt-4">Would you like to install it now and restart?</p>
+  useEffect(() => {
+    // React to the update status to show a dialog when the update is downloaded and ready.
+    const showUpdateDialog = async () => {
+      if (status === "ready" && updateInfo) {
+        const confirmed = await openDialog({
+          title: "Update Ready",
+          content: (
+            <div>
+              <p>A new version ({updateInfo.version}) has been downloaded. You are using {__APP_VERSION__}.</p>
+              <p className="mt-2 text-sm text-gray-500">Release Notes:</p>
+              <div className="mt-1 max-h-40 overflow-y-auto rounded-md border bg-gray-50 p-2 text-sm">
+                <pre className="whitespace-pre-wrap font-sans">
+                  {updateInfo.body ?? "No release notes available."}
+                </pre>
               </div>
-            ),
-            type: "confirm",
-            status: "info",
-            confirmText: "Install & Relaunch",
-          });
+              <p className="mt-4">Would you like to restart now to apply the update?</p>
+            </div>
+          ),
+          type: "confirm",
+          status: "info",
+          confirmText: "Relaunch Now",
+        });
 
-          if (confirmed) {
-            await update.downloadAndInstall();
-            await relaunch();
-          }
+        if (confirmed) {
+          await install();
         }
-      } catch (e) {
-        console.error("Failed to check for updates:", e);
       }
     };
-
-    checkForUpdates();
-  }, [openDialog]);
+    showUpdateDialog();
+  }, [status, updateInfo, openDialog, install]);
 
   const workspaceRightPanel = (
     <TabbedPanel
