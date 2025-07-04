@@ -1,3 +1,11 @@
+# [1.3.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.3.0-next.1...app-v1.3.0-next.2) (2025-07-04)
+
+
+### Features
+
+* **prompt:** integrate token estimation in PromptComposer and SelectedFilesPanel ([76e4f45](https://github.com/Fanzzzd/repo-wizard/commit/76e4f45fcb333d424d43ea0cda708d00c96b6597))
+* **update:** enhance update management with user notifications and status indicators ([42eb18b](https://github.com/Fanzzzd/repo-wizard/commit/42eb18b8f7b325b21719893e6d79dfd4904a52b2))
+
 # [1.3.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.2.0...app-v1.3.0-next.1) (2025-07-04)
 
 
