@@ -9,7 +9,6 @@ interface PromptState {
   setInstructions: (instructions: string) => void;
   setMarkdownResponse: (response: string) => void;
   markMarkdownAsProcessed: () => void;
-  resetProcessedMarkdown: () => void;
 }
 
 export const usePromptStore = create<PromptState>()(
@@ -25,7 +24,6 @@ export const usePromptStore = create<PromptState>()(
       },
       markMarkdownAsProcessed: () =>
         set((state) => ({ processedMarkdownResponse: state.markdownResponse })),
-      resetProcessedMarkdown: () => set({ processedMarkdownResponse: null }),
     }),
     {
       name: "repo-wizard-prompt",

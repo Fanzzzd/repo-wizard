@@ -324,9 +324,10 @@ export function PromptComposer() {
               </button>
             ) : (
               <button
-                disabled
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gray-200 text-gray-500 rounded-md font-semibold cursor-not-allowed"
-                title="Paste a response to start a new review"
+                onClick={handleReview}
+                disabled={!markdownResponse.trim()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 font-semibold disabled:text-gray-500 disabled:hover:bg-gray-200 disabled:cursor-not-allowed"
+                title="Start a new review for the pasted response"
               >
                 <FileSearch2 size={14} />
                 <span>Review</span>

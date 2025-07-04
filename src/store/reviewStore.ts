@@ -12,7 +12,6 @@ import {
 import { useWorkspaceStore } from "./workspaceStore";
 import { useHistoryStore } from "./historyStore";
 import { applyPatch as applyJsPatch } from "diff";
-import { usePromptStore } from "./promptStore";
 
 /**
  * Updates workspace state after a file operation to prevent stale paths.
@@ -28,11 +27,21 @@ const updateWorkspaceOnFileChange = (
     setSelectedFilePaths,
     setActiveFilePath,
     triggerFileTreeRefresh,
+    addSelectedFilePath,
+    removeSelectedFilePath,
   } = useWorkspaceStore.getState();
   if (!rootPath) return;
 
   const getAbsPath = (p: string) => `${rootPath}/${p}`;
   const isApply = direction === "apply";
+
+  const isCreateOperation =
+    (operation.type === "modify" || operation.type === "rewrite") &&
+    operation.isNewFile;
+
+  if (isCreateOperation && isApply) {
+    addSelectedFilePath(getAbsPath(operation.filePath));
+  }
 
   if (operation.type === "delete" && isApply) {
     // A file was deleted
@@ -46,10 +55,10 @@ const updateWorkspaceOnFileChange = (
     const newSelected = selectedFilePaths.map((p) => (p === from ? to : p));
     setSelectedFilePaths(newSelected);
     if (activeFilePath === from) setActiveFilePath(to);
-  } else if (operation.type === "modify" && operation.isNewFile && !isApply) {
+  } else if (isCreateOperation && !isApply) {
     // A new file's creation was reverted (i.e., it was deleted)
     const filePath = getAbsPath(operation.filePath);
-    setSelectedFilePaths(selectedFilePaths.filter((p) => p !== filePath));
+    removeSelectedFilePath(filePath);
     if (activeFilePath === filePath) setActiveFilePath(null);
   }
 
@@ -111,7 +120,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         }
       });
 
-      const fileList = Array.from(filesToSnapshot).filter(p => p);
+      const fileList = Array.from(filesToSnapshot).filter((p) => p);
 
       try {
         const backupId = await backupFiles(rootPath, fileList);
@@ -137,41 +146,63 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
 
     let baseBackupId = get().sessionBaseBackupId;
     if (!baseBackupId) {
-        baseBackupId = headSnapshot?.backupId ?? null;
-        if (baseBackupId) {
-            set({ sessionBaseBackupId: baseBackupId });
-        } else {
-            console.error("Could not establish a base snapshot for the review session.");
-            return;
-        }
+      baseBackupId = headSnapshot?.backupId ?? null;
+      if (baseBackupId) {
+        set({ sessionBaseBackupId: baseBackupId });
+      } else {
+        console.error(
+          "Could not establish a base snapshot for the review session."
+        );
+        return;
+      }
     }
-    
+
     const changes = await Promise.all(
       initialChanges.map(async (change): Promise<ReviewChange> => {
         const { operation } = change;
-        
+
         const getBaseFileContent = async (filePath: string) => {
-            try {
-                return await readFileFromBackup(baseBackupId!, filePath);
-            } catch (e) {
-                return null;
-            }
+          try {
+            return await readFileFromBackup(baseBackupId!, filePath);
+          } catch (e) {
+            return null;
+          }
         };
 
-        if (operation.type === "modify") {
+        if (operation.type === "modify" || operation.type === "rewrite") {
           const originalContent = await getBaseFileContent(operation.filePath);
-          if (originalContent === null) return change; // Likely a new file, not identical
-          try {
-            const modifiedContent = applyJsPatch(originalContent, operation.diff);
-            if (modifiedContent !== false && originalContent === modifiedContent) {
-              return { ...change, status: "identical" };
+          const isNewFile = originalContent === null;
+
+          const updatedOperation = {
+            ...operation,
+            isNewFile: operation.isNewFile || isNewFile,
+          };
+          let updatedChange = { ...change, operation: updatedOperation };
+
+          if (!isNewFile) {
+            // File existed, check if it's identical
+            if (updatedOperation.type === "modify") {
+              try {
+                const modifiedContent = applyJsPatch(
+                  originalContent!,
+                  updatedOperation.diff
+                );
+                if (
+                  modifiedContent !== false &&
+                  originalContent === modifiedContent
+                ) {
+                  updatedChange = { ...updatedChange, status: "identical" };
+                }
+              } catch (e) {
+                /* ignore */
+              }
+            } else if (updatedOperation.type === "rewrite") {
+              if (originalContent === updatedOperation.content) {
+                updatedChange = { ...updatedChange, status: "identical" };
+              }
             }
-          } catch (e) { /* ignore, not identical */ }
-        } else if (operation.type === "rewrite") {
-           const originalContent = await getBaseFileContent(operation.filePath);
-            if (originalContent !== null && originalContent === operation.content) {
-                return { ...change, status: "identical" };
-            }
+          }
+          return updatedChange;
         }
         return change;
       })
@@ -180,7 +211,10 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     set({
       changes,
       isReviewing: true,
-      activeChangeId: changes.find(c => c.status === 'pending')?.id ?? changes[0]?.id ?? null,
+      activeChangeId:
+        changes.find((c) => c.status === "pending")?.id ??
+        changes[0]?.id ??
+        null,
       errors: {},
       lastReview: null,
     });
@@ -188,17 +222,11 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
 
   endReview: () => {
     set((state) => {
-      // Check if any changes were actually applied in this session.
-      const appliedChangesCount = state.changes.filter(
-        (c) => c.status === "applied"
-      ).length;
-
       // If no changes were applied, we discard the session entirely.
       // This prevents a "Re-enter Review" button for a session that had no effect.
-      if (appliedChangesCount === 0) {
-        // Allow the user to re-initiate the review from the same markdown.
-        usePromptStore.getState().resetProcessedMarkdown();
-
+      // NOTE: We no longer reset processed markdown to prevent auto-review loops.
+      // The user can re-initiate via the "Review" button in the composer.
+      if (state.changes.every((c) => c.status !== "applied")) {
         return {
           isReviewing: false,
           changes: [],
@@ -208,7 +236,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
           lastReview: null, // Do not save this session
         };
       }
-      
+
       // If changes were applied, the session is persisted to `lastReview`.
       // The primary record is the new state in the history panel.
       return {
@@ -232,12 +260,15 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         isReviewing: true,
         changes,
         sessionBaseBackupId,
-        activeChangeId: changes.find(c => c.status !== 'identical')?.id ?? changes[0]?.id ?? null,
+        activeChangeId:
+          changes.find((c) => c.status !== "identical")?.id ??
+          changes[0]?.id ??
+          null,
         lastReview: null,
       };
     });
   },
-  
+
   clearReviewSession: () => set({ sessionBaseBackupId: null }),
 
   setActiveChangeId: (id) => set({ activeChangeId: id }),
@@ -299,7 +330,12 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     const change = changes.find((c) => c.id === id);
     const rootPath = useWorkspaceStore.getState().rootPath;
 
-    if (!change || change.status !== "applied" || !rootPath || !sessionBaseBackupId)
+    if (
+      !change ||
+      change.status !== "applied" ||
+      !rootPath ||
+      !sessionBaseBackupId
+    )
       return;
 
     try {
@@ -307,15 +343,19 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       switch (operation.type) {
         case "modify":
         case "rewrite":
-            // We need to know if the file was new relative to the base snapshot.
-            // We can check if it exists in the backup.
-            try {
-                await revertFileFromBackup(rootPath, sessionBaseBackupId, operation.filePath);
-            } catch (e) {
-                // Assuming error means file did not exist in backup, so it was new.
-                await deleteFile(`${rootPath}/${operation.filePath}`);
-            }
-            break;
+          // We need to know if the file was new relative to the base snapshot.
+          // We can check if it exists in the backup.
+          try {
+            await revertFileFromBackup(
+              rootPath,
+              sessionBaseBackupId,
+              operation.filePath
+            );
+          } catch (e) {
+            // Assuming error means file did not exist in backup, so it was new.
+            await deleteFile(`${rootPath}/${operation.filePath}`);
+          }
+          break;
         case "delete":
           await revertFileFromBackup(
             rootPath,
@@ -353,7 +393,9 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
 
   revertAllAppliedChanges: async () => {
     const { changes } = get();
-    const appliedChanges = [...changes].reverse().filter((c) => c.status === "applied");
+    const appliedChanges = [...changes]
+      .reverse()
+      .filter((c) => c.status === "applied");
     for (const change of appliedChanges) {
       await get().revertChange(change.id);
     }

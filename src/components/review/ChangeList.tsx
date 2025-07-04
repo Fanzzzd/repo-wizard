@@ -92,9 +92,14 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
           <>
             <PencilRuler size={14} className="text-purple-500" />
             <ShortenedPath path={operation.filePath} className="truncate min-w-0" />
-            <span className="text-xs text-purple-600 font-medium ml-auto mr-2 flex-shrink-0">
-              REWRITE
-            </span>
+            <div className="ml-auto mr-2 flex-shrink-0 flex items-center gap-2">
+              {operation.isNewFile && (
+                <span className="text-xs text-green-600 font-medium">NEW</span>
+              )}
+              <span className="text-xs text-purple-600 font-medium">
+                REWRITE
+              </span>
+            </div>
           </>
         );
       case "delete":
@@ -202,7 +207,7 @@ export function ChangeList() {
               type: operation.isNewFile ? "added" : "modified",
             };
           case "rewrite":
-            return { path: operation.filePath, type: "modified" };
+            return { path: operation.filePath, type: operation.isNewFile ? "added" : "modified" };
           case "delete":
             return { path: operation.filePath, type: "deleted" };
           case "move":
@@ -219,7 +224,7 @@ export function ChangeList() {
         const { operation } = change;
         if (operation.type === "modify" && operation.isNewFile)
           newFileSet.add(operation.filePath);
-        if (operation.type === "rewrite") newFileSet.add(operation.filePath);
+        if (operation.type === "rewrite" && operation.isNewFile) newFileSet.add(operation.filePath);
         if (operation.type === "delete") newFileSet.delete(operation.filePath);
         if (operation.type === "move") {
           newFileSet.delete(operation.fromPath);
