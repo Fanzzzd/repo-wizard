@@ -11,6 +11,7 @@ interface HistoryStore {
   amendState: (entry: Omit<HistoryState, "id" | "timestamp" | "isInitialState">) => Promise<void>;
   checkout: (rootPath: string, targetIndex: number) => Promise<void>;
   clearAllHistory: () => Promise<void>;
+  popHeadState: (rootPath: string) => Promise<void>;
 }
 
 export const useHistoryStore = create<HistoryStore>()(
@@ -119,6 +120,44 @@ export const useHistoryStore = create<HistoryStore>()(
       clearAllHistory: async () => {
         await deleteAllBackups();
         set({ history: {}, head: {} });
+      },
+
+      popHeadState: async (rootPath) => {
+        const { history, head } = get();
+        const projectHistory = history[rootPath];
+        const currentHeadIndex = head[rootPath];
+
+        if (!projectHistory || currentHeadIndex === undefined || currentHeadIndex < 0) {
+          console.warn("Cannot pop state: No history or head is invalid.");
+          return;
+        }
+
+        const headState = projectHistory[currentHeadIndex];
+        if (headState.backupId) {
+          try {
+            await deleteBackup(headState.backupId);
+          } catch (error) {
+            console.error(`Failed to delete backup ${headState.backupId} while popping history state:`, error);
+          }
+        }
+
+        set((state) => {
+          const newProjectHistory = [...state.history[rootPath]];
+          newProjectHistory.pop(); // Remove the head state
+
+          const newHeadIndex = newProjectHistory.length - 1;
+
+          return {
+            history: {
+              ...state.history,
+              [rootPath]: newProjectHistory,
+            },
+            head: {
+              ...state.head,
+              [rootPath]: newHeadIndex,
+            },
+          };
+        });
       },
     }),
     {

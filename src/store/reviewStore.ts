@@ -1,20 +1,18 @@
 import { create } from "zustand";
-import type { ChangeOperation, FileChangeInfo, FileNode, ReviewChange } from "../types";
+import type { ChangeOperation, ReviewChange } from "../types";
 import {
   applyPatch,
   backupFiles,
   deleteFile,
-  listDirectoryRecursive,
   moveFile,
   revertFileFromBackup,
   writeFileContent,
-  readFileContent,
   readFileFromBackup,
 } from "../lib/tauri_api";
 import { useWorkspaceStore } from "./workspaceStore";
 import { useHistoryStore } from "./historyStore";
-import { useSettingsStore } from "./settingsStore";
 import { applyPatch as applyJsPatch } from "diff";
+import { usePromptStore } from "./promptStore";
 
 /**
  * Updates workspace state after a file operation to prevent stale paths.
@@ -58,73 +56,6 @@ const updateWorkspaceOnFileChange = (
   triggerFileTreeRefresh();
 };
 
-function collectAllRelativePaths(node: FileNode, root: string): string[] {
-  const relativePath = node.path.replace(root, "").replace(/^\//, "");
-  if (!node.isDirectory) {
-      return relativePath ? [relativePath] : [];
-  }
-  let paths: string[] = [];
-  if (node.children) {
-      for (const child of node.children) {
-          paths.push(...collectAllRelativePaths(child, root));
-      }
-  }
-  return paths;
-}
-
-async function detectAndSnapshotWorkspaceChanges(rootPath: string): Promise<boolean> {
-    const { history, head, addState } = useHistoryStore.getState();
-    const headIndex = head[rootPath] ?? -1;
-    const headSnapshot = headIndex !== -1 ? history[rootPath][headIndex] : null;
-    if (!headSnapshot) return false;
-
-    const { respectGitignore, customIgnorePatterns } = useSettingsStore.getState();
-    const currentFileTree = await listDirectoryRecursive(rootPath, { respectGitignore, customIgnorePatterns });
-    
-    const currentFiles = new Set(collectAllRelativePaths(currentFileTree, rootPath));
-    const snapshotFiles = new Set(headSnapshot.files);
-  
-    const addedFiles = [...currentFiles].filter(f => !snapshotFiles.has(f));
-    const deletedFiles = [...snapshotFiles].filter(f => !currentFiles.has(f));
-  
-    const modifiedFiles: string[] = [];
-    const commonFiles = [...currentFiles].filter(f => snapshotFiles.has(f));
-  
-    for (const file of commonFiles) {
-      try {
-        const currentContent = await readFileContent(`${rootPath}/${file}`);
-        const snapshotContent = await readFileFromBackup(headSnapshot.backupId, file);
-        if (currentContent !== snapshotContent) {
-          modifiedFiles.push(file);
-        }
-      } catch(e) {
-        console.warn(`Could not compare file ${file}, assuming modified.`, e);
-        modifiedFiles.push(file);
-      }
-    }
-  
-    const workspaceChanges: FileChangeInfo[] = [
-      ...addedFiles.map(p => ({ path: p, type: 'added' as const })),
-      ...deletedFiles.map(p => ({ path: p, type: 'deleted' as const })),
-      ...modifiedFiles.map(p => ({ path: p, type: 'modified' as const }))
-    ];
-  
-    if (workspaceChanges.length > 0) {
-      const allFilesForBackup = Array.from(currentFiles);
-      const newBackupId = await backupFiles(rootPath, allFilesForBackup);
-      addState({
-        backupId: newBackupId,
-        description: 'Workspace changes detected',
-        rootPath,
-        changedFiles: workspaceChanges,
-        files: allFilesForBackup,
-      });
-      return true;
-    }
-  
-    return false;
-}
-
 interface LastReview {
   changes: ReviewChange[];
   sessionBaseBackupId: string | null;
@@ -161,11 +92,47 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     const rootPath = useWorkspaceStore.getState().rootPath;
     if (!rootPath) return;
 
-    await detectAndSnapshotWorkspaceChanges(rootPath);
-    
-    const { history, head } = useHistoryStore.getState();
-    const projectHistory = history[rootPath] ?? [];
-    const headIndex = head[rootPath] ?? -1;
+    const { history, head, addState } = useHistoryStore.getState();
+    let projectHistory = history[rootPath] ?? [];
+    let headIndex = head[rootPath] ?? -1;
+
+    if (projectHistory.length === 0) {
+      const filesToSnapshot = new Set<string>();
+      initialChanges.forEach(({ operation }) => {
+        switch (operation.type) {
+          case "modify":
+          case "rewrite":
+          case "delete":
+            filesToSnapshot.add(operation.filePath);
+            break;
+          case "move":
+            filesToSnapshot.add(operation.fromPath);
+            break;
+        }
+      });
+
+      const fileList = Array.from(filesToSnapshot).filter(p => p);
+
+      try {
+        const backupId = await backupFiles(rootPath, fileList);
+        addState({
+          backupId,
+          description: "Initial project state",
+          rootPath,
+          changedFiles: [],
+          files: fileList,
+          isInitialState: true,
+        });
+
+        // Re-fetch state after update
+        projectHistory = useHistoryStore.getState().history[rootPath];
+        headIndex = useHistoryStore.getState().head[rootPath];
+      } catch (err) {
+        console.error("Failed to create initial history state:", err);
+        return; // Abort review
+      }
+    }
+
     const headSnapshot = headIndex !== -1 ? projectHistory[headIndex] : null;
 
     let baseBackupId = get().sessionBaseBackupId;
@@ -193,7 +160,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
 
         if (operation.type === "modify") {
           const originalContent = await getBaseFileContent(operation.filePath);
-          if (originalContent === null) return change;
+          if (originalContent === null) return change; // Likely a new file, not identical
           try {
             const modifiedContent = applyJsPatch(originalContent, operation.diff);
             if (modifiedContent !== false && originalContent === modifiedContent) {
@@ -221,9 +188,29 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
 
   endReview: () => {
     set((state) => {
-      if (state.changes.length === 0) {
-        return { isReviewing: false };
+      // Check if any changes were actually applied in this session.
+      const appliedChangesCount = state.changes.filter(
+        (c) => c.status === "applied"
+      ).length;
+
+      // If no changes were applied, we discard the session entirely.
+      // This prevents a "Re-enter Review" button for a session that had no effect.
+      if (appliedChangesCount === 0) {
+        // Allow the user to re-initiate the review from the same markdown.
+        usePromptStore.getState().resetProcessedMarkdown();
+
+        return {
+          isReviewing: false,
+          changes: [],
+          activeChangeId: null,
+          sessionBaseBackupId: null, // Clear the base snapshot ID
+          errors: {},
+          lastReview: null, // Do not save this session
+        };
       }
+      
+      // If changes were applied, the session is persisted to `lastReview`.
+      // The primary record is the new state in the history panel.
       return {
         isReviewing: false,
         lastReview: {
@@ -342,8 +329,6 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
             `${rootPath}/${operation.toPath}`,
             `${rootPath}/${operation.fromPath}`
           );
-          // And we need to restore original content if it was also modified... but `move` is separate.
-          // The user's spec treats them as separate. Let's stick to that.
           break;
       }
       set((state) => ({

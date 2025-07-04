@@ -158,7 +158,7 @@ export function ChangeList() {
     revertAllAppliedChanges,
   } = useReviewStore();
   const { rootPath, triggerFileTreeRefresh } = useWorkspaceStore();
-  const { history, head, addState, amendState } = useHistoryStore();
+  const { history, head, addState, amendState, popHeadState } = useHistoryStore();
   const { open: openDialog } = useDialogStore();
 
   const appliedChanges = changes.filter((c) => c.status === "applied");
@@ -166,14 +166,35 @@ export function ChangeList() {
   const handleFinishReview = async () => {
     if (!rootPath) return;
 
-    if (appliedChanges.length === 0) {
-      endReview();
-      return;
-    }
-
     const projectHistory = history[rootPath] ?? [];
     const headIndex = head[rootPath] ?? -1;
     const headSnapshot = headIndex !== -1 ? projectHistory[headIndex] : null;
+
+    // Determine if the current HEAD is an amendable state from a previous review.
+    const isAmendableState =
+      headSnapshot &&
+      !headSnapshot.isInitialState &&
+      !headSnapshot.description.includes("Workspace changes detected");
+
+    if (appliedChanges.length === 0) {
+      // If we were reviewing an amendable state and we reverted all changes,
+      // we should pop this state from history, effectively reverting the commit.
+      if (isAmendableState && headSnapshot) {
+        try {
+          await popHeadState(rootPath);
+          triggerFileTreeRefresh();
+        } catch (e) {
+          console.error(`Failed to pop history state:`, e);
+          await openDialog({
+            title: "Error Reverting History",
+            content: `Failed to revert the last set of changes: ${e}.`,
+            status: "error",
+          });
+        }
+      }
+      endReview();
+      return;
+    }
 
     try {
       const changedFiles: FileChangeInfo[] = appliedChanges.map((change) => {
@@ -221,11 +242,7 @@ export function ChangeList() {
         files: newFiles,
       };
 
-      const shouldAmend = headSnapshot &&
-        !headSnapshot.isInitialState &&
-        !headSnapshot.description.includes("Workspace changes detected");
-
-      if (shouldAmend) {
+      if (isAmendableState) {
         await amendState(newStateData);
       } else {
         addState(newStateData);
