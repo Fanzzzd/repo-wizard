@@ -17,6 +17,7 @@ import { useReviewStore } from "../../store/reviewStore";
 import { parseChangesFromMarkdown } from "../../lib/diff_parser";
 import { usePromptStore } from "../../store/promptStore";
 import { MetaPromptsManagerModal } from "./MetaPromptsManagerModal";
+import { estimateTokens } from "../../lib/token_estimator";
 
 const editFormatOptions: { value: EditFormat; label: string }[] = [
   { value: "whole", label: "Whole File" },
@@ -48,10 +49,6 @@ export function PromptComposer() {
     setMetaPrompts,
     autoReviewOnPaste,
   } = useSettingsStore();
-
-  const estimateTokens = (text: string) => {
-    return Math.ceil(text.length / 4);
-  };
 
   useEffect(() => {
     const calculate = async () => {
