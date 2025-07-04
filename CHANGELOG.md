@@ -1,3 +1,16 @@
+# [1.3.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.2.0...app-v1.3.0-next.1) (2025-07-04)
+
+
+### Bug Fixes
+
+* prevent page-level scroll effects on component scroll ([faf4d40](https://github.com/Fanzzzd/repo-wizard/commit/faf4d4040f887a17cdf5b0c5c508a2b7ec9fbd1b))
+
+
+### Features
+
+* **core:** add language detection for monaco editors ([856fd86](https://github.com/Fanzzzd/repo-wizard/commit/856fd8650f7ee58f771547adb7fe2b6d6419771a))
+* **updater:** integrate updater plugin and implement update check functionality ([7a61d58](https://github.com/Fanzzzd/repo-wizard/commit/7a61d583275519f5752721aed0f4b3075749c1ad))
+
 # [1.2.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.1.0...app-v1.2.0) (2025-07-03)
 
 
