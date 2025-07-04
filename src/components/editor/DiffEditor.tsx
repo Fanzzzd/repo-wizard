@@ -97,7 +97,14 @@ export function DiffEditor() {
       original={originalContent}
       modified={modifiedContent}
       theme="vs"
-      options={{ readOnly: true, automaticLayout: true }}
+      options={{
+        readOnly: true,
+        renderSideBySide: true,
+        minimap: { enabled: false },
+        renderSideBySideInlineBreakpoint: 200,
+        showUnused: false,
+        diffAlgorithm: "advanced"
+      }}
     />
   );
 }
