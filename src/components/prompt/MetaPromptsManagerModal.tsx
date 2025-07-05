@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSettingsStore } from "../../store/settingsStore";
 import type { MetaPrompt } from "../../types";
 import { v4 as uuidv4 } from "uuid";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, Copy, Combine, ChevronUp } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { Input } from "../common/Input";
 import { Textarea } from "../common/Textarea";
@@ -13,18 +13,73 @@ interface MetaPromptsManagerModalProps {
   onClose: () => void;
 }
 
+const templateFiles = ["architect.md", "engineer.md", "code-reviewer.md"];
+
 export function MetaPromptsManagerModal({
   isOpen,
   onClose,
 }: MetaPromptsManagerModalProps) {
   const { metaPrompts, setMetaPrompts } = useSettingsStore();
   const [localPrompts, setLocalPrompts] = useState<MetaPrompt[]>([]);
+  const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
+  const [availableTemplates, setAvailableTemplates] = useState<
+    { name: string; content: string }[]
+  >([]);
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+  const addMenuRef = useRef<HTMLDivElement>(null);
+
+  const selectedPrompt = localPrompts.find((p) => p.id === selectedPromptId);
 
   useEffect(() => {
     if (isOpen) {
+      // Deep copy to avoid mutating global state directly
       setLocalPrompts(JSON.parse(JSON.stringify(metaPrompts)));
+
+      // Set initial selection
+      if (metaPrompts.length > 0) {
+        setSelectedPromptId(metaPrompts[0].id);
+      } else {
+        setSelectedPromptId(null);
+      }
+
+      // Fetch templates
+      const fetchTemplates = async () => {
+        try {
+          const templatesData = await Promise.all(
+            templateFiles.map(async (filename) => {
+              const response = await fetch(`/meta-prompts/${filename}`);
+              if (!response.ok)
+                throw new Error(`Failed to fetch ${filename}`);
+              const content = await response.text();
+              const name = filename
+                .replace(".md", "")
+                .replace(/-/g, " ")
+                .replace(/\b\w/g, (l) => l.toUpperCase());
+              return { name, content };
+            })
+          );
+          setAvailableTemplates(templatesData);
+        } catch (error) {
+          console.error("Failed to load meta prompt templates:", error);
+        }
+      };
+      fetchTemplates();
     }
   }, [isOpen, metaPrompts]);
+
+  // Click outside listener for the add menu
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        addMenuRef.current &&
+        !addMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsAddMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSave = () => {
     setMetaPrompts(localPrompts);
@@ -41,17 +96,62 @@ export function MetaPromptsManagerModal({
   };
 
   const handleDeletePrompt = (id: string) => {
-    setLocalPrompts(localPrompts.filter((p) => p.id !== id));
+    const index = localPrompts.findIndex((p) => p.id === id);
+    if (index === -1) return;
+
+    const newPrompts = localPrompts.filter((p) => p.id !== id);
+    setLocalPrompts(newPrompts);
+
+    if (selectedPromptId === id) {
+      if (newPrompts.length === 0) {
+        setSelectedPromptId(null);
+      } else {
+        const newIndex = Math.max(0, index - 1);
+        setSelectedPromptId(newPrompts[newIndex].id);
+      }
+    }
   };
 
-  const handleAddPrompt = () => {
+  const handleDuplicatePrompt = (id: string) => {
+    const sourcePrompt = localPrompts.find((p) => p.id === id);
+    if (!sourcePrompt) return;
     const newPrompt: MetaPrompt = {
+      ...sourcePrompt,
+      id: uuidv4(),
+      name: `${sourcePrompt.name} (Copy)`,
+    };
+    const sourceIndex = localPrompts.findIndex((p) => p.id === id);
+    const newPrompts = [...localPrompts];
+    newPrompts.splice(sourceIndex + 1, 0, newPrompt);
+    setLocalPrompts(newPrompts);
+    setSelectedPromptId(newPrompt.id);
+  };
+
+  const addPrompt = (prompt: MetaPrompt) => {
+    setLocalPrompts((prev) => [...prev, prompt]);
+    setSelectedPromptId(prompt.id);
+    setIsAddMenuOpen(false);
+  };
+
+  const handleAddFromTemplate = (template: {
+    name: string;
+    content: string;
+  }) => {
+    addPrompt({
+      id: uuidv4(),
+      name: template.name,
+      content: template.content,
+      enabled: true,
+    });
+  };
+
+  const handleAddBlankPrompt = () => {
+    addPrompt({
       id: uuidv4(),
       name: "New Meta Prompt",
       content: "",
       enabled: true,
-    };
-    setLocalPrompts([...localPrompts, newPrompt]);
+    });
   };
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -76,7 +176,7 @@ export function MetaPromptsManagerModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="bg-white rounded-lg shadow-xl w-full max-w-2xl h-[80vh] flex flex-col overflow-hidden"
+            className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <header className="p-4 border-b flex items-center justify-between flex-shrink-0">
@@ -91,60 +191,145 @@ export function MetaPromptsManagerModal({
               </button>
             </header>
 
-            <main className="flex-grow p-4 overflow-y-auto space-y-4 bg-gray-50">
-              {localPrompts.map((prompt) => (
-                <div
-                  key={prompt.id}
-                  className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-3"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <Input
-                      type="text"
-                      value={prompt.name}
-                      onChange={(e) =>
-                        handleUpdatePrompt(prompt.id, { name: e.target.value })
-                      }
-                      className="font-semibold flex-grow"
-                      placeholder="Meta Prompt Name"
-                    />
-                    <div className="flex items-center justify-between sm:justify-end gap-4 flex-shrink-0">
-                      <Checkbox
-                        checked={prompt.enabled}
+            <main className="flex-grow flex min-h-0 bg-gray-50">
+              {/* Left Column: Prompt List */}
+              <div className="w-1/3 border-r border-gray-200 flex flex-col bg-white">
+                <div className="flex-grow p-2 overflow-y-auto">
+                  <AnimatePresence>
+                    {localPrompts.map((prompt) => (
+                      <motion.button
+                        key={prompt.id}
+                        layout
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.2 }}
+                        onClick={() => setSelectedPromptId(prompt.id)}
+                        className={`w-full text-left flex items-center justify-between p-2 rounded-md text-sm mb-1 transition-colors ${
+                          selectedPromptId === prompt.id
+                            ? "bg-blue-100 text-blue-800 font-semibold"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span className="truncate">{prompt.name}</span>
+                        {prompt.enabled && (
+                          <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 ml-2" title="Enabled"></div>
+                        )}
+                      </motion.button>
+                    ))}
+                  </AnimatePresence>
+                </div>
+                <div className="flex-shrink-0 p-2 border-t border-gray-200 relative" ref={addMenuRef}>
+                  <AnimatePresence>
+                    {isAddMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute bottom-full left-2 right-2 mb-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-1"
+                      >
+                        <button
+                          onClick={handleAddBlankPrompt}
+                          className="w-full flex items-center gap-2 text-sm px-3 py-2 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
+                        >
+                          <Plus size={16} /> Add Blank Prompt
+                        </button>
+                        {availableTemplates.map((template, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleAddFromTemplate(template)}
+                            className="w-full flex items-center gap-2 text-sm px-3 py-2 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
+                            title={`Add the "${template.name}" template`}
+                          >
+                            <Combine size={16} /> {template.name}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <button
+                    onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                  >
+                    <Plus size={16} />
+                    Add Prompt
+                    <ChevronUp size={16} className={`transition-transform ${isAddMenuOpen ? "rotate-0" : "rotate-180"}`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: Editor */}
+              <div className="w-2/3 p-6 overflow-y-auto">
+                {selectedPrompt ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Name</label>
+                      <Input
+                        type="text"
+                        value={selectedPrompt.name}
                         onChange={(e) =>
-                          handleUpdatePrompt(prompt.id, {
+                          handleUpdatePrompt(selectedPrompt.id, {
+                            name: e.target.value,
+                          })
+                        }
+                        placeholder="Meta Prompt Name"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Content</label>
+                      <Textarea
+                        value={selectedPrompt.content}
+                        onChange={(e) =>
+                          handleUpdatePrompt(selectedPrompt.id, {
+                            content: e.target.value,
+                          })
+                        }
+                        className="h-48 text-xs"
+                        placeholder="Enter meta prompt content..."
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Checkbox
+                        checked={selectedPrompt.enabled}
+                        onChange={(e) =>
+                          handleUpdatePrompt(selectedPrompt.id, {
                             enabled: e.target.checked,
                           })
                         }
                       >
                         Enabled
                       </Checkbox>
-                      <button
-                        onClick={() => handleDeletePrompt(prompt.id)}
-                        className="p-1.5 text-gray-500 hover:text-red-600 rounded-full hover:bg-gray-100 transition-colors"
-                        title="Delete Prompt"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleDuplicatePrompt(selectedPrompt.id)}
+                          className="flex items-center gap-1.5 p-1.5 text-xs text-gray-600 hover:text-blue-600 rounded-md hover:bg-gray-100 transition-colors"
+                          title="Duplicate Prompt"
+                        >
+                          <Copy size={14} /> Duplicate
+                        </button>
+                        <button
+                          onClick={() => handleDeletePrompt(selectedPrompt.id)}
+                          className="flex items-center gap-1.5 p-1.5 text-xs text-gray-600 hover:text-red-600 rounded-md hover:bg-gray-100 transition-colors"
+                          title="Delete Prompt"
+                        >
+                          <Trash2 size={14} /> Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <Textarea
-                    value={prompt.content}
-                    onChange={(e) =>
-                      handleUpdatePrompt(prompt.id, {
-                        content: e.target.value,
-                      })
-                    }
-                    className="bg-gray-50 text-xs h-32"
-                    placeholder="Enter meta prompt content..."
-                  />
-                </div>
-              ))}
-              <button
-                onClick={handleAddPrompt}
-                className="w-full flex items-center justify-center gap-2 text-sm px-3 py-2 border-2 border-dashed rounded-md hover:bg-gray-100 hover:border-gray-300 text-gray-500 transition-colors"
-              >
-                <Plus size={16} /> Add Meta Prompt
-              </button>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-center text-gray-500">
+                    <div>
+                      <p>No meta prompts yet.</p>
+                      <p className="text-sm">
+                        Click "Add Prompt" to get started.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </main>
 
             <footer className="bg-gray-100 px-4 py-3 flex justify-end gap-3 border-t flex-shrink-0">
