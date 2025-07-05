@@ -1,3 +1,13 @@
+# [1.3.0-next.4](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.3.0-next.3...app-v1.3.0-next.4) (2025-07-05)
+
+
+### Features
+
+* **common:** format large token counts with 'k' suffix ([084177e](https://github.com/Fanzzzd/repo-wizard/commit/084177eef8d30e7c31fb241d6c3a857618316eac))
+* **prompt:** add meta prompt management and enhance prompt building ([222f9c5](https://github.com/Fanzzzd/repo-wizard/commit/222f9c5f3ddd4d2b5d482f6e8ce6dba94901757a))
+* **prompt:** enhance prompt formatting with structured sections ([7644591](https://github.com/Fanzzzd/repo-wizard/commit/7644591e6890005c367be3b0829a08ff1ece716d))
+* **review:** enhance change tracking with new file detection and UI updates ([3c95c6f](https://github.com/Fanzzzd/repo-wizard/commit/3c95c6f1d144e5907f79484ec35bcc6664324d6a))
+
 # [1.3.0-next.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.3.0-next.2...app-v1.3.0-next.3) (2025-07-04)
 
 
