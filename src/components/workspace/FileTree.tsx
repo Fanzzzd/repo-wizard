@@ -3,11 +3,10 @@ import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { listDirectoryRecursive, backupFiles } from "../../lib/tauri_api";
+import { listDirectoryRecursive } from "../../lib/tauri_api";
 import type { FileNode } from "../../types";
 import { FileTypeIcon } from "./FileTypeIcon";
 import { AnimatePresence, motion } from "motion/react";
-import { useHistoryStore } from "../../store/historyStore";
 
 function collectFilePaths(node: FileNode): string[] {
   if (!node.isDirectory) {
@@ -174,24 +173,9 @@ function FileNodeComponent({
   );
 }
 
-function collectAllRelativePaths(node: FileNode, root: string): string[] {
-  const relativePath = node.path.replace(root, "").replace(/^\//, "");
-  if (!node.isDirectory) {
-      return relativePath ? [relativePath] : [];
-  }
-  let paths: string[] = [];
-  if (node.children) {
-      for (const child of node.children) {
-          paths.push(...collectAllRelativePaths(child, root));
-      }
-  }
-  return paths;
-}
-
 export function FileTree() {
   const { rootPath, fileTree, setRootPath, setFileTree, refreshCounter } = useWorkspaceStore();
   const { respectGitignore, customIgnorePatterns } = useSettingsStore();
-  const { history, addState } = useHistoryStore();
 
   const handleOpenFolder = async () => {
     try {
@@ -215,33 +199,14 @@ export function FileTree() {
     if (rootPath) {
       const settings = { respectGitignore, customIgnorePatterns };
       listDirectoryRecursive(rootPath, settings)
-        .then(async (tree) => {
+        .then((tree) => {
           setFileTree(tree);
-
-          const projectHistory = history[rootPath] ?? [];
-          if (projectHistory.length === 0) {
-            // This is a new project being opened, create an initial history state
-            try {
-              const allFiles = collectAllRelativePaths(tree, rootPath);
-              const backupId = await backupFiles(rootPath, allFiles);
-              addState({
-                backupId,
-                description: "Initial project state",
-                rootPath,
-                changedFiles: [],
-                files: allFiles,
-                isInitialState: true,
-              });
-            } catch (err) {
-              console.error("Failed to create initial history state:", err);
-            }
-          }
         })
         .catch(console.error);
     } else {
       setFileTree(null);
     }
-  }, [rootPath, setFileTree, respectGitignore, customIgnorePatterns, refreshCounter, history, addState]);
+  }, [rootPath, setFileTree, respectGitignore, customIgnorePatterns, refreshCounter]);
 
   if (!fileTree) {
     return (

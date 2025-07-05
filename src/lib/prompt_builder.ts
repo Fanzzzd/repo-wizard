@@ -153,8 +153,9 @@ export const buildPrompt = (
   let prompt = "";
 
   if (customSystemPrompt) {
+    prompt += `--- BEGIN SYSTEM PROMPT ---\n`;
     prompt += customSystemPrompt;
-    prompt += "\n\n";
+    prompt += `\n--- END SYSTEM PROMPT ---\n\n`;
   }
 
   const enabledMetaPrompts = metaPrompts.filter((p) => p.enabled);
@@ -163,20 +164,26 @@ export const buildPrompt = (
     for (const metaPrompt of enabledMetaPrompts) {
       prompt += `--- BEGIN META PROMPT: "${metaPrompt.name}" ---\n`;
       prompt += metaPrompt.content;
-      prompt += `\n--- END META PROMPT ---\n\n`;
+      prompt += `\n--- END META PROMPT: "${metaPrompt.name}" ---\n\n`;
     }
   }
-
+  
+  prompt += `--- BEGIN File Editing Rules ---\n`;
   prompt += formattingRulesMap[editFormat];
-  prompt += "\n\n";
+  prompt += `\n--- END File Editing Rules ---\n\n`;
 
+  prompt += "--- BEGIN SELECTED CODE ---\n";
   prompt += "Here are the files to work with:\n\n";
 
   for (const file of files) {
     prompt += `${file.path}\n\`\`\`\n${file.content}\n\`\`\`\n\n`;
   }
 
+  prompt += "--- END SELECTED CODE ---\n\n";
+
   prompt += `My instructions are:\n\n${instructions}`;
+
+  prompt += `\n\n**IMPORTANT** IF MAKING FILE CHANGES, YOU MUST USE THE FILE EDITING FORMATS PROVIDED ABOVE – IT IS THE ONLY WAY FOR YOUR CHANGES TO BE APPLIED.`;
 
   return prompt;
 };

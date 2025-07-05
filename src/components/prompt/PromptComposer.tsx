@@ -8,15 +8,18 @@ import {
   History,
   FileSearch2,
 } from "lucide-react";
-import { motion } from "motion/react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { buildPrompt } from "../../lib/prompt_builder";
 import { useSettingsStore } from "../../store/settingsStore";
-import type { EditFormat, MetaPrompt } from "../../types";
+import type { EditFormat } from "../../types";
 import { useReviewStore } from "../../store/reviewStore";
 import { parseChangesFromMarkdown } from "../../lib/diff_parser";
 import { usePromptStore } from "../../store/promptStore";
 import { MetaPromptsManagerModal } from "./MetaPromptsManagerModal";
+import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
+import { Textarea } from "../common/Textarea";
+import { MetaPromptSelector } from "./MetaPromptSelector";
+import { motion } from "motion/react";
 
 const editFormatOptions: { value: EditFormat; label: string }[] = [
   { value: "whole", label: "Whole File" },
@@ -45,13 +48,8 @@ export function PromptComposer() {
     editFormat,
     setEditFormat,
     metaPrompts,
-    setMetaPrompts,
     autoReviewOnPaste,
   } = useSettingsStore();
-
-  const estimateTokens = (text: string) => {
-    return Math.ceil(text.length / 4);
-  };
 
   useEffect(() => {
     const calculate = async () => {
@@ -79,8 +77,10 @@ export function PromptComposer() {
               `Failed to read file for token count ${path}:`,
               error
             );
-            if (typeof error === 'string' && error.includes('No such file')) {
-              console.warn(`Removing non-existent file from selection: ${path}`);
+            if (typeof error === "string" && error.includes("No such file")) {
+              console.warn(
+                `Removing non-existent file from selection: ${path}`
+              );
               useWorkspaceStore.getState().removeSelectedFilePath(path);
             }
           }
@@ -158,29 +158,38 @@ export function PromptComposer() {
   }, [rootPath, startReview, markMarkdownAsProcessed]);
 
   useEffect(() => {
-    if (autoReviewOnPaste && markdownResponse.trim() && markdownResponse !== processedMarkdownResponse && rootPath) {
+    if (
+      autoReviewOnPaste &&
+      markdownResponse.trim() &&
+      markdownResponse !== processedMarkdownResponse &&
+      rootPath
+    ) {
       const timer = setTimeout(() => {
         handleReview();
       }, 500); // Debounce for 500ms
       return () => clearTimeout(timer);
     }
-  }, [markdownResponse, processedMarkdownResponse, rootPath, autoReviewOnPaste, handleReview]);
-  
+  }, [
+    markdownResponse,
+    processedMarkdownResponse,
+    rootPath,
+    autoReviewOnPaste,
+    handleReview,
+  ]);
+
   const handleReenterReview = () => {
     reenterReview();
   };
 
-  const handleUpdateMetaPrompt = (
-    id: string,
-    update: Partial<Omit<MetaPrompt, "id">>
-  ) => {
-    setMetaPrompts(
-      metaPrompts.map((p) => (p.id === id ? { ...p, ...update } : p))
-    );
-  };
+  const hasUnprocessedResponse =
+    markdownResponse.trim() !== "" &&
+    markdownResponse !== processedMarkdownResponse;
+  const canReenterReview = !hasUnprocessedResponse && !!lastReview;
 
-  const hasUnprocessedResponse = markdownResponse.trim() !== "" && markdownResponse !== processedMarkdownResponse;
-  
+  const responsePlaceholder = autoReviewOnPaste
+    ? "Paste full markdown response from your LLM here to automatically start review..."
+    : "Paste full markdown response from your LLM here. Click 'Review' to start.";
+
   return (
     <div className="p-4 flex flex-col h-full bg-gray-50 text-gray-800 overflow-y-auto">
       <div className="flex-grow flex flex-col min-h-0">
@@ -215,20 +224,26 @@ export function PromptComposer() {
           <div className="text-xs text-gray-500 mt-1">
             {editFormat === "whole" && (
               <div>
-                <span className="font-semibold text-green-700">Recommended:</span>
+                <span className="font-semibold text-green-700">
+                  Recommended:
+                </span>
                 <span> Universal and reliable, but can be verbose.</span>
               </div>
             )}
             {editFormat === "udiff" && (
               <div>
-                <span className="font-semibold text-yellow-700">Experimental:</span>
+                <span className="font-semibold text-yellow-700">
+                  Experimental:
+                </span>
                 <span> Best for GPT models. </span>
                 <span> Use 'Whole File' for best results.</span>
               </div>
             )}
             {editFormat === "diff-fenced" && (
               <div>
-                <span className="font-semibold text-yellow-700">Experimental:</span>
+                <span className="font-semibold text-yellow-700">
+                  Experimental:
+                </span>
                 <span> Best for Gemini models. </span>
                 <span> Use 'Whole File' for best results.</span>
               </div>
@@ -248,45 +263,19 @@ export function PromptComposer() {
               Manage
             </button>
           </div>
-          {metaPrompts.length > 0 ? (
-            <div className="flex overflow-x-auto gap-2 pb-2 -mx-4 px-4">
-              {metaPrompts.map((prompt) => (
-                <button
-                  key={prompt.id}
-                  onClick={() =>
-                    handleUpdateMetaPrompt(prompt.id, {
-                      enabled: !prompt.enabled,
-                    })
-                  }
-                  className={`px-3 py-1.5 mt-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex-shrink-0 ring-1 ${
-                    prompt.enabled
-                      ? "bg-blue-100 text-blue-800 ring-blue-300"
-                      : "bg-gray-100 text-gray-700 ring-transparent hover:bg-gray-200 hover:ring-gray-300"
-                  }`}
-                  title={prompt.name}
-                >
-                  {prompt.name}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div
-              onClick={() => setIsMetaPromptsManagerOpen(true)}
-              className="text-center text-sm text-gray-500 border-2 border-dashed border-gray-300 rounded-md p-3 hover:bg-gray-100 hover:border-gray-400 cursor-pointer transition-colors"
-            >
-              No meta prompts defined. Click here to create one.
-            </div>
-          )}
+          <MetaPromptSelector
+            onManageRequest={() => setIsMetaPromptsManagerOpen(true)}
+          />
         </div>
 
-        <textarea
-          className="w-full flex-grow bg-white p-2 rounded-md mb-2 font-mono text-sm border border-gray-200"
+        <Textarea
+          className="flex-grow mb-2"
           placeholder="Enter your refactoring instructions here..."
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
-        ></textarea>
+        />
         <div className="text-right text-xs text-gray-500 mb-2">
-          Estimated Tokens: ~{estimatedTokens.toLocaleString()}
+          Estimated Tokens: ~{formatTokenCount(estimatedTokens)}
         </div>
         <button
           onClick={generatePrompt}
@@ -300,36 +289,43 @@ export function PromptComposer() {
 
       <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col">
         <div className="flex items-center justify-between mb-2">
-            <h2 className="font-bold">Paste Response & Review</h2>
-            <div className="flex items-center gap-2">
-              {lastReview && (
-                  <button
-                      onClick={handleReenterReview}
-                      disabled={hasUnprocessedResponse}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 font-semibold disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
-                      title={hasUnprocessedResponse ? "A new response is waiting for review" : "Go back to last review session"}
-                  >
-                      <History size={14} />
-                      Last Review
-                  </button>
-              )}
-              <button
-                  onClick={handleReview}
-                  disabled={!hasUnprocessedResponse}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200 font-semibold disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
-                  title={!hasUnprocessedResponse ? "Paste a response to enable review" : "Start review for the pasted response"}
-              >
-                  <FileSearch2 size={14} />
-                  Start Review
-              </button>
-            </div>
+          <h2 className="font-bold">Paste Response & Review</h2>
+          {hasUnprocessedResponse ? (
+            <button
+              onClick={handleReview}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200 font-semibold"
+              title="Start review for the pasted response"
+            >
+              <FileSearch2 size={14} />
+              <span>Review</span>
+            </button>
+          ) : canReenterReview ? (
+            <button
+              onClick={handleReenterReview}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 font-semibold"
+              title="Go back to last review session"
+            >
+              <History size={14} />
+              <span>Review</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleReview}
+              disabled={!markdownResponse.trim()}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 font-semibold disabled:text-gray-500 disabled:hover:bg-gray-200 disabled:cursor-not-allowed"
+              title="Start a new review for the pasted response"
+            >
+              <FileSearch2 size={14} />
+              <span>Review</span>
+            </button>
+          )}
         </div>
-        <textarea
-          className="w-full h-24 bg-white p-2 rounded-md font-mono text-sm border border-gray-200 mb-2"
-          placeholder="Paste full markdown response from your LLM here to automatically start review..."
+        <Textarea
+          className="h-24 mb-2"
+          placeholder={responsePlaceholder}
           value={markdownResponse}
           onChange={(e) => setMarkdownResponse(e.target.value)}
-        ></textarea>
+        />
       </div>
       <MetaPromptsManagerModal
         isOpen={isMetaPromptsManagerOpen}

@@ -69,6 +69,7 @@ function parseFencedBlockContent(filePath: string, content: string): ChangeOpera
       type: "rewrite",
       filePath,
       content,
+      isNewFile: false,
     };
   }
 }

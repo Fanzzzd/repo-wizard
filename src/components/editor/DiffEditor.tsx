@@ -4,6 +4,7 @@ import { useReviewStore } from "../../store/reviewStore";
 import { useEffect, useState } from "react";
 import { readFileContent } from "../../lib/tauri_api";
 import { applyPatch } from "diff";
+import { getLanguageForFilePath } from "../../lib/language_service";
 
 export function DiffEditor() {
   const { rootPath } = useWorkspaceStore();
@@ -12,6 +13,7 @@ export function DiffEditor() {
   const [originalContent, setOriginalContent] = useState("");
   const [modifiedContent, setModifiedContent] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [language, setLanguage] = useState<string | undefined>(undefined);
 
   const activeChange = changes.find((c) => c.id === activeChangeId);
 
@@ -19,10 +21,27 @@ export function DiffEditor() {
     setMessage(null);
     setOriginalContent("");
     setModifiedContent("");
+    setLanguage(undefined);
 
     if (!activeChange || !rootPath) return;
 
     const { operation } = activeChange;
+
+    let filePathForLanguage: string | undefined;
+    switch (operation.type) {
+      case "modify":
+      case "rewrite":
+      case "delete":
+        filePathForLanguage = operation.filePath;
+        break;
+      case "move":
+        filePathForLanguage = operation.toPath;
+        break;
+    }
+
+    if (filePathForLanguage) {
+      setLanguage(getLanguageForFilePath(filePathForLanguage));
+    }
 
     if (operation.type === 'delete' || operation.type === 'move') {
       let msg = `This change is a ${operation.type} operation.`;
@@ -93,11 +112,18 @@ export function DiffEditor() {
   return (
     <MonacoDiffEditor
       height="100%"
-      language="typescript" // This could be dynamic based on file type in future
+      language={language}
       original={originalContent}
       modified={modifiedContent}
       theme="vs"
-      options={{ readOnly: true, automaticLayout: true }}
+      options={{
+        readOnly: true,
+        renderSideBySide: true,
+        minimap: { enabled: false },
+        renderSideBySideInlineBreakpoint: 200,
+        showUnused: false,
+        diffAlgorithm: "advanced"
+      }}
     />
   );
 }

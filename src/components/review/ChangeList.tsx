@@ -79,9 +79,9 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
         return (
           <>
             <FileTypeIcon filename={operation.filePath} isDirectory={false} />
-            <ShortenedPath path={operation.filePath} className="truncate" />
+            <ShortenedPath path={operation.filePath} className="truncate min-w-0" />
             {operation.isNewFile && (
-              <span className="text-xs text-green-600 font-medium ml-auto mr-2">
+              <span className="text-xs text-green-600 font-medium ml-auto mr-2 flex-shrink-0">
                 NEW
               </span>
             )}
@@ -91,10 +91,15 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
         return (
           <>
             <PencilRuler size={14} className="text-purple-500" />
-            <ShortenedPath path={operation.filePath} className="truncate" />
-            <span className="text-xs text-purple-600 font-medium ml-auto mr-2">
-              REWRITE
-            </span>
+            <ShortenedPath path={operation.filePath} className="truncate min-w-0" />
+            <div className="ml-auto mr-2 flex-shrink-0 flex items-center gap-2">
+              {operation.isNewFile && (
+                <span className="text-xs text-green-600 font-medium">NEW</span>
+              )}
+              <span className="text-xs text-purple-600 font-medium">
+                REWRITE
+              </span>
+            </div>
           </>
         );
       case "delete":
@@ -103,7 +108,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
             <Trash2 size={14} className="text-red-500" />
             <ShortenedPath
               path={operation.filePath}
-              className="truncate line-through"
+              className="truncate line-through min-w-0"
             />
           </>
         );
@@ -111,13 +116,9 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
         return (
           <>
             <Move size={14} className="text-blue-500" />
-            <span
-              className="truncate"
-              title={`${operation.fromPath} → ${operation.toPath}`}
-            >
-              <ShortenedPath path={operation.fromPath} /> →{" "}
-              <ShortenedPath path={operation.toPath} />
-            </span>
+            <ShortenedPath path={operation.fromPath} className="truncate min-w-0" />
+            <span className="text-gray-500 flex-shrink-0">→</span>
+            <ShortenedPath path={operation.toPath} className="truncate min-w-0" />
           </>
         );
     }
@@ -158,7 +159,7 @@ export function ChangeList() {
     revertAllAppliedChanges,
   } = useReviewStore();
   const { rootPath, triggerFileTreeRefresh } = useWorkspaceStore();
-  const { history, head, addState, amendState } = useHistoryStore();
+  const { history, head, addState, amendState, popHeadState } = useHistoryStore();
   const { open: openDialog } = useDialogStore();
 
   const appliedChanges = changes.filter((c) => c.status === "applied");
@@ -166,14 +167,35 @@ export function ChangeList() {
   const handleFinishReview = async () => {
     if (!rootPath) return;
 
-    if (appliedChanges.length === 0) {
-      endReview();
-      return;
-    }
-
     const projectHistory = history[rootPath] ?? [];
     const headIndex = head[rootPath] ?? -1;
     const headSnapshot = headIndex !== -1 ? projectHistory[headIndex] : null;
+
+    // Determine if the current HEAD is an amendable state from a previous review.
+    const isAmendableState =
+      headSnapshot &&
+      !headSnapshot.isInitialState &&
+      !headSnapshot.description.includes("Workspace changes detected");
+
+    if (appliedChanges.length === 0) {
+      // If we were reviewing an amendable state and we reverted all changes,
+      // we should pop this state from history, effectively reverting the commit.
+      if (isAmendableState && headSnapshot) {
+        try {
+          await popHeadState(rootPath);
+          triggerFileTreeRefresh();
+        } catch (e) {
+          console.error(`Failed to pop history state:`, e);
+          await openDialog({
+            title: "Error Reverting History",
+            content: `Failed to revert the last set of changes: ${e}.`,
+            status: "error",
+          });
+        }
+      }
+      endReview();
+      return;
+    }
 
     try {
       const changedFiles: FileChangeInfo[] = appliedChanges.map((change) => {
@@ -185,7 +207,7 @@ export function ChangeList() {
               type: operation.isNewFile ? "added" : "modified",
             };
           case "rewrite":
-            return { path: operation.filePath, type: "modified" };
+            return { path: operation.filePath, type: operation.isNewFile ? "added" : "modified" };
           case "delete":
             return { path: operation.filePath, type: "deleted" };
           case "move":
@@ -202,7 +224,7 @@ export function ChangeList() {
         const { operation } = change;
         if (operation.type === "modify" && operation.isNewFile)
           newFileSet.add(operation.filePath);
-        if (operation.type === "rewrite") newFileSet.add(operation.filePath);
+        if (operation.type === "rewrite" && operation.isNewFile) newFileSet.add(operation.filePath);
         if (operation.type === "delete") newFileSet.delete(operation.filePath);
         if (operation.type === "move") {
           newFileSet.delete(operation.fromPath);
@@ -221,11 +243,7 @@ export function ChangeList() {
         files: newFiles,
       };
 
-      const shouldAmend = headSnapshot &&
-        !headSnapshot.isInitialState &&
-        !headSnapshot.description.includes("Workspace changes detected");
-
-      if (shouldAmend) {
+      if (isAmendableState) {
         await amendState(newStateData);
       } else {
         addState(newStateData);

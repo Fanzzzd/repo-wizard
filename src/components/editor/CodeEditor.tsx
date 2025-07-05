@@ -3,6 +3,7 @@ import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useEffect, useState } from "react";
 import { readFileContent } from "../../lib/tauri_api";
 import { useReviewStore } from "../../store/reviewStore";
+import { getLanguageForFilePath } from "../../lib/language_service";
 
 export function CodeEditor() {
   const { activeFilePath } = useWorkspaceStore();
@@ -30,6 +31,7 @@ export function CodeEditor() {
       height="100%"
       path={activeFilePath}
       value={content}
+      language={getLanguageForFilePath(activeFilePath)}
       theme="vs"
       options={{ readOnly: true, automaticLayout: true }}
     />
