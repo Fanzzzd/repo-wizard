@@ -1,3 +1,24 @@
+# [1.3.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.2.0...app-v1.3.0) (2025-07-05)
+
+
+### Bug Fixes
+
+* prevent page-level scroll effects on component scroll ([faf4d40](https://github.com/Fanzzzd/repo-wizard/commit/faf4d4040f887a17cdf5b0c5c508a2b7ec9fbd1b))
+
+
+### Features
+
+* **common:** format large token counts with 'k' suffix ([084177e](https://github.com/Fanzzzd/repo-wizard/commit/084177eef8d30e7c31fb241d6c3a857618316eac))
+* **common:** introduce standard form components and enhance textarea ([6c416eb](https://github.com/Fanzzzd/repo-wizard/commit/6c416ebfb0b01f990b9253fd1c27634760756df5))
+* **core:** add language detection for monaco editors ([856fd86](https://github.com/Fanzzzd/repo-wizard/commit/856fd8650f7ee58f771547adb7fe2b6d6419771a))
+* **prompt:** add meta prompt management and enhance prompt building ([222f9c5](https://github.com/Fanzzzd/repo-wizard/commit/222f9c5f3ddd4d2b5d482f6e8ce6dba94901757a))
+* **prompt:** enhance prompt formatting with structured sections ([7644591](https://github.com/Fanzzzd/repo-wizard/commit/7644591e6890005c367be3b0829a08ff1ece716d))
+* **prompt:** integrate token estimation in PromptComposer and SelectedFilesPanel ([76e4f45](https://github.com/Fanzzzd/repo-wizard/commit/76e4f45fcb333d424d43ea0cda708d00c96b6597))
+* **review:** enhance change tracking with new file detection and UI updates ([3c95c6f](https://github.com/Fanzzzd/repo-wizard/commit/3c95c6f1d144e5907f79484ec35bcc6664324d6a))
+* **review:** enhance review state management with history pop functionality ([fd728cb](https://github.com/Fanzzzd/repo-wizard/commit/fd728cb39f6a1c53405ea85ae02da34cbfd0c2ce))
+* **update:** enhance update management with user notifications and status indicators ([42eb18b](https://github.com/Fanzzzd/repo-wizard/commit/42eb18b8f7b325b21719893e6d79dfd4904a52b2))
+* **updater:** integrate updater plugin and implement update check functionality ([7a61d58](https://github.com/Fanzzzd/repo-wizard/commit/7a61d583275519f5752721aed0f4b3075749c1ad))
+
 # [1.3.0-next.4](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.3.0-next.3...app-v1.3.0-next.4) (2025-07-05)
 
 
