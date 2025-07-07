@@ -27,23 +27,6 @@ export const createReviewChange = (operation: ChangeOperation): ReviewChange => 
   status: "pending",
 });
 
-export interface FileChangeInfo {
-  path: string;
-  type: "modified" | "added" | "deleted" | "renamed";
-  newPath?: string;
-}
-
-export interface HistoryState {
-  id: string;
-  timestamp: number;
-  description: string;
-  rootPath: string;
-  backupId: string;
-  changedFiles: FileChangeInfo[];
-  files: string[]; // List of all relative file paths in this state
-  isInitialState?: boolean;
-}
-
 export interface MetaPrompt {
   id: string;
   name: string;

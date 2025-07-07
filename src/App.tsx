@@ -2,16 +2,16 @@ import { useEffect } from "react";
 import { Layout } from "./components/Layout";
 import { MainPanel } from "./components/MainPanel";
 import { useReviewStore } from "./store/reviewStore";
+import { useDialogStore } from "./store/dialogStore";
+import { useUpdateStore } from "./store/updateStore";
 import { ChangeList } from "./components/review/ChangeList";
 import { PromptComposer } from "./components/prompt/PromptComposer";
 import { TabbedPanel } from "./components/TabbedPanel";
 import { Header } from "./components/Header";
-import { HistoryPanel } from "./components/history/HistoryPanel";
+import { PromptHistoryPanel } from "./components/history/PromptHistoryPanel";
 import { WorkspaceSidebar } from "./components/workspace/WorkspaceSidebar";
 import { ModalDialog } from "./components/common/ModalDialog";
-import { useDialogStore } from "./store/dialogStore";
 import { Tooltip } from "./components/common/Tooltip";
-import { useUpdateStore } from "./store/updateStore";
 import { ContextMenu } from "./components/common/ContextMenu";
 
 /**
@@ -63,7 +63,7 @@ function App() {
     <TabbedPanel
       tabs={{
         "Compose & Review": <PromptComposer />,
-        "History": <HistoryPanel />,
+        "Prompt History": <PromptHistoryPanel />,
       }}
     />
   );

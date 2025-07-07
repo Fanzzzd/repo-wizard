@@ -1,8 +1,8 @@
 import Editor from "@monaco-editor/react";
 import { useWorkspaceStore } from "../../store/workspaceStore";
+import { useReviewStore } from "../../store/reviewStore";
 import { useEffect, useState } from "react";
 import { readFileContent } from "../../lib/tauri_api";
-import { useReviewStore } from "../../store/reviewStore";
 import { getLanguageForFilePath } from "../../lib/language_service";
 
 export function CodeEditor() {

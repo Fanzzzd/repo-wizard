@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useSettingsStore } from "../../store/settingsStore";
+import { useContextMenuStore } from "../../store/contextMenuStore";
 import type { MetaPrompt } from "../../types";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -18,8 +19,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { Input } from "../common/Input";
 import { Textarea } from "../common/Textarea";
 import { Checkbox } from "../common/Checkbox";
-import { useContextMenuStore } from "../../store/contextMenuStore";
 import { Button } from "../common/Button";
+import { SortableItem, DragHandle } from "../common/Sortable/SortableItem";
+import { SortableOverlay } from "../common/Sortable/SortableOverlay";
 import {
   DndContext,
   PointerSensor,
@@ -37,11 +39,6 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import {
-  SortableItem,
-  DragHandle,
-  SortableOverlay,
-} from "../common/Sortable";
 
 interface MetaPromptsManagerModalProps {
   isOpen: boolean;
@@ -540,33 +537,46 @@ export function MetaPromptsManagerModal({
                           transition={{ duration: 0.15 }}
                           className="absolute bottom-full left-2 right-2 mb-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-1"
                         >
-                          <button
+                          <Button
                             onClick={() => handleAddBlankPrompt("universal")}
-                            className="w-full flex items-center gap-2 text-sm px-3 py-2 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
+                            variant="ghost"
+                            size="md"
+                            className="w-full justify-start text-gray-600 hover:text-gray-800"
+                            leftIcon={<Wand2 size={16} />}
                           >
-                            <Wand2 size={16} /> Add Blank (Universal)
-                          </button>
-                          <button
+                            Add Blank (Universal)
+                          </Button>
+                          <Button
                             onClick={() => handleAddBlankPrompt("edit")}
-                            className="w-full flex items-center gap-2 text-sm px-3 py-2 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
+                            variant="ghost"
+                            size="md"
+                            className="w-full justify-start text-gray-600 hover:text-gray-800"
+                            leftIcon={<Edit size={16} />}
                           >
-                            <Edit size={16} /> Add Blank (Edit)
-                          </button>
-                          <button
+                            Add Blank (Edit)
+                          </Button>
+                          <Button
                             onClick={() => handleAddBlankPrompt("qa")}
-                            className="w-full flex items-center gap-2 text-sm px-3 py-2 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
+                            variant="ghost"
+                            size="md"
+                            className="w-full justify-start text-gray-600 hover:text-gray-800"
+                            leftIcon={<MessageSquare size={16} />}
                           >
-                            <MessageSquare size={16} /> Add Blank (QA)
-                          </button>
+                            Add Blank (QA)
+                          </Button>
+
                           {availableTemplates.map((template, index) => (
-                            <button
+                            <Button
                               key={index}
                               onClick={() => handleAddFromTemplate(template)}
-                              className="w-full flex items-center gap-2 text-sm px-3 py-2 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
+                              variant="ghost"
+                              size="md"
+                              className="w-full justify-start text-gray-600 hover:text-gray-800"
                               title={`Add the "${template.name}" template`}
+                              leftIcon={<Combine size={16} />}
                             >
-                              <Combine size={16} /> {template.name}
-                            </button>
+                              {template.name}
+                            </Button>
                           ))}
                         </motion.div>
                       )}

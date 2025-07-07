@@ -5,6 +5,7 @@ import { X, ChevronDown, Wand2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Checkbox } from "../common/Checkbox";
 import { HorizontalScroller } from "../common/HorizontalScroller";
+import { Button } from "../common/Button";
 
 interface MetaPromptSelectorProps {
   composerMode: "edit" | "qa";
@@ -182,15 +183,17 @@ export function MetaPromptSelector({
               )}
             </div>
             <div className="border-t border-gray-200 mt-2 pt-2">
-              <button
+              <Button
                 onClick={() => {
                   setIsSelectorOpen(false);
                   onManageRequest();
                 }}
-                className="w-full text-center text-sm text-blue-600 hover:text-blue-800 p-2 rounded-md hover:bg-blue-50 transition-colors"
+                variant="ghost"
+                size="md"
+                className="w-full text-blue-600 hover:text-blue-800 hover:bg-blue-50"
               >
                 Manage All Prompts...
-              </button>
+              </Button>
             </div>
           </motion.div>
         )}

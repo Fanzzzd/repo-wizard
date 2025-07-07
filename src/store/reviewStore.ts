@@ -4,13 +4,13 @@ import {
   applyPatch,
   backupFiles,
   deleteFile,
+  deleteBackup,
   moveFile,
+  readFileFromBackup,
   revertFileFromBackup,
   writeFileContent,
-  readFileFromBackup,
 } from "../lib/tauri_api";
 import { useWorkspaceStore } from "./workspaceStore";
-import { useHistoryStore } from "./historyStore";
 import { applyPatch as applyJsPatch } from "diff";
 
 /**
@@ -98,72 +98,54 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   lastReview: null,
 
   startReview: async (initialChanges) => {
+    // Clean up backup from the previous review session, if it exists.
+    const { lastReview } = get();
+    if (lastReview?.sessionBaseBackupId) {
+      deleteBackup(lastReview.sessionBaseBackupId).catch((e) =>
+        console.error(
+          `Failed to delete obsolete backup ${lastReview.sessionBaseBackupId}`,
+          e
+        )
+      );
+    }
+    
     const rootPath = useWorkspaceStore.getState().rootPath;
     if (!rootPath) return;
 
-    const { history, head, addState } = useHistoryStore.getState();
-    let projectHistory = history[rootPath] ?? [];
-    let headIndex = head[rootPath] ?? -1;
-
-    if (projectHistory.length === 0) {
-      const filesToSnapshot = new Set<string>();
-      initialChanges.forEach(({ operation }) => {
-        switch (operation.type) {
-          case "modify":
-          case "rewrite":
-          case "delete":
-            filesToSnapshot.add(operation.filePath);
-            break;
-          case "move":
-            filesToSnapshot.add(operation.fromPath);
-            break;
-        }
-      });
-
-      const fileList = Array.from(filesToSnapshot).filter((p) => p);
-
-      try {
-        const backupId = await backupFiles(rootPath, fileList);
-        addState({
-          backupId,
-          description: "Initial project state",
-          rootPath,
-          changedFiles: [],
-          files: fileList,
-          isInitialState: true,
-        });
-
-        // Re-fetch state after update
-        projectHistory = useHistoryStore.getState().history[rootPath];
-        headIndex = useHistoryStore.getState().head[rootPath];
-      } catch (err) {
-        console.error("Failed to create initial history state:", err);
-        return; // Abort review
+    // 1. Create a session-specific backup
+    const filesToSnapshot = new Set<string>();
+    initialChanges.forEach(({ operation }) => {
+      switch (operation.type) {
+        case "modify":
+        case "rewrite":
+        case "delete":
+          filesToSnapshot.add(operation.filePath);
+          break;
+        case "move":
+          filesToSnapshot.add(operation.fromPath);
+          break;
       }
+    });
+
+    const fileList = Array.from(filesToSnapshot).filter((p) => p);
+    let sessionBaseBackupId: string;
+    try {
+      sessionBaseBackupId = await backupFiles(rootPath, fileList);
+      set({ sessionBaseBackupId });
+    } catch (err) {
+      console.error("Failed to create session backup:", err);
+      return; // Abort review
     }
 
-    const headSnapshot = headIndex !== -1 ? projectHistory[headIndex] : null;
-
-    let baseBackupId = get().sessionBaseBackupId;
-    if (!baseBackupId) {
-      baseBackupId = headSnapshot?.backupId ?? null;
-      if (baseBackupId) {
-        set({ sessionBaseBackupId: baseBackupId });
-      } else {
-        console.error(
-          "Could not establish a base snapshot for the review session."
-        );
-        return;
-      }
-    }
-
+    // 2. Process changes, determining `isNewFile` and `identical` status
+    //    based on the new backup. This is the source of truth for the session.
     const changes = await Promise.all(
       initialChanges.map(async (change): Promise<ReviewChange> => {
         const { operation } = change;
 
         const getBaseFileContent = async (filePath: string) => {
           try {
-            return await readFileFromBackup(baseBackupId!, filePath);
+            return await readFileFromBackup(sessionBaseBackupId, filePath);
           } catch (e) {
             return null;
           }
@@ -171,12 +153,10 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
 
         if (operation.type === "modify" || operation.type === "rewrite") {
           const originalContent = await getBaseFileContent(operation.filePath);
+          // The source of truth for `isNewFile` is whether it existed in the session backup.
           const isNewFile = originalContent === null;
 
-          const updatedOperation = {
-            ...operation,
-            isNewFile: operation.isNewFile || isNewFile,
-          };
+          const updatedOperation = { ...operation, isNewFile };
           let updatedChange = { ...change, operation: updatedOperation };
 
           if (!isNewFile) {
@@ -194,7 +174,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
                   updatedChange = { ...updatedChange, status: "identical" };
                 }
               } catch (e) {
-                /* ignore */
+                /* ignore patch errors, it just won't be identical */
               }
             } else if (updatedOperation.type === "rewrite") {
               if (originalContent === updatedOperation.content) {
@@ -221,35 +201,30 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   },
 
   endReview: () => {
-    set((state) => {
-      // If no changes were applied, we discard the session entirely.
-      // This prevents a "Re-enter Review" button for a session that had no effect.
-      // NOTE: We no longer reset processed markdown to prevent auto-review loops.
-      // The user can re-initiate via the "Review" button in the composer.
-      if (state.changes.every((c) => c.status !== "applied")) {
-        return {
-          isReviewing: false,
-          changes: [],
-          activeChangeId: null,
-          sessionBaseBackupId: null, // Clear the base snapshot ID
-          errors: {},
-          lastReview: null, // Do not save this session
-        };
-      }
+    const { sessionBaseBackupId, changes } = get();
+    const wasAnythingApplied = changes.some((c) => c.status === "applied");
 
-      // If changes were applied, the session is persisted to `lastReview`.
-      // The primary record is the new state in the history panel.
-      return {
-        isReviewing: false,
-        lastReview: {
-          changes: state.changes,
-          sessionBaseBackupId: state.sessionBaseBackupId,
-        },
-        changes: [],
-        activeChangeId: null,
-        errors: {},
-      };
-    });
+    // Only clean up the backup if no changes were applied.
+    // Otherwise, it's preserved for the 'lastReview' session.
+    if (sessionBaseBackupId && !wasAnythingApplied) {
+      deleteBackup(sessionBaseBackupId).catch((e) =>
+        console.error(`Failed to delete session backup ${sessionBaseBackupId}`, e)
+      );
+    }
+
+    set((state) => ({
+      isReviewing: false,
+      lastReview: wasAnythingApplied
+        ? {
+            changes: state.changes,
+            sessionBaseBackupId: state.sessionBaseBackupId,
+          }
+        : null,
+      changes: [],
+      activeChangeId: null,
+      sessionBaseBackupId: null,
+      errors: {},
+    }));
   },
 
   reenterReview: () => {
@@ -343,20 +318,20 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       switch (operation.type) {
         case "modify":
         case "rewrite":
-          // We need to know if the file was new relative to the base snapshot.
-          // We can check if it exists in the backup.
-          try {
+          if (operation.isNewFile) {
+            // If the file was new, reverting means deleting it.
+            await deleteFile(`${rootPath}/${operation.filePath}`);
+          } else {
+            // If the file existed, revert it from the backup.
             await revertFileFromBackup(
               rootPath,
               sessionBaseBackupId,
               operation.filePath
             );
-          } catch (e) {
-            // Assuming error means file did not exist in backup, so it was new.
-            await deleteFile(`${rootPath}/${operation.filePath}`);
           }
           break;
         case "delete":
+          // Reverting a delete means restoring the file from backup.
           await revertFileFromBackup(
             rootPath,
             sessionBaseBackupId,
@@ -364,7 +339,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
           );
           break;
         case "move":
-          // Reverting a move means moving it back. We don't need backup for this.
+          // Reverting a move means moving it back.
           await moveFile(
             `${rootPath}/${operation.toPath}`,
             `${rootPath}/${operation.fromPath}`
@@ -379,7 +354,6 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       updateWorkspaceOnFileChange(operation, "revert");
     } catch (e: any) {
       console.error(`Failed to revert change ${id}:`, e);
-      // Optionally set an error state on the change item
     }
   },
 

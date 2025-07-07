@@ -1,6 +1,5 @@
 use crate::IgnoreSettings;
 use anyhow::{anyhow, Result};
-use async_recursion::async_recursion;
 use ignore::overrides::OverrideBuilder;
 use ignore::WalkBuilder;
 use serde::Serialize;
@@ -17,6 +16,10 @@ pub struct FileNode {
     pub children: Option<Vec<FileNode>>,
     #[serde(rename = "isDirectory")]
     pub is_directory: bool,
+}
+
+fn normalize_path_str(p: &Path) -> String {
+    p.to_string_lossy().replace('\\', "/")
 }
 
 pub async fn list_directory_recursive(
@@ -105,7 +108,7 @@ pub async fn list_directory_recursive(
         };
 
         FileNode {
-            path: path.to_string_lossy().to_string(),
+            path: normalize_path_str(path),
             name: path
                 .file_name()
                 .unwrap_or_default()
@@ -184,60 +187,6 @@ pub async fn backup_files(root_path: &Path, paths: Vec<PathBuf>) -> Result<Strin
     Ok(backup_id)
 }
 
-#[async_recursion]
-async fn restore_directory_recursively(from_dir: &Path, to_dir: &Path) -> Result<()> {
-    if !from_dir.is_dir() {
-        return Ok(());
-    }
-
-    if !to_dir.exists() {
-        fs::create_dir_all(to_dir).await?;
-    }
-
-    let mut entries = fs::read_dir(from_dir).await?;
-    while let Some(entry) = entries.next_entry().await? {
-        let from_path = entry.path();
-        let file_name = from_path
-            .file_name()
-            .ok_or_else(|| anyhow!("Failed to get file name for {:?}", from_path))?;
-        let to_path = to_dir.join(file_name);
-
-        if from_path.is_dir() {
-            restore_directory_recursively(&from_path, &to_path).await?;
-        } else if from_path.is_file() {
-            if let Some(p) = to_path.parent() {
-                if !p.exists() {
-                    fs::create_dir_all(p).await?;
-                }
-            }
-            fs::copy(&from_path, &to_path).await?;
-        }
-    }
-    Ok(())
-}
-
-pub async fn restore_state(
-    root_path: &Path,
-    backup_id: &str,
-    files_to_delete: Vec<String>,
-) -> Result<()> {
-    for rel_path_str in files_to_delete {
-        let path_to_delete = root_path.join(rel_path_str);
-        if path_to_delete.is_file() {
-            fs::remove_file(path_to_delete).await?;
-        }
-    }
-
-    let backup_root = get_backup_dir(backup_id);
-    if !backup_root.exists() {
-        return Err(anyhow!("Backup ID not found: {}", backup_id));
-    }
-
-    restore_directory_recursively(&backup_root, root_path).await?;
-
-    Ok(())
-}
-
 pub async fn revert_file_from_backup(
     root_path: &Path,
     backup_id: &str,
@@ -280,14 +229,6 @@ pub async fn delete_backup(backup_id: &str) -> Result<()> {
     let backup_root = get_backup_dir(backup_id);
     if backup_root.exists() {
         fs::remove_dir_all(backup_root).await?;
-    }
-    Ok(())
-}
-
-pub async fn delete_all_backups() -> Result<()> {
-    let backups_dir = get_backup_root_dir();
-    if backups_dir.exists() {
-        fs::remove_dir_all(backups_dir).await?;
     }
     Ok(())
 }

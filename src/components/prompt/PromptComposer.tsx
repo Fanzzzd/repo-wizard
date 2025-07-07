@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useWorkspaceStore } from "../../store/workspaceStore";
-import { readFileContent } from "../../lib/tauri_api";
+import { useReviewStore } from "../../store/reviewStore";
+import { useSettingsStore } from "../../store/settingsStore";
+import { usePromptStore } from "../../store/promptStore";
+import { usePromptHistoryStore } from "../../store/promptHistoryStore";
+import { getRelativePath, readFileContent } from "../../lib/tauri_api";
 import {
   Clipboard,
   Check,
@@ -10,17 +14,14 @@ import {
 } from "lucide-react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { buildPrompt } from "../../lib/prompt_builder";
-import { useSettingsStore } from "../../store/settingsStore";
 import type { EditFormat } from "../../types";
-import { useReviewStore } from "../../store/reviewStore";
 import { parseChangesFromMarkdown } from "../../lib/diff_parser";
-import { usePromptStore } from "../../store/promptStore";
 import { MetaPromptsManagerModal } from "./MetaPromptsManagerModal";
 import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
+import { Button } from "../common/Button";
 import { Textarea } from "../common/Textarea";
 import { MetaPromptSelector } from "./MetaPromptSelector";
 import { motion } from "motion/react";
-import { getRelativePath } from "../../lib/path_utils";
 
 const editFormatOptions: { value: EditFormat; label: string }[] = [
   { value: "whole", label: "Whole File" },
@@ -49,7 +50,7 @@ export function PromptComposer() {
   const [isCopied, setIsCopied] = useState(false);
   const [estimatedTokens, setEstimatedTokens] = useState(0);
 
-  const { selectedFilePaths, rootPath } = useWorkspaceStore();
+  const { selectedFilePaths, rootPath, removeSelectedFilePath } = useWorkspaceStore();
   const { startReview, lastReview, reenterReview } = useReviewStore();
   const {
     customSystemPrompt,
@@ -58,6 +59,25 @@ export function PromptComposer() {
     metaPrompts,
     autoReviewOnPaste,
   } = useSettingsStore();
+  const { addPrompt: addPromptToHistory } = usePromptHistoryStore();
+
+  const getFilesWithRelativePaths = useCallback(async (paths: string[], root: string) => {
+    const files = await Promise.all(paths.map(async (path) => {
+        try {
+            const content = await readFileContent(path);
+            const relativePath = await getRelativePath(path, root);
+            return { path: relativePath, content };
+        } catch (error) {
+            console.error(`Failed to read file for prompt: ${path}`, error);
+            if (typeof error === "string" && error.includes("No such file")) {
+              console.warn(`Removing non-existent file from selection: ${path}`);
+              removeSelectedFilePath(path);
+            }
+            return null;
+        }
+    }));
+    return files.filter(f => f !== null) as {path: string, content: string}[];
+  }, [removeSelectedFilePath]);
 
   useEffect(() => {
     const calculate = async () => {
@@ -74,28 +94,7 @@ export function PromptComposer() {
         return;
       }
 
-      const files = [];
-      if (selectedFilePaths.length > 0) {
-        for (const path of selectedFilePaths) {
-          try {
-            const content = await readFileContent(path);
-            const relativePath = getRelativePath(path, rootPath);
-            files.push({ path: relativePath, content });
-          } catch (error) {
-            console.error(
-              `Failed to read file for token count ${path}:`,
-              error
-            );
-            if (typeof error === "string" && error.includes("No such file")) {
-              console.warn(
-                `Removing non-existent file from selection: ${path}`
-              );
-              useWorkspaceStore.getState().removeSelectedFilePath(path);
-            }
-          }
-        }
-      }
-
+      const files = await getFilesWithRelativePaths(selectedFilePaths, rootPath);
       const fullPrompt = buildPrompt(
         files,
         instructions,
@@ -122,22 +121,13 @@ export function PromptComposer() {
     rootPath,
     metaPrompts,
     composerMode,
+    getFilesWithRelativePaths
   ]);
 
   const generatePrompt = async () => {
     if (!rootPath) return;
 
-    const files = [];
-    for (const path of selectedFilePaths) {
-      try {
-        const content = await readFileContent(path);
-        const relativePath = getRelativePath(path, rootPath);
-        files.push({ path: relativePath, content });
-      } catch (error) {
-        console.error(`Failed to read file ${path}:`, error);
-      }
-    }
-
+    const files = await getFilesWithRelativePaths(selectedFilePaths, rootPath);
     const fullPrompt = buildPrompt(
       files,
       instructions,
@@ -147,6 +137,7 @@ export function PromptComposer() {
       composerMode
     );
     await writeText(fullPrompt);
+    addPromptToHistory(instructions);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
@@ -204,6 +195,50 @@ export function PromptComposer() {
     composerMode === "edit" && autoReviewOnPaste
       ? "Paste full markdown response from your LLM here to automatically start review..."
       : "Paste full markdown response from your LLM here. Click 'Review' to start.";
+
+  const renderReviewButton = () => {
+    if (hasUnprocessedResponse) {
+      return (
+        <Button
+          onClick={handleReview}
+          size="sm"
+          variant="ghost"
+          className="bg-green-100 text-green-800 hover:bg-green-200 font-medium"
+          title="Start review for the pasted response"
+          leftIcon={<FileSearch2 size={14} />}
+        >
+          Review
+        </Button>
+      );
+    }
+    if (canReenterReview) {
+      return (
+        <Button
+          onClick={handleReenterReview}
+          size="sm"
+          variant="ghost"
+          className="bg-blue-100 text-blue-800 hover:bg-blue-200 font-medium"
+          title="Go back to last review session"
+          leftIcon={<History size={14} />}
+        >
+          Review
+        </Button>
+      );
+    }
+    return (
+      <Button
+        onClick={handleReview}
+        disabled={!markdownResponse.trim()}
+        size="sm"
+        variant="ghost"
+        className="bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium disabled:text-gray-500 disabled:hover:bg-gray-200 disabled:cursor-not-allowed"
+        title="Start a new review for the pasted response"
+        leftIcon={<FileSearch2 size={14} />}
+      >
+        Review
+      </Button>
+    );
+  };
 
   return (
     <div className="p-4 flex flex-col h-full bg-gray-50 text-gray-800 overflow-y-auto">
@@ -301,14 +336,16 @@ export function PromptComposer() {
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <label className="text-sm font-semibold ">Meta Prompts</label>
-            <button
+            <Button
               onClick={() => setIsMetaPromptsManagerOpen(true)}
-              className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded-md hover:bg-blue-100 transition-colors"
+              variant="ghost"
+              size="sm"
+              className="text-blue-600 hover:text-blue-800 font-medium hover:bg-blue-100"
               title="Manage Meta Prompts"
+              leftIcon={<SlidersHorizontal size={14} />}
             >
-              <SlidersHorizontal size={14} />
               Manage
-            </button>
+            </Button>
           </div>
           <MetaPromptSelector
             key={composerMode}
@@ -326,49 +363,23 @@ export function PromptComposer() {
         <div className="text-right text-xs text-gray-500 mb-2">
           Estimated Tokens: ~{formatTokenCount(estimatedTokens)}
         </div>
-        <button
+        <Button
           onClick={generatePrompt}
-          className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-500 rounded-md disabled:bg-gray-400"
+          variant="primary"
+          size="md"
+          className="bg-indigo-600 hover:bg-indigo-500"
           disabled={selectedFilePaths.length === 0 || !instructions}
+          leftIcon={isCopied ? <Check size={16} /> : <Clipboard size={16} />}
         >
-          {isCopied ? <Check size={16} /> : <Clipboard size={16} />}
           {isCopied ? "Copied!" : "Generate & Copy Prompt"}
-        </button>
+        </Button>
       </div>
 
       {composerMode === "edit" && (
         <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col">
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-bold">Paste Response & Review</h2>
-            {hasUnprocessedResponse ? (
-              <button
-                onClick={handleReview}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200 font-medium"
-                title="Start review for the pasted response"
-              >
-                <FileSearch2 size={14} />
-                <span>Review</span>
-              </button>
-            ) : canReenterReview ? (
-              <button
-                onClick={handleReenterReview}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 font-medium"
-                title="Go back to last review session"
-              >
-                <History size={14} />
-                <span>Review</span>
-              </button>
-            ) : (
-              <button
-                onClick={handleReview}
-                disabled={!markdownResponse.trim()}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 font-medium disabled:text-gray-500 disabled:hover:bg-gray-200 disabled:cursor-not-allowed"
-                title="Start a new review for the pasted response"
-              >
-                <FileSearch2 size={14} />
-                <span>Review</span>
-              </button>
-            )}
+            {renderReviewButton()}
           </div>
           <Textarea
             className="h-24 mb-2"
