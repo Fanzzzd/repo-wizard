@@ -18,7 +18,6 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { Input } from "../common/Input";
 import { Textarea } from "../common/Textarea";
-import { Checkbox } from "../common/Checkbox";
 import { Button } from "../common/Button";
 import { SortableItem, DragHandle } from "../common/Sortable/SortableItem";
 import { SortableOverlay } from "../common/Sortable/SortableOverlay";
@@ -39,6 +38,7 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { ToggleSwitch } from "../common/ToggleSwitch";
 
 interface MetaPromptsManagerModalProps {
   isOpen: boolean;
@@ -90,12 +90,13 @@ function PromptItemDisplay({
         />
         <span className="truncate">{prompt.name}</span>
       </div>
-      {prompt.enabled && (
-        <div
-          className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 ml-2"
-          title="Enabled"
-        ></div>
-      )}
+      <div className="ml-2 flex-shrink-0">
+        <ToggleSwitch
+          checked={prompt.enabled}
+          onChange={() => {}} // Dummy, no-op for display
+          title={prompt.enabled ? "Enabled" : "Disabled"}
+        />
+      </div>
     </div>
   );
 }
@@ -105,11 +106,13 @@ function SortablePromptItem({
   onSelect,
   selectedPromptId,
   onContextMenu,
+  onUpdate,
 }: {
   prompt: MetaPrompt;
   onSelect: (id: string) => void;
   selectedPromptId: string | null;
   onContextMenu: (e: React.MouseEvent, prompt: MetaPrompt) => void;
+  onUpdate: (update: Partial<Omit<MetaPrompt, "id">>) => void;
 }) {
   return (
     <SortableItem id={prompt.id}>
@@ -131,12 +134,13 @@ function SortablePromptItem({
           </DragHandle>
           <span className="truncate">{prompt.name}</span>
         </div>
-        {prompt.enabled && (
-          <div
-            className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 ml-2"
-            title="Enabled"
-          ></div>
-        )}
+        <div className="ml-2 flex-shrink-0">
+          <ToggleSwitch
+            checked={prompt.enabled}
+            onChange={(enabled) => onUpdate({ enabled })}
+            title={prompt.enabled ? "Click to disable" : "Click to enable"}
+          />
+        </div>
       </div>
     </SortableItem>
   );
@@ -150,6 +154,7 @@ function PromptListSection({
   onSelect,
   onUpdateList,
   selectedPromptId,
+  onUpdatePrompt,
 }: {
   mode: PromptMode;
   title: string;
@@ -158,6 +163,7 @@ function PromptListSection({
   onSelect: (id: string | null) => void;
   onUpdateList: (mode: PromptMode, prompts: MetaPrompt[]) => void;
   selectedPromptId: string | null;
+  onUpdatePrompt: (id: string, update: Partial<Omit<MetaPrompt, "id">>) => void;
 }) {
   const { open: openContextMenu } = useContextMenuStore();
   const promptIds = useMemo(() => prompts.map((p) => p.id), [prompts]);
@@ -224,6 +230,7 @@ function PromptListSection({
               onSelect={onSelect}
               selectedPromptId={selectedPromptId}
               onContextMenu={handleContextMenu}
+              onUpdate={(update) => onUpdatePrompt(prompt.id, update)}
             />
           ))}
         </div>
@@ -520,6 +527,7 @@ export function MetaPromptsManagerModal({
                           selectedPromptId={selectedPromptId}
                           onSelect={setSelectedPromptId}
                           onUpdateList={handleUpdateList}
+                          onUpdatePrompt={handleUpdatePrompt}
                         />
                       )
                     )}
@@ -678,18 +686,6 @@ export function MetaPromptsManagerModal({
                         className="h-48 text-xs"
                         placeholder="Enter meta prompt content..."
                       />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Checkbox
-                        checked={selectedPrompt.enabled}
-                        onChange={(e) =>
-                          handleUpdatePrompt(selectedPrompt.id, {
-                            enabled: e.target.checked,
-                          })
-                        }
-                      >
-                        Enabled
-                      </Checkbox>
                     </div>
                   </div>
                 ) : (
