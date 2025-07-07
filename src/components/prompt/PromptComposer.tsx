@@ -310,6 +310,7 @@ export function PromptComposer() {
             </button>
           </div>
           <MetaPromptSelector
+            key={composerMode}
             composerMode={composerMode}
             onManageRequest={() => setIsMetaPromptsManagerOpen(true)}
           />
