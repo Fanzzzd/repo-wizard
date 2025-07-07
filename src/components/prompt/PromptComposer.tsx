@@ -20,6 +20,7 @@ import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
 import { Textarea } from "../common/Textarea";
 import { MetaPromptSelector } from "./MetaPromptSelector";
 import { motion } from "motion/react";
+import { getRelativePath } from "../../lib/path_utils";
 
 const editFormatOptions: { value: EditFormat; label: string }[] = [
   { value: "whole", label: "Whole File" },
@@ -78,9 +79,7 @@ export function PromptComposer() {
         for (const path of selectedFilePaths) {
           try {
             const content = await readFileContent(path);
-            const relativePath = rootPath
-              ? path.replace(rootPath, "").replace(/^[\\/]/, "")
-              : path;
+            const relativePath = getRelativePath(path, rootPath);
             files.push({ path: relativePath, content });
           } catch (error) {
             console.error(
@@ -132,7 +131,7 @@ export function PromptComposer() {
     for (const path of selectedFilePaths) {
       try {
         const content = await readFileContent(path);
-        const relativePath = path.replace(rootPath + "/", "");
+        const relativePath = getRelativePath(path, rootPath);
         files.push({ path: relativePath, content });
       } catch (error) {
         console.error(`Failed to read file ${path}:`, error);

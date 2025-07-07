@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { readFileContent } from "../../lib/tauri_api";
 import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
 import { ShortenedPath } from "../common/ShortenedPath";
+import { getRelativePath } from "../../lib/path_utils";
 
 export function SelectedFilesPanel() {
   const {
@@ -64,9 +65,7 @@ export function SelectedFilesPanel() {
     const filesWithDetails = selectedFilePaths.map((path) => ({
       path,
       tokens: detailsMap.get(path) ?? 0,
-      shortPath: rootPath
-        ? path.replace(rootPath, "").replace(/^[\\/]/, "")
-        : path,
+      shortPath: getRelativePath(path, rootPath),
     }));
 
     if (sortBy === "tokens") {
