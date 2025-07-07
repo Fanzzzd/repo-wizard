@@ -141,7 +141,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
           onClick={handleClick}
           disabled={change.status === 'identical'}
           title="Cycle Status (Pending -> Applied)"
-          className={`flex items-center justify-center w-24 gap-1.5 py-1 text-xs font-semibold rounded-full transition-colors ${style} disabled:cursor-default disabled:hover:bg-green-100`}
+          className={`flex items-center justify-center w-24 gap-1.5 py-1 text-xs font-medium rounded-full transition-colors ${style} disabled:cursor-default disabled:hover:bg-green-100`}
         >
           {icon}
           <span>{text}</span>

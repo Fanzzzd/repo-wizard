@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useSettingsStore } from "../../store/settingsStore";
 import type { MetaPrompt } from "../../types";
-import { X, ChevronDown } from "lucide-react";
+import { X, ChevronDown, Wand2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Checkbox } from "../common/Checkbox";
 import { HorizontalScroller } from "../common/HorizontalScroller";
 
 interface MetaPromptSelectorProps {
+  composerMode: "edit" | "qa";
   onManageRequest: () => void;
 }
 
 export function MetaPromptSelector({
+  composerMode,
   onManageRequest,
 }: MetaPromptSelectorProps) {
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
@@ -19,8 +21,19 @@ export function MetaPromptSelector({
   const { metaPrompts, setMetaPrompts } = useSettingsStore();
 
   const enabledPrompts = useMemo(
-    () => metaPrompts.filter((p) => p.enabled),
-    [metaPrompts]
+    () =>
+      metaPrompts.filter(
+        (p) => p.enabled && (p.mode === composerMode || p.mode === "universal")
+      ),
+    [metaPrompts, composerMode]
+  );
+  
+  const selectablePrompts = useMemo(
+    () =>
+      metaPrompts.filter(
+        (p) => p.mode === composerMode || p.mode === "universal"
+      ),
+    [metaPrompts, composerMode]
   );
 
   useEffect(() => {
@@ -85,8 +98,13 @@ export function MetaPromptSelector({
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.5 }}
                         transition={{ duration: 0.15 }}
-                        className="flex-shrink-0 flex items-center gap-1.5 bg-blue-100 text-blue-800 text-sm font-medium pl-3 pr-1.5 py-1 rounded-full"
+                        className={`flex-shrink-0 flex items-center gap-1.5 text-sm font-medium pl-3 pr-1.5 py-1 rounded-full ${
+                          prompt.mode === 'universal'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}
                       >
+                        {prompt.mode === 'universal' && <Wand2 size={12} className="mr-1" />}
                         <span>{prompt.name}</span>
                         <button
                           onClick={(e) => {
@@ -95,7 +113,11 @@ export function MetaPromptSelector({
                               enabled: false,
                             });
                           }}
-                          className="p-0.5 rounded-full hover:bg-blue-200"
+                          className={`p-0.5 rounded-full ${
+                            prompt.mode === 'universal'
+                            ? 'hover:bg-purple-200'
+                            : 'hover:bg-blue-200'
+                          }`}
                           title={`Deselect ${prompt.name}`}
                         >
                           <X size={14} />
@@ -131,25 +153,33 @@ export function MetaPromptSelector({
             className="absolute top-full left-0 right-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-20 p-2"
           >
             <div className="flex flex-col gap-1 max-h-60 overflow-y-auto p-1 thin-scrollbar">
-              {metaPrompts.map((prompt) => (
-                <Checkbox
-                  key={prompt.id}
-                  checked={prompt.enabled}
-                  onChange={(e) =>
-                    handleUpdateMetaPrompt(prompt.id, {
-                      enabled: e.target.checked,
-                    })
-                  }
-                  className="w-full px-3 py-2 hover:bg-blue-50 rounded-md transition-colors text-gray-700"
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <span>{prompt.name}</span>
-                    {prompt.enabled && (
-                      <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    )}
-                  </div>
-                </Checkbox>
-              ))}
+              {selectablePrompts.map((prompt) => (
+                  <Checkbox
+                    key={prompt.id}
+                    checked={prompt.enabled}
+                    onChange={(e) =>
+                      handleUpdateMetaPrompt(prompt.id, {
+                        enabled: e.target.checked,
+                      })
+                    }
+                    className="w-full px-3 py-2 hover:bg-blue-50 rounded-md transition-colors text-gray-700"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="flex items-center gap-2">
+                        {prompt.mode === 'universal' && <Wand2 size={14} className="text-purple-500" />}
+                        {prompt.name}
+                      </span>
+                      {prompt.enabled && (
+                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      )}
+                    </div>
+                  </Checkbox>
+                ))}
+              {selectablePrompts.length === 0 && (
+                <div className="text-center text-xs text-gray-400 p-4">
+                  No prompts available for {composerMode} mode.
+                </div>
+              )}
             </div>
             <div className="border-t border-gray-200 mt-2 pt-2">
               <button

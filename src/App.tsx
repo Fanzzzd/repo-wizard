@@ -12,6 +12,7 @@ import { ModalDialog } from "./components/common/ModalDialog";
 import { useDialogStore } from "./store/dialogStore";
 import { Tooltip } from "./components/common/Tooltip";
 import { useUpdateStore } from "./store/updateStore";
+import { ContextMenu } from "./components/common/ContextMenu";
 
 /**
  * The root component of the application.
@@ -87,6 +88,7 @@ function App() {
       {/* Global components that can be displayed as overlays. */}
       <ModalDialog />
       <Tooltip />
+      <ContextMenu />
     </div>
   );
 }

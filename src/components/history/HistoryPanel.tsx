@@ -115,8 +115,8 @@ const HistoryNode = ({
       </div>
       <div className={`${isFuture ? "text-gray-400" : "text-gray-900"}`}>
         <div className="flex items-center gap-2">
-            <p className="font-semibold">{entry.description}</p>
-            {isCurrent && <span className="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">HEAD</span>}
+            <p className="font-medium">{entry.description}</p>
+            {isCurrent && <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">HEAD</span>}
         </div>
         <p className={`text-xs ${isFuture ? 'text-gray-400' : 'text-gray-500'}`}>{new Date(entry.timestamp).toLocaleString()}</p>
       </div>

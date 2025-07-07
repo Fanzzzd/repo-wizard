@@ -148,7 +148,8 @@ export const buildPrompt = (
   instructions: string,
   customSystemPrompt: string,
   editFormat: EditFormat,
-  metaPrompts: MetaPrompt[]
+  metaPrompts: MetaPrompt[],
+  composerMode: "edit" | "qa"
 ): string => {
   let prompt = "";
 
@@ -158,19 +159,24 @@ export const buildPrompt = (
     prompt += `\n--- END SYSTEM PROMPT ---\n\n`;
   }
 
-  const enabledMetaPrompts = metaPrompts.filter((p) => p.enabled);
+  const enabledMetaPrompts = metaPrompts.filter(
+    (p) => p.enabled && (p.mode === composerMode || p.mode === "universal")
+  );
   if (enabledMetaPrompts.length > 0) {
-    prompt += "In addition to my instructions, you must also follow the rules in these blocks:\n\n";
+    prompt +=
+      "In addition to my instructions, you must also follow the rules in these blocks:\n\n";
     for (const metaPrompt of enabledMetaPrompts) {
       prompt += `--- BEGIN META PROMPT: "${metaPrompt.name}" ---\n`;
       prompt += metaPrompt.content;
       prompt += `\n--- END META PROMPT: "${metaPrompt.name}" ---\n\n`;
     }
   }
-  
-  prompt += `--- BEGIN File Editing Rules ---\n`;
-  prompt += formattingRulesMap[editFormat];
-  prompt += `\n--- END File Editing Rules ---\n\n`;
+
+  if (composerMode === "edit") {
+    prompt += `--- BEGIN File Editing Rules ---\n`;
+    prompt += formattingRulesMap[editFormat];
+    prompt += `\n--- END File Editing Rules ---\n\n`;
+  }
 
   prompt += "--- BEGIN SELECTED CODE ---\n";
   prompt += "Here are the files to work with:\n\n";
@@ -183,7 +189,9 @@ export const buildPrompt = (
 
   prompt += `My instructions are:\n\n${instructions}`;
 
-  prompt += `\n\n**IMPORTANT** IF MAKING FILE CHANGES, YOU MUST USE THE FILE EDITING FORMATS PROVIDED ABOVE – IT IS THE ONLY WAY FOR YOUR CHANGES TO BE APPLIED.`;
+  if (composerMode === "edit") {
+    prompt += `\n\n**IMPORTANT** IF MAKING FILE CHANGES, YOU MUST USE THE FILE EDITING FORMATS PROVIDED ABOVE – IT IS THE ONLY WAY FOR YOUR CHANGES TO BE APPLIED.`;
+  }
 
   return prompt;
 };

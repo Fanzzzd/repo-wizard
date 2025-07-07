@@ -49,4 +49,5 @@ export interface MetaPrompt {
   name: string;
   content: string;
   enabled: boolean;
+  mode: "edit" | "qa" | "universal";
 }

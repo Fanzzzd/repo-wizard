@@ -43,6 +43,20 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: "repo-wizard-settings",
+      version: 1, // Add versioning for migration
+      migrate: (persistedState: unknown, version: number) => {
+        if (version < 1) {
+          const state = persistedState as any;
+          if (state && state.metaPrompts) {
+            // Migrate old meta prompts to include the 'mode' property
+            state.metaPrompts = state.metaPrompts.map((p: any) => ({
+              ...p,
+              mode: p.mode ?? "edit",
+            }));
+          }
+        }
+        return persistedState as SettingsState;
+      },
     }
   )
 );

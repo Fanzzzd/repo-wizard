@@ -1,12 +1,13 @@
 import { FolderOpen, ChevronRight, ChevronDown, X } from "lucide-react";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useSettingsStore } from "../../store/settingsStore";
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { listDirectoryRecursive } from "../../lib/tauri_api";
 import type { FileNode } from "../../types";
 import { FileTypeIcon } from "./FileTypeIcon";
 import { AnimatePresence, motion } from "motion/react";
+import { Checkbox } from "../common/Checkbox";
 
 function collectFilePaths(node: FileNode): string[] {
   if (!node.isDirectory) {
@@ -39,7 +40,6 @@ function FileNodeComponent({
     removeSelectedFilePath,
     setSelectedFilePaths,
   } = useWorkspaceStore();
-  const checkboxRef = useRef<HTMLInputElement>(null);
 
   const isDirectory = node.isDirectory;
 
@@ -63,12 +63,6 @@ function FileNodeComponent({
     isDirectory &&
     selectedDescendantCount > 0 &&
     selectedDescendantCount < descendantFilePaths.length;
-
-  useEffect(() => {
-    if (checkboxRef.current) {
-      checkboxRef.current.indeterminate = isIndeterminate;
-    }
-  }, [isIndeterminate]);
 
   const handleContainerClick = () => {
     if (isDirectory) {
@@ -129,11 +123,10 @@ function FileNodeComponent({
             (isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
         </div>
 
-        <input
-          type="checkbox"
-          ref={checkboxRef}
-          className="form-checkbox h-4 w-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0 ml-1"
+        <Checkbox
+          className="ml-1"
           checked={isSelected}
+          isIndeterminate={isIndeterminate}
           onChange={handleCheckboxChange}
           onClick={(e) => e.stopPropagation()}
         />
