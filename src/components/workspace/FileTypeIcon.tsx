@@ -20,6 +20,7 @@ export function FileTypeIcon({
       src={`/icons/${iconName}.svg`}
       alt={`${filename} icon`}
       className="w-4 h-4"
+      draggable="false"
       // In case of loading error, this will make it less disruptive
       onError={(e) => (e.currentTarget.style.display = "none")}
     />

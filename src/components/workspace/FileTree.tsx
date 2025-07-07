@@ -98,7 +98,7 @@ function FileNodeComponent({
   return (
     <div>
       <div
-        className={`flex items-center p-1 rounded text-sm group ${
+        className={`flex items-center p-1 rounded text-sm group select-none ${
           isActive
             ? "bg-blue-100 text-blue-900"
             : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"

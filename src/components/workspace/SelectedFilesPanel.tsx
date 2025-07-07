@@ -108,7 +108,7 @@ export function SelectedFilesPanel() {
               return (
                 <li
                   key={path}
-                  className={`flex items-center justify-between p-1.5 rounded group cursor-pointer ${
+                  className={`flex items-center justify-between p-1.5 rounded group cursor-pointer select-none ${
                     isActive
                       ? "bg-blue-100 text-blue-900"
                       : "hover:bg-gray-100"
