@@ -8,7 +8,7 @@ interface ToggleSwitchProps {
 }
 
 export function ToggleSwitch({ checked, onChange, title }: ToggleSwitchProps) {
-  const spring = { type: "spring", stiffness: 700, damping: 30 };
+  const spring = { type: "spring" as const, stiffness: 700, damping: 30 };
 
   const handleClick = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
