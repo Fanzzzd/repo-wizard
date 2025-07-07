@@ -167,16 +167,19 @@ pub async fn backup_files(root_path: &Path, paths: Vec<PathBuf>) -> Result<Strin
 
     for path in paths {
         let full_path = root_path.join(&path);
-        if !full_path.exists() {
+        if !full_path.is_file() {
             continue;
         }
 
         let backup_path = backup_root.join(&path);
 
         if let Some(parent) = backup_path.parent() {
-            fs::create_dir_all(parent).await?;
+            if !parent.exists() {
+                fs::create_dir_all(parent).await?;
+            }
         }
-        fs::copy(&full_path, &backup_path).await?;
+        let content = fs::read(&full_path).await?;
+        fs::write(&backup_path, &content).await?;
     }
     Ok(backup_id)
 }

@@ -78,7 +78,9 @@ export function PromptComposer() {
         for (const path of selectedFilePaths) {
           try {
             const content = await readFileContent(path);
-            const relativePath = path.replace(rootPath + "/", "");
+            const relativePath = rootPath
+              ? path.replace(rootPath, "").replace(/^[\\/]/, "")
+              : path;
             files.push({ path: relativePath, content });
           } catch (error) {
             console.error(

@@ -64,7 +64,9 @@ export function SelectedFilesPanel() {
     const filesWithDetails = selectedFilePaths.map((path) => ({
       path,
       tokens: detailsMap.get(path) ?? 0,
-      shortPath: rootPath ? path.replace(rootPath + "/", "") : path,
+      shortPath: rootPath
+        ? path.replace(rootPath, "").replace(/^[\\/]/, "")
+        : path,
     }));
 
     if (sortBy === "tokens") {
