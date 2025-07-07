@@ -9,7 +9,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
   ({ className, children, checked, isIndeterminate, ...props }, ref) => {
     return (
       <label
-        className={`flex items-center gap-2 cursor-pointer text-sm text-gray-700 select-none ${
+        className={`flex items-center gap-2 text-sm text-gray-700 select-none ${
           className ?? ""
         }`}
       >
@@ -28,7 +28,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
                 : "border-gray-300 bg-white"
             }
             peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-blue-500
-            peer-disabled:opacity-50 peer-disabled:cursor-not-allowed
+            peer-disabled:opacity-50
           `}
         >
           <Check

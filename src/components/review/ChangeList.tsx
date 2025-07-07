@@ -126,7 +126,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
   return (
     <div
       onClick={() => setActiveChangeId(change.id)}
-      className={`flex items-center justify-between gap-2 cursor-pointer p-2 rounded text-sm ${
+      className={`flex items-center justify-between gap-2 p-2 rounded text-sm cursor-default ${
         isActive
           ? "bg-blue-100 text-blue-900"
           : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -140,7 +140,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
           onClick={handleClick}
           disabled={change.status === 'identical'}
           title="Cycle Status (Pending -> Applied)"
-          className={`flex items-center justify-center w-24 gap-1.5 py-1 text-xs font-medium rounded-full transition-colors ${style} disabled:cursor-default disabled:hover:bg-green-100`}
+          className={`flex items-center justify-center w-24 gap-1.5 py-1 text-xs font-medium rounded-full transition-colors ${style} disabled:cursor-default`}
         >
           {icon}
           <span>{text}</span>

@@ -1,7 +1,7 @@
 import { FolderOpen, ChevronRight, ChevronDown, X } from "lucide-react";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useSettingsStore } from "../../store/settingsStore";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { listDirectoryRecursive } from "../../lib/tauri_api";
 import type { FileNode } from "../../types";
@@ -40,6 +40,7 @@ function FileNodeComponent({
     removeSelectedFilePath,
     setSelectedFilePaths,
   } = useWorkspaceStore();
+  const checkboxRef = useRef<HTMLInputElement>(null);
 
   const isDirectory = node.isDirectory;
 
@@ -64,16 +65,7 @@ function FileNodeComponent({
     selectedDescendantCount > 0 &&
     selectedDescendantCount < descendantFilePaths.length;
 
-  const handleContainerClick = () => {
-    if (isDirectory) {
-      setIsOpen(!isOpen);
-    } else {
-      setActiveFilePath(node.path);
-    }
-  };
-
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
     const isChecked = e.target.checked;
 
     if (isDirectory) {
@@ -93,12 +85,19 @@ function FileNodeComponent({
     }
   };
 
+  const handleRightAreaClick = () => {
+    if (!isDirectory) {
+      setActiveFilePath(node.path);
+    }
+    checkboxRef.current?.click();
+  };
+
   const isActive = activeFilePath === node.path;
 
   return (
     <div>
       <div
-        className={`flex items-center p-1 rounded text-sm group select-none ${
+        className={`flex items-center p-1 rounded text-sm group select-none cursor-default ${
           isActive
             ? "bg-blue-100 text-blue-900"
             : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -115,15 +114,14 @@ function FileNodeComponent({
                 }
               : undefined
           }
-          className={`w-4 h-4 flex-shrink-0 flex items-center justify-center ${
-            isDirectory ? "cursor-pointer" : ""
-          }`}
+          className="w-4 h-4 flex-shrink-0 flex items-center justify-center"
         >
           {isDirectory &&
             (isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
         </div>
 
         <Checkbox
+          ref={checkboxRef}
           className="ml-1"
           checked={isSelected}
           isIndeterminate={isIndeterminate}
@@ -132,8 +130,8 @@ function FileNodeComponent({
         />
 
         <div
-          onClick={handleContainerClick}
-          className="flex items-center gap-2 cursor-pointer flex-grow overflow-hidden ml-2"
+          onClick={handleRightAreaClick}
+          className="flex items-center gap-2 flex-grow overflow-hidden ml-2"
         >
           <FileTypeIcon
             filename={node.name}

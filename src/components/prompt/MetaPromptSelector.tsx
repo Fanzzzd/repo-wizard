@@ -63,7 +63,7 @@ export function MetaPromptSelector({
     return (
       <div
         onClick={onManageRequest}
-        className="text-center text-sm text-gray-500 border-2 border-dashed border-gray-300 rounded-md p-3 hover:bg-gray-100 hover:border-gray-400 cursor-pointer transition-colors"
+        className="text-center text-sm text-gray-500 border-2 border-dashed border-gray-300 rounded-md p-3 hover:bg-gray-100 hover:border-gray-400 transition-colors"
       >
         No meta prompts defined. Click here to create one.
       </div>
@@ -85,7 +85,7 @@ export function MetaPromptSelector({
               setIsSelectorOpen(!isSelectorOpen);
               outerWrapperProps.onMouseEnter();
             }}
-            className="relative flex items-center justify-between gap-2 p-2 border border-gray-300 bg-white rounded-md min-h-[40px] cursor-pointer hover:border-blue-400 transition-colors"
+            className="relative flex items-center justify-between gap-2 p-2 border border-gray-300 bg-white rounded-md min-h-[40px] hover:border-blue-400 transition-colors"
           >
             <div className="flex-grow flex-shrink min-w-0">
               <div ref={scrollContainerRef} className={scrollContainerClassName}>
