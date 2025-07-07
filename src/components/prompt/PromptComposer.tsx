@@ -21,7 +21,7 @@ import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
 import { Button } from "../common/Button";
 import { Textarea } from "../common/Textarea";
 import { MetaPromptSelector } from "./MetaPromptSelector";
-import { motion } from "motion/react";
+import { SegmentedControl } from "../common/SegmentedControl";
 
 const editFormatOptions: { value: EditFormat; label: string }[] = [
   { value: "whole", label: "Whole File" },
@@ -247,28 +247,12 @@ export function PromptComposer() {
 
         <div className="mb-4">
           <label className="text-sm font-semibold mb-1 block">Mode</label>
-          <div className="relative z-0 flex bg-gray-200 rounded-md p-0.5">
-            {composerModeOptions.map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => setComposerMode(value)}
-                className={`relative flex-1 text-center text-xs px-2 py-1 font-medium transition-colors duration-200 ${
-                  composerMode === value
-                    ? "text-gray-900"
-                    : "text-gray-600 hover:text-gray-800"
-                }`}
-              >
-                {composerMode === value && (
-                  <motion.div
-                    layoutId="composer-mode-slider"
-                    className="absolute inset-0 bg-white shadow-sm rounded-md"
-                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10">{label}</span>
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            options={composerModeOptions}
+            value={composerMode}
+            onChange={setComposerMode}
+            layoutId="composer-mode-slider"
+          />
         </div>
 
         {composerMode === "edit" && (
@@ -276,32 +260,12 @@ export function PromptComposer() {
             <label className="text-sm font-semibold mb-1 block">
               Edit Format
             </label>
-            <div className="relative z-0 flex bg-gray-200 rounded-md p-0.5">
-              {editFormatOptions.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => setEditFormat(value)}
-                  className={`relative flex-1 text-center text-xs px-2 py-1 font-medium transition-colors duration-200 ${
-                    editFormat === value
-                      ? "text-gray-900"
-                      : "text-gray-600 hover:text-gray-800"
-                  }`}
-                >
-                  {editFormat === value && (
-                    <motion.div
-                      layoutId="edit-format-slider"
-                      className="absolute inset-0 bg-white shadow-sm rounded-md"
-                      transition={{
-                        type: "spring",
-                        stiffness: 350,
-                        damping: 30,
-                      }}
-                    />
-                  )}
-                  <span className="relative z-10">{label}</span>
-                </button>
-              ))}
-            </div>
+            <SegmentedControl
+              options={editFormatOptions}
+              value={editFormat}
+              onChange={setEditFormat}
+              layoutId="edit-format-slider"
+            />
             <div className="text-xs text-gray-500 mt-1">
               {editFormat === "whole" && (
                 <div>

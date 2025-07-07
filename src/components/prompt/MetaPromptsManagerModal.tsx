@@ -39,6 +39,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { ToggleSwitch } from "../common/ToggleSwitch";
+import { SegmentedControl } from "../common/SegmentedControl";
 
 interface MetaPromptsManagerModalProps {
   isOpen: boolean;
@@ -274,11 +275,11 @@ export function MetaPromptsManagerModal({
     useSensor(KeyboardSensor)
   );
 
-  const modeDisplayNames: Record<PromptMode, string> = {
-    universal: "Universal",
-    edit: "Edit Mode",
-    qa: "QA Mode",
-  };
+  const modeOptions: { value: PromptMode, label: string }[] = [
+    { value: "universal", label: "Universal" },
+    { value: "edit", label: "Edit Mode" },
+    { value: "qa", label: "QA Mode" },
+  ];
 
   useEffect(() => {
     if (isOpen) {
@@ -469,9 +470,9 @@ export function MetaPromptsManagerModal({
   };
 
   const promptSections = {
-    universal: { prompts: universalPrompts, icon: <Wand2 size={14} /> },
-    edit: { prompts: editPrompts, icon: <Edit size={14} /> },
-    qa: { prompts: qaPrompts, icon: <MessageSquare size={14} /> },
+    universal: { prompts: universalPrompts, icon: <Wand2 size={14} />, title: "Universal" },
+    edit: { prompts: editPrompts, icon: <Edit size={14} />, title: "Edit Mode" },
+    qa: { prompts: qaPrompts, icon: <MessageSquare size={14} />, title: "QA Mode" },
   };
 
   return (
@@ -517,11 +518,11 @@ export function MetaPromptsManagerModal({
                 <div className="w-1/3 border-r border-gray-200 flex flex-col bg-white">
                   <div className="flex-grow p-2 overflow-y-auto select-none">
                     {Object.entries(promptSections).map(
-                      ([mode, { prompts, icon }]) => (
+                      ([mode, { prompts, icon, title }]) => (
                         <PromptListSection
                           key={mode}
                           mode={mode as PromptMode}
-                          title={modeDisplayNames[mode as PromptMode]}
+                          title={title}
                           prompts={prompts}
                           icon={icon}
                           selectedPromptId={selectedPromptId}
@@ -624,38 +625,12 @@ export function MetaPromptsManagerModal({
                       <label className="text-sm font-medium text-gray-700 mb-1 block">
                         Mode
                       </label>
-                      <div className="relative z-0 flex bg-gray-200 rounded-md p-0.5">
-                        {(["universal", "edit", "qa"] as const).map(
-                          (mode) => (
-                            <button
-                              key={mode}
-                              onClick={() =>
-                                handleUpdatePrompt(selectedPrompt.id, { mode })
-                              }
-                              className={`relative flex-1 text-center text-xs px-2 py-1 font-medium transition-colors duration-200 ${
-                                (selectedPrompt.mode ?? "edit") === mode
-                                  ? "text-gray-900"
-                                  : "text-gray-600 hover:text-gray-800"
-                              }`}
-                            >
-                              {(selectedPrompt.mode ?? "edit") === mode && (
-                                <motion.div
-                                  layoutId="prompt-mode-slider"
-                                  className="absolute inset-0 bg-white shadow-sm rounded-md"
-                                  transition={{
-                                    type: "spring",
-                                    stiffness: 350,
-                                    damping: 30,
-                                  }}
-                                />
-                              )}
-                              <span className="relative z-10">
-                                {modeDisplayNames[mode]}
-                              </span>
-                            </button>
-                          )
-                        )}
-                      </div>
+                      <SegmentedControl
+                        options={modeOptions}
+                        value={selectedPrompt.mode}
+                        onChange={(mode) => handleUpdatePrompt(selectedPrompt.id, { mode })}
+                        layoutId="prompt-mode-slider"
+                      />
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">

@@ -1,4 +1,10 @@
 @import "tailwindcss";
+
+@layer components {
+  .form-input-base {
+    @apply w-full p-2 text-sm text-gray-900 placeholder-gray-400 bg-white rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors;
+  }
+}
   
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
