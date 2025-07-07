@@ -1,3 +1,16 @@
+# [1.4.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.4.0-next.1...app-v1.4.0-next.2) (2025-07-07)
+
+
+### Bug Fixes
+
+* specify spring type in ToggleSwitch component for improved type safety ([0a6c783](https://github.com/Fanzzzd/repo-wizard/commit/0a6c7832d2d483d37030c3929831c64d599cae07))
+
+
+### Features
+
+* add ToggleSwitch component for improved prompt enable/disable functionality in MetaPromptsManagerModal ([a986ae5](https://github.com/Fanzzzd/repo-wizard/commit/a986ae581437046cd539a5e1adf4e9df288f776d))
+* implement SegmentedControl component and refactor input styles for consistency ([f19596d](https://github.com/Fanzzzd/repo-wizard/commit/f19596d3c2d27c4e81e90399dcc80ec82f13add9))
+
 # [1.4.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.3.0...app-v1.4.0-next.1) (2025-07-07)
 
 
