@@ -111,6 +111,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_log::Builder::default().build())
+        .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![
             list_directory_recursive,
             get_relative_path,

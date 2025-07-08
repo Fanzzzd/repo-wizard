@@ -33,6 +33,7 @@ ignore = "0.4.23"
 tauri-plugin-clipboard-manager = "2"
 uuid = { version = "1.17.0", features = ["v4"] }
 tauri-plugin-process = "2"
+tauri-plugin-http = "2"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"

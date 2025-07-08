@@ -18,6 +18,14 @@
     "clipboard-manager:allow-write-image",
     "clipboard-manager:allow-write-text",
     "updater:default",
-    "process:default"
+    "process:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://github.com/Fanzzzd/repo-wizard/releases/latest/download/latest.json"
+        }
+      ]
+    }
   ]
 }

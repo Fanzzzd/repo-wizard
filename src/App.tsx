@@ -24,34 +24,38 @@ function App() {
   const { status, updateInfo, install } = useUpdateStore();
 
   useEffect(() => {
-    // Initiate update check on startup via the store
-    useUpdateStore.getState().check();
-  }, []);
-
-  useEffect(() => {
     // React to the update status to show a dialog when the update is downloaded and ready.
     const showUpdateDialog = async () => {
       if (status === "ready" && updateInfo) {
+        const isDev = __APP_VERSION__.includes("-");
+
         const confirmed = await openDialog({
-          title: "Update Ready",
+          title: isDev ? "Update Available" : "Update Ready",
           content: (
             <div>
-              <p>A new version ({updateInfo.version}) has been downloaded. You are using {__APP_VERSION__}.</p>
+              <p>
+                A new version ({updateInfo.version}) is available. You are using{" "}
+                {__APP_VERSION__}.
+              </p>
               <p className="mt-2 text-sm text-gray-500">Release Notes:</p>
               <div className="mt-1 max-h-40 overflow-y-auto rounded-md border bg-gray-50 p-2 text-sm">
                 <pre className="whitespace-pre-wrap font-sans">
-                  {updateInfo.body ?? "No release notes available."}
+                  {updateInfo.body || "No release notes available."}
                 </pre>
               </div>
-              <p className="mt-4">Would you like to restart now to apply the update?</p>
+              {!isDev && (
+                <p className="mt-4">
+                  Would you like to restart now to apply the update?
+                </p>
+              )}
             </div>
           ),
-          type: "confirm",
+          type: isDev ? "alert" : "confirm",
           status: "info",
           confirmText: "Relaunch Now",
         });
 
-        if (confirmed) {
+        if (confirmed && !isDev) {
           await install();
         }
       }
