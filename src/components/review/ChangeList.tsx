@@ -1,4 +1,6 @@
+import { useDialogStore } from "../../store/dialogStore";
 import { useReviewStore } from "../../store/reviewStore";
+import { useWorkspaceStore } from "../../store/workspaceStore";
 import { FileTypeIcon } from "../workspace/FileTypeIcon";
 import {
   Check,
@@ -8,12 +10,9 @@ import {
   PencilRuler,
   AlertTriangle,
 } from "lucide-react";
-import type { FileChangeInfo, ReviewChange } from "../../types";
+import type { ReviewChange } from "../../types";
+import { Button } from "../common/Button";
 import { ShortenedPath } from "../common/ShortenedPath";
-import { backupFiles } from "../../lib/tauri_api";
-import { useWorkspaceStore } from "../../store/workspaceStore";
-import { useHistoryStore } from "../../store/historyStore";
-import { useDialogStore } from "../../store/dialogStore";
 
 const ChangeItem = ({ change }: { change: ReviewChange }) => {
   const {
@@ -127,7 +126,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
   return (
     <div
       onClick={() => setActiveChangeId(change.id)}
-      className={`flex items-center justify-between gap-2 cursor-pointer p-2 rounded text-sm ${
+      className={`flex items-center justify-between gap-2 p-2 rounded text-sm cursor-default ${
         isActive
           ? "bg-blue-100 text-blue-900"
           : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -141,7 +140,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
           onClick={handleClick}
           disabled={change.status === 'identical'}
           title="Cycle Status (Pending -> Applied)"
-          className={`flex items-center justify-center w-24 gap-1.5 py-1 text-xs font-semibold rounded-full transition-colors ${style} disabled:cursor-default disabled:hover:bg-green-100`}
+          className={`flex items-center justify-center w-24 gap-1.5 py-1 text-xs font-medium rounded-full transition-colors ${style} disabled:cursor-default`}
         >
           {icon}
           <span>{text}</span>
@@ -158,106 +157,16 @@ export function ChangeList() {
     applyAllPendingChanges,
     revertAllAppliedChanges,
   } = useReviewStore();
-  const { rootPath, triggerFileTreeRefresh } = useWorkspaceStore();
-  const { history, head, addState, amendState, popHeadState } = useHistoryStore();
-  const { open: openDialog } = useDialogStore();
+  const { triggerFileTreeRefresh } = useWorkspaceStore();
 
   const appliedChanges = changes.filter((c) => c.status === "applied");
 
-  const handleFinishReview = async () => {
-    if (!rootPath) return;
-
-    const projectHistory = history[rootPath] ?? [];
-    const headIndex = head[rootPath] ?? -1;
-    const headSnapshot = headIndex !== -1 ? projectHistory[headIndex] : null;
-
-    // Determine if the current HEAD is an amendable state from a previous review.
-    const isAmendableState =
-      headSnapshot &&
-      !headSnapshot.isInitialState &&
-      !headSnapshot.description.includes("Workspace changes detected");
-
-    if (appliedChanges.length === 0) {
-      // If we were reviewing an amendable state and we reverted all changes,
-      // we should pop this state from history, effectively reverting the commit.
-      if (isAmendableState && headSnapshot) {
-        try {
-          await popHeadState(rootPath);
-          triggerFileTreeRefresh();
-        } catch (e) {
-          console.error(`Failed to pop history state:`, e);
-          await openDialog({
-            title: "Error Reverting History",
-            content: `Failed to revert the last set of changes: ${e}.`,
-            status: "error",
-          });
-        }
-      }
-      endReview();
-      return;
-    }
-
-    try {
-      const changedFiles: FileChangeInfo[] = appliedChanges.map((change) => {
-        const { operation } = change;
-        switch (operation.type) {
-          case "modify":
-            return {
-              path: operation.filePath,
-              type: operation.isNewFile ? "added" : "modified",
-            };
-          case "rewrite":
-            return { path: operation.filePath, type: operation.isNewFile ? "added" : "modified" };
-          case "delete":
-            return { path: operation.filePath, type: "deleted" };
-          case "move":
-            return {
-              path: operation.fromPath,
-              type: "renamed",
-              newPath: operation.toPath,
-            };
-        }
-      });
-
-      const newFileSet = new Set<string>(headSnapshot?.files ?? []);
-      appliedChanges.forEach((change) => {
-        const { operation } = change;
-        if (operation.type === "modify" && operation.isNewFile)
-          newFileSet.add(operation.filePath);
-        if (operation.type === "rewrite" && operation.isNewFile) newFileSet.add(operation.filePath);
-        if (operation.type === "delete") newFileSet.delete(operation.filePath);
-        if (operation.type === "move") {
-          newFileSet.delete(operation.fromPath);
-          newFileSet.add(operation.toPath);
-        }
-      });
-      const newFiles = Array.from(newFileSet);
-
-      const newStateBackupId = await backupFiles(rootPath, newFiles);
-
-      const newStateData = {
-        backupId: newStateBackupId,
-        description: `Applied ${appliedChanges.length} change(s)`,
-        rootPath,
-        changedFiles,
-        files: newFiles,
-      };
-
-      if (isAmendableState) {
-        await amendState(newStateData);
-      } else {
-        addState(newStateData);
-      }
-
+  const handleFinishReview = () => {
+    // Applying changes already modified the file system. Finishing review
+    // now just finalizes the session and cleans up the temporary backup.
+    endReview();
+    if (appliedChanges.length > 0) {
       triggerFileTreeRefresh();
-      endReview();
-    } catch (e) {
-      console.error(`Failed to finalize review:`, e);
-      await openDialog({
-        title: "Error Finalizing Review",
-        content: `Failed to save changes to history: ${e}.`,
-        status: "error",
-      });
     }
   };
 
@@ -266,20 +175,22 @@ export function ChangeList() {
       <div className="flex justify-between items-center mb-2 flex-shrink-0">
         <h2 className="font-bold text-lg">Changes ({changes.length})</h2>
         <div className="flex gap-2">
-          <button
+          <Button
             onClick={applyAllPendingChanges}
-            className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded hover:bg-green-200"
+            size="sm"
+            className="bg-green-100 text-green-800 hover:bg-green-200 border-none"
             title="Apply all pending changes"
           >
             Apply All
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={revertAllAppliedChanges}
-            className="px-2 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+            size="sm"
+            className="bg-gray-200 text-gray-800 hover:bg-gray-300 border-none"
             title="Revert all applied changes"
           >
             Reset All
-          </button>
+          </Button>
         </div>
       </div>
       <div className="flex-grow overflow-y-auto pr-1 min-h-0">
@@ -291,12 +202,14 @@ export function ChangeList() {
       </div>
       <div className="mt-4 pt-4 border-t border-gray-200 flex-shrink-0">
         <div className="flex flex-col gap-3">
-          <button
+          <Button
             onClick={handleFinishReview}
-            className="w-full px-4 py-2 bg-gray-600 text-white hover:bg-gray-700 rounded-md font-semibold"
+            size="md"
+            variant="ghost"
+            className="w-full bg-gray-600 text-white hover:bg-gray-700 font-semibold"
           >
             Finish Review ({appliedChanges.length} applied)
-          </button>
+          </Button>
         </div>
       </div>
     </div>

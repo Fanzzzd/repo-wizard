@@ -1,3 +1,31 @@
+# [1.4.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.4.0-next.1...app-v1.4.0-next.2) (2025-07-07)
+
+
+### Bug Fixes
+
+* specify spring type in ToggleSwitch component for improved type safety ([0a6c783](https://github.com/Fanzzzd/repo-wizard/commit/0a6c7832d2d483d37030c3929831c64d599cae07))
+
+
+### Features
+
+* add ToggleSwitch component for improved prompt enable/disable functionality in MetaPromptsManagerModal ([a986ae5](https://github.com/Fanzzzd/repo-wizard/commit/a986ae581437046cd539a5e1adf4e9df288f776d))
+* implement SegmentedControl component and refactor input styles for consistency ([f19596d](https://github.com/Fanzzzd/repo-wizard/commit/f19596d3c2d27c4e81e90399dcc80ec82f13add9))
+
+# [1.4.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.3.0...app-v1.4.0-next.1) (2025-07-07)
+
+
+### Bug Fixes
+
+* improve path handling in PromptComposer and SelectedFilesPanel ([95b49aa](https://github.com/Fanzzzd/repo-wizard/commit/95b49aa37069be387b20711c32e15c27097d74cb))
+* **prompt:** ensure unique key for MetaPromptSelector based on composer mode ([d4f0d34](https://github.com/Fanzzzd/repo-wizard/commit/d4f0d34b7181c65cdb847810a772004113ed20f9))
+* remove figma-squircle dependency from pnpm-lock.yaml ([b821cbb](https://github.com/Fanzzzd/repo-wizard/commit/b821cbba533a650cff1a28dbec16835cbd0e41b6))
+* update app identifier format in tauri configuration ([fde03d3](https://github.com/Fanzzzd/repo-wizard/commit/fde03d3c7dbc0a93f70b45a4a56d989ca2007d92))
+
+
+### Features
+
+* **prompt:** enhance meta prompt management with mode support ([2c890ab](https://github.com/Fanzzzd/repo-wizard/commit/2c890ab97d3dd59d934de9cec59c5b69cf54cea2))
+
 # [1.3.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.2.0...app-v1.3.0) (2025-07-05)
 
 

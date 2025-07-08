@@ -1,10 +1,11 @@
 import { Settings, X, DownloadCloud, RefreshCw } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useSettingsStore } from "../store/settingsStore";
-import { AnimatePresence, motion } from "motion/react";
 import { useUpdateStore } from "../store/updateStore";
+import { AnimatePresence, motion } from "motion/react";
 import { Textarea } from "./common/Textarea";
 import { Checkbox } from "./common/Checkbox";
+import { Button } from "./common/Button";
 
 function UpdateStatusIndicator() {
   const { status, install } = useUpdateStore();
@@ -23,14 +24,16 @@ function UpdateStatusIndicator() {
 
   if (status === "ready") {
     return (
-      <button
+      <Button
         onClick={install}
-        className="flex items-center gap-2 text-sm font-semibold px-2 py-1.5 rounded-md bg-green-100 text-green-700 hover:bg-green-200"
+        variant="ghost"
+        size="sm"
+        className="font-semibold bg-green-100 text-green-700 hover:bg-green-200"
         title="Relaunch to apply update"
+        leftIcon={<RefreshCw size={16} />}
       >
-        <RefreshCw size={16} />
-        <span>Relaunch to Update</span>
-      </button>
+        Relaunch to Update
+      </Button>
     );
   }
 

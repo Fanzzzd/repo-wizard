@@ -7,6 +7,7 @@ import { listDirectoryRecursive } from "../../lib/tauri_api";
 import type { FileNode } from "../../types";
 import { FileTypeIcon } from "./FileTypeIcon";
 import { AnimatePresence, motion } from "motion/react";
+import { Checkbox } from "../common/Checkbox";
 
 function collectFilePaths(node: FileNode): string[] {
   if (!node.isDirectory) {
@@ -64,22 +65,7 @@ function FileNodeComponent({
     selectedDescendantCount > 0 &&
     selectedDescendantCount < descendantFilePaths.length;
 
-  useEffect(() => {
-    if (checkboxRef.current) {
-      checkboxRef.current.indeterminate = isIndeterminate;
-    }
-  }, [isIndeterminate]);
-
-  const handleContainerClick = () => {
-    if (isDirectory) {
-      setIsOpen(!isOpen);
-    } else {
-      setActiveFilePath(node.path);
-    }
-  };
-
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
     const isChecked = e.target.checked;
 
     if (isDirectory) {
@@ -99,12 +85,19 @@ function FileNodeComponent({
     }
   };
 
+  const handleRightAreaClick = () => {
+    if (!isDirectory) {
+      setActiveFilePath(node.path);
+    }
+    checkboxRef.current?.click();
+  };
+
   const isActive = activeFilePath === node.path;
 
   return (
     <div>
       <div
-        className={`flex items-center p-1 rounded text-sm group ${
+        className={`flex items-center p-1 rounded text-sm group select-none cursor-default ${
           isActive
             ? "bg-blue-100 text-blue-900"
             : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -121,26 +114,24 @@ function FileNodeComponent({
                 }
               : undefined
           }
-          className={`w-4 h-4 flex-shrink-0 flex items-center justify-center ${
-            isDirectory ? "cursor-pointer" : ""
-          }`}
+          className="w-4 h-4 flex-shrink-0 flex items-center justify-center"
         >
           {isDirectory &&
             (isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
         </div>
 
-        <input
-          type="checkbox"
+        <Checkbox
           ref={checkboxRef}
-          className="form-checkbox h-4 w-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0 ml-1"
+          className="ml-1"
           checked={isSelected}
+          isIndeterminate={isIndeterminate}
           onChange={handleCheckboxChange}
           onClick={(e) => e.stopPropagation()}
         />
 
         <div
-          onClick={handleContainerClick}
-          className="flex items-center gap-2 cursor-pointer flex-grow overflow-hidden ml-2"
+          onClick={handleRightAreaClick}
+          className="flex items-center gap-2 flex-grow overflow-hidden ml-2"
         >
           <FileTypeIcon
             filename={node.name}

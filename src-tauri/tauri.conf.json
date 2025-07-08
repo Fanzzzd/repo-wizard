@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2.json",
   "productName": "Repo Wizard",
-  "version": "1.3.0",
-  "identifier": "com.repo-wizard.app",
+  "version": "1.4.0",
+  "identifier": "com.app.repo-wizard",
   "build": {
     "beforeDevCommand": "pnpm run web:dev",
     "devUrl": "http://localhost:1420",

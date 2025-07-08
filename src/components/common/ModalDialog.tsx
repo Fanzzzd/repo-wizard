@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useDialogStore } from "../../store/dialogStore";
 import { CheckCircle, AlertTriangle, XCircle, Info, X } from "lucide-react";
+import { Button } from "./Button";
 
 const statusIcons = {
     success: <CheckCircle className="text-green-500" size={24} />,
@@ -59,19 +60,21 @@ export function ModalDialog() {
             
             <div className="bg-gray-50 px-6 py-3 flex flex-row-reverse gap-3">
                 {options.type === 'confirm' && (
-                    <button
+                    <Button
                         onClick={() => handleClose(true)}
-                        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        variant="primary"
+                        size="md"
                     >
                         {options.confirmText ?? 'Confirm'}
-                    </button>
+                    </Button>
                 )}
-                 <button
+                 <Button
                     onClick={() => handleClose(false)}
-                    className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    variant="secondary"
+                    size="md"
                 >
                     {options.cancelText ?? (options.type === 'confirm' ? 'Cancel' : 'Close')}
-                </button>
+                </Button>
             </div>
           </motion.div>
         </motion.div>
