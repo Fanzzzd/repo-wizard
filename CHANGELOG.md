@@ -1,3 +1,10 @@
+# [1.5.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.4.0...app-v1.5.0-next.1) (2025-07-08)
+
+
+### Features
+
+* add HTTP plugin support and enhance update handling ([06b6a82](https://github.com/Fanzzzd/repo-wizard/commit/06b6a82f7fbfe09e9317bc4c3aa8d74fd21a07cf))
+
 # [1.4.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.3.0...app-v1.4.0) (2025-07-08)
 
 
