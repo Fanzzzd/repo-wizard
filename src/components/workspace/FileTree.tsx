@@ -88,11 +88,10 @@ function FileNodeComponent({
     }
   };
 
-  const handleRightAreaClick = () => {
+  const handleDisplayFile = () => {
     if (!isDirectory) {
       setActiveFilePath(node.path);
     }
-    checkboxRef.current?.click();
   };
 
   const isActive = activeFilePath === node.path;
@@ -100,41 +99,61 @@ function FileNodeComponent({
   return (
     <div>
       <div
-        className={`flex items-center p-1 rounded text-sm group select-none cursor-default ${
+        className={`flex items-center rounded text-sm group select-none ${
           isActive
             ? "bg-blue-100 text-blue-900"
             : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
         }`}
         title={node.path}
-        style={{ paddingLeft: `${level * 1.25}rem` }}
       >
+        {/* Zone 3: Left-side toggle/display area. Handles indentation. */}
         <div
-          onClick={
-            isDirectory
-              ? (e) => {
-                  e.stopPropagation();
-                  setIsOpen(!isOpen);
-                }
-              : undefined
-          }
-          className="w-4 h-4 flex-shrink-0 flex items-center justify-center"
+          style={{ paddingLeft: `${level * 1.25}rem` }}
+          className="flex items-center self-stretch p-1 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (isDirectory) {
+              setIsOpen(!isOpen);
+            } else {
+              handleDisplayFile();
+            }
+          }}
         >
-          {isDirectory &&
-            (isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
+          <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
+            {isDirectory &&
+              (isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
+          </div>
         </div>
 
-        <Checkbox
-          ref={checkboxRef}
-          className="ml-1"
-          checked={isSelected}
-          isIndeterminate={isIndeterminate}
-          onChange={handleCheckboxChange}
-          onClick={(e) => e.stopPropagation()}
-        />
-
+        {/* Zone 2: Checkbox area. The wrapper div provides a larger, consistent click target. */}
         <div
-          onClick={handleRightAreaClick}
-          className="flex items-center gap-2 flex-grow overflow-hidden ml-2"
+          className="p-1 flex items-center cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            checkboxRef.current?.click();
+          }}
+        >
+          <div className="pointer-events-none">
+            <Checkbox
+              ref={checkboxRef}
+              checked={isSelected}
+              isIndeterminate={isIndeterminate}
+              onChange={handleCheckboxChange}
+            />
+          </div>
+        </div>
+
+        {/* Zone 1: Right-side display/toggle area */}
+        <div
+          className="flex items-center gap-2 flex-grow overflow-hidden p-1 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (isDirectory) {
+              setIsOpen(!isOpen);
+            } else {
+              handleDisplayFile();
+            }
+          }}
         >
           <FileTypeIcon
             filename={node.name}
