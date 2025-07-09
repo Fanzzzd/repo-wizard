@@ -19,7 +19,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "node scripts/sync-version.js ${nextRelease.version} && cargo check --manifest-path src-tauri/Cargo.toml"
+        "prepareCmd": "node scripts/sync-version.js ${nextRelease.version} && cargo update --workspace"
       }
     ],
     "@semantic-release/npm",
