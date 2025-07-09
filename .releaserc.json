@@ -19,7 +19,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "node scripts/sync-version.js ${nextRelease.version} && cargo update --workspace"
+        "prepareCmd": "node scripts/sync-version.js ${nextRelease.version} && cd src-tauri && cargo update --workspace"
       }
     ],
     "@semantic-release/npm",
