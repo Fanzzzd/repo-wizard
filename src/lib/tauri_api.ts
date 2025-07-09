@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { FileNode } from "../types";
+import type { FileNode, ChangeOperation } from "../types";
 
 interface IgnoreSettings {
   respectGitignore: boolean;
@@ -74,4 +74,8 @@ export const getRelativePath = (
   rootPath: string
 ): Promise<string> => {
   return invoke("get_relative_path", { fullPath, rootPath });
+};
+
+export const parseChangesFromMarkdown = (markdown: string): Promise<ChangeOperation[]> => {
+  return invoke("parse_changes_from_markdown", { markdown });
 };

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useProjectStore } from "../../store/projectStore";
 import { useSettingsStore } from "../../store/settingsStore";
-import { getRelativePath, readFileContent } from "../../lib/tauri_api";
+import { getRelativePath, readFileContent, parseChangesFromMarkdown } from "../../lib/tauri_api";
 import {
   Clipboard,
   Check,
@@ -12,7 +12,7 @@ import {
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { buildPrompt } from "../../lib/prompt_builder";
 import type { EditFormat, MetaPrompt } from "../../types";
-import { parseChangesFromMarkdown } from "../../lib/diff_parser";
+import { createReviewChange } from "../../types";
 import { MetaPromptsManagerModal } from "./MetaPromptsManagerModal";
 import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
 import { Button } from "../common/Button";
@@ -120,13 +120,20 @@ export function PromptComposer() {
     const currentMarkdownResponse = useProjectStore.getState().markdownResponse;
     if (!currentMarkdownResponse.trim()) return;
 
-    const parsedChanges = parseChangesFromMarkdown(currentMarkdownResponse);
-    if (parsedChanges.length === 0) {
-      markMarkdownAsProcessed();
-      return;
+    try {
+      const parsedOperations = await parseChangesFromMarkdown(currentMarkdownResponse);
+      if (parsedOperations.length === 0) {
+        markMarkdownAsProcessed();
+        return;
+      }
+      const changes = parsedOperations.map(createReviewChange);
+      await startReview(changes);
+    } catch (e) {
+        console.error("Failed to parse markdown:", e);
+        // Here you might want to show an error dialog to the user
+    } finally {
+        markMarkdownAsProcessed();
     }
-    await startReview(parsedChanges);
-    markMarkdownAsProcessed();
   }, [rootPath, startReview, markMarkdownAsProcessed, composerMode]);
 
   useEffect(() => {

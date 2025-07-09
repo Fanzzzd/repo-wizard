@@ -1,6 +1,6 @@
 mod core;
 
-use crate::core::{fs_utils, patcher, path_utils};
+use crate::core::{fs_utils, patcher, path_utils, parser};
 use base64::{engine::general_purpose, Engine as _};
 use serde::Deserialize;
 use std::path::PathBuf;
@@ -148,6 +148,11 @@ async fn delete_backup(backup_id: String) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn parse_changes_from_markdown(markdown: String) -> Result<Vec<parser::ChangeOperation>, String> {
+    parser::parse_changes_from_markdown(&markdown).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -175,7 +180,8 @@ pub fn run() {
             backup_files,
             revert_file_from_backup,
             read_file_from_backup,
-            delete_backup
+            delete_backup,
+            parse_changes_from_markdown
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

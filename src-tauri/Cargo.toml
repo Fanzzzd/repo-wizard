@@ -37,6 +37,9 @@ tauri-plugin-http = "2"
 tauri-plugin-store = "2"
 base64 = "0.22.1"
 tauri-plugin-os = "2"
+lazy_static = "1.4.0"
+regex = "1.10.5"
+similar = { version = "2.5.0", features = ["inline"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"

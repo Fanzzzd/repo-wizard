@@ -7,7 +7,7 @@ interface File {
 
 const udiffFormattingRules = `# File editing rules:
 
-Return edits similar to unified diffs that \`diff -U0\` would produce.
+Return edits in fenced \`\`\`udiff code blocks.
 
 Make sure you include the first 2 lines with the file paths.
 Don't include timestamps with the file paths.
@@ -45,20 +45,25 @@ MOVE path/from/old.ext TO path/to/new.ext
 
 const diffFencedFormattingRules = `# File editing rules:
 
-Return edits in search/replace blocks. Each block must be in a fenced code block, preceded by a \`CREATE\` or \`REWRITE\` command with the file path.
+Return edits in search/replace blocks. Each set of changes for a file must be in a fenced code block, preceded by a \`MODIFY\` command with the file path.
 
-**To modify an existing file:**
-REWRITE path/to/file.py
+**To modify an existing file with one or more changes:**
+MODIFY path/to/file.py
 \`\`\`
 <<<<<<< SEARCH
-// original code to be replaced
+// original code to be replaced in the first location
 =======
 // new code to replace the original
+>>>>>>> REPLACE
+<<<<<<< SEARCH
+// original code to be replaced in a second location
+=======
+// new code to replace it
 >>>>>>> REPLACE
 \`\`\`
 
 **To create a new file:**
-CREATE path/to/new_file.ext
+MODIFY path/to/new_file.ext
 \`\`\`
 <<<<<<< SEARCH
 =======

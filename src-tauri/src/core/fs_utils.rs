@@ -130,7 +130,8 @@ pub async fn list_directory_recursive(
 }
 
 pub async fn read_file_content(path: &PathBuf) -> Result<String> {
-    fs::read_to_string(path).await.map_err(anyhow::Error::from)
+    let bytes = fs::read(path).await?;
+    Ok(String::from_utf8_lossy(&bytes).to_string())
 }
 
 pub async fn write_file_content(path: &PathBuf, content: &str) -> Result<()> {
