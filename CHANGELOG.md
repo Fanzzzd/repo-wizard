@@ -1,3 +1,10 @@
+# [1.5.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.1...app-v1.5.0-next.2) (2025-07-09)
+
+
+### Features
+
+* integrate project store and refactor state management ([44625f7](https://github.com/Fanzzzd/repo-wizard/commit/44625f7878e17e3177e003176d933a5a787e6f58))
+
 # [1.5.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.4.0...app-v1.5.0-next.1) (2025-07-08)
 
 

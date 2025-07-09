@@ -1,6 +1,6 @@
 [package]
 name = "repo-wizard"
-version = "1.0.4"
+version = "1.5.0"
 description = "A code refactoring staging area to safely and efficiently apply LLM-suggested code changes."
 authors = ["fanzzzd"]
 edition = "2021"
