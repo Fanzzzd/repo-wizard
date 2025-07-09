@@ -91,12 +91,13 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
             <PencilRuler size={14} className="text-purple-500" />
             <ShortenedPath path={operation.filePath} className="truncate min-w-0" />
             <div className="ml-auto mr-2 flex-shrink-0 flex items-center gap-2">
-              {operation.isNewFile && (
+              {operation.isNewFile ? (
                 <span className="text-xs text-green-600 font-medium">NEW</span>
+              ) : (
+                <span className="text-xs text-purple-600 font-medium">
+                  REWRITE
+                </span>
               )}
-              <span className="text-xs text-purple-600 font-medium">
-                REWRITE
-              </span>
             </div>
           </>
         );

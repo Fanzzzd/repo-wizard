@@ -45,9 +45,10 @@ MOVE path/from/old.ext TO path/to/new.ext
 
 const diffFencedFormattingRules = `# File editing rules:
 
-Return edits in search/replace blocks. Each block must be in a fenced code block, starting with the file path on the first line.
+Return edits in search/replace blocks. Each block must be in a fenced code block, preceded by a \`CREATE\` or \`REWRITE\` command with the file path.
 
-path/to/file.py
+**To modify an existing file:**
+REWRITE path/to/file.py
 \`\`\`
 <<<<<<< SEARCH
 // original code to be replaced
@@ -56,55 +57,16 @@ path/to/file.py
 >>>>>>> REPLACE
 \`\`\`
 
-When generating SEARCH/REPLACE blocks, the SEARCH block must contain only the exact, original lines of code to be replaced. Do not include +, -, @@, or any diff-like syntax in the SEARCH block; it must be a literal copy of the existing code section.
-
-### Example 1: Single Line Change
-
-**CORRECT:**
-path/to/file.py
-\`\`\`
-<<<<<<< SEARCH
-old_variable = 10
-=======
-new_variable = 20
->>>>>>> REPLACE
-\`\`\`
-
-**INCORRECT:**
-path/to/file.py
-\`\`\`
-<<<<<<< SEARCH
--old_variable = 10
-+new_variable = 20
-=======
-new_variable = 20
->>>>>>> REPLACE
-\`\`\`
-
-### Example 2: Changing Indentation/Structure
-
-**CORRECT:** (The SEARCH block is the literal original, even with 'wrong' indentation)
-path/to/file.py
-\`\`\`
-<<<<<<< SEARCH
-  value = calculate_value()
-if value > 100:
-    process_high_value(value)
-=======
-  value = calculate_value()
-  if value > 100:
-      process_high_value(value) // Indentation fixed
->>>>>>> REPLACE
-\`\`\`
-
-To make a new file, use a search/replace block where the SEARCH block is empty.
-path/to/new_file.ext
+**To create a new file:**
+CREATE path/to/new_file.ext
 \`\`\`
 <<<<<<< SEARCH
 =======
 // content of the new file
 >>>>>>> REPLACE
 \`\`\`
+
+When using SEARCH/REPLACE, the SEARCH block must contain only the exact, original lines of code.
 
 To delete a file, output a single line:
 DELETE path/to/file.ext
@@ -115,19 +77,18 @@ MOVE path/from/old.ext TO path/to/new.ext
 
 const wholeFileFormattingRules = `# File editing rules:
 
-For each file you need to modify, output the complete, updated content of the file within a fenced code block.
-The file path must be on the line immediately preceding the code block.
+For each file you need to modify, use a command (\`CREATE\` for new files, \`REWRITE\` for existing files) followed by the file path, and then the complete, updated content of the file within a fenced code block.
 
-path/to/file.py
+**To create a new file:**
+CREATE path/to/new_file.py
 \`\`\`python
-// full updated content of file.py
-// ...
+// this file does not exist, it's just an example file to show you the response format
 \`\`\`
 
-To create a new file, follow the same format. Provide the full content for the new file.
-path/to/new_file.ext
-\`\`\`
-// content of the new file
+**To modify an existing file:**
+REWRITE path/to/existing_file.py
+\`\`\`python
+// this file does not exist, it's just an example file to show you the response format
 \`\`\`
 
 To delete a file, output a single line:

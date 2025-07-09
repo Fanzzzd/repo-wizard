@@ -69,7 +69,7 @@ function parseFencedBlockContent(filePath: string, content: string): ChangeOpera
       type: "rewrite",
       filePath,
       content,
-      isNewFile: false,
+      isNewFile: false, // This will be overridden by the CREATE command if present
     };
   }
 }
@@ -83,70 +83,70 @@ export const parseChangesFromMarkdown = (markdown: string): ReviewChange[] => {
     const currentLine = lines[i];
     const trimmedLine = currentLine.trim();
 
-    // Check for single-line commands first (case-insensitive).
+    // Check for single-line commands
     if (trimmedLine.toUpperCase().startsWith('DELETE ')) {
       const filePath = trimmedLine.substring('DELETE '.length).trim();
-      if (filePath) {
-        operations.push({ type: 'delete', filePath });
-      }
+      if (filePath) operations.push({ type: 'delete', filePath });
       i++;
       continue;
     }
 
     if (trimmedLine.toUpperCase().startsWith('MOVE ')) {
       const rest = trimmedLine.substring('MOVE '.length);
-      const parts = rest.split(/ TO /i); // Case-insensitive " TO " separator.
+      const parts = rest.split(/ TO /i);
       if (parts.length === 2) {
         const fromPath = parts[0].trim();
         const toPath = parts[1].trim();
-        if (fromPath && toPath) {
-          operations.push({ type: 'move', fromPath, toPath });
-        }
+        if (fromPath && toPath) operations.push({ type: 'move', fromPath, toPath });
       }
       i++;
       continue;
     }
 
-    if (trimmedLine.startsWith('```')) {
-      const blockStartIndex = i;
-      const lang = trimmedLine.substring(3).trim().toLowerCase();
+    // Check for CREATE/REWRITE commands with a following fenced block
+    const commandMatch = trimmedLine.match(/^(CREATE|REWRITE) (.*)/i);
+    if (commandMatch) {
+      const command = commandMatch[1].toUpperCase();
+      const filePath = commandMatch[2].trim();
+      
+      let blockStartIndex = -1;
+      for (let j = i + 1; j < lines.length; j++) {
+        if (lines[j].trim().startsWith('```')) { blockStartIndex = j; break; }
+      }
 
+      if (blockStartIndex !== -1) {
+        let blockEndIndex = -1;
+        for (let j = blockStartIndex + 1; j < lines.length; j++) {
+          if (lines[j].trim() === '```') { blockEndIndex = j; break; }
+        }
+        
+        if (blockEndIndex !== -1) {
+          const content = lines.slice(blockStartIndex + 1, blockEndIndex).join('\n');
+          const operation = parseFencedBlockContent(filePath, content);
+          
+          if (command === 'CREATE' && (operation.type === 'rewrite' || operation.type === 'modify')) {
+            operation.isNewFile = true;
+          }
+          
+          operations.push(operation);
+          i = blockEndIndex + 1;
+          continue;
+        }
+      }
+    }
+
+    // Check for ```diff blocks
+    if (trimmedLine.startsWith('```diff')) {
+      const blockStartIndex = i;
       let blockEndIndex = -1;
       for (let j = i + 1; j < lines.length; j++) {
-        if (lines[j].trim() === '```') {
-          blockEndIndex = j;
-          break;
-        }
+        if (lines[j].trim() === '```') { blockEndIndex = j; break; }
       }
 
       if (blockEndIndex !== -1) {
         const content = lines.slice(blockStartIndex + 1, blockEndIndex).join('\n');
-        let operation: ChangeOperation | null = null;
-        
-        if (lang === 'diff') {
-          operation = parseUdiffContent(content);
-        } else {
-          let pathLineIndex = blockStartIndex - 1;
-          while (pathLineIndex >= 0 && lines[pathLineIndex].trim() === '') {
-            pathLineIndex--;
-          }
-          
-          if (pathLineIndex >= 0) {
-            let filePath = lines[pathLineIndex].trim();
-            if (filePath.startsWith('`') && filePath.endsWith('`')) {
-              filePath = filePath.substring(1, filePath.length - 1).trim();
-            }
-            
-            if (filePath) {
-              operation = parseFencedBlockContent(filePath, content);
-            }
-          }
-        }
-        
-        if (operation) {
-          operations.push(operation);
-        }
-
+        const operation = parseUdiffContent(content);
+        if (operation) operations.push(operation);
         i = blockEndIndex + 1;
         continue;
       }
