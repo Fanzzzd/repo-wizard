@@ -110,6 +110,28 @@ function App() {
           ]
         : [];
 
+    // App Menu (macOS specific)
+    const appMenu = await Submenu.new({
+      text: "Repo Wizard",
+      items: [
+        await MenuItem.new({
+          text: "About Repo Wizard",
+          action: () => {
+            console.log("About Repo Wizard");
+          },
+        }),
+        await PredefinedMenuItem.new({ item: "Separator" }),
+        await PredefinedMenuItem.new({ item: "Services" }),
+        await PredefinedMenuItem.new({ item: "Separator" }),
+        await PredefinedMenuItem.new({ item: "Hide", text: "Hide Repo Wizard" }),
+        await PredefinedMenuItem.new({ item: "HideOthers" }),
+        await PredefinedMenuItem.new({ item: "ShowAll" }),
+        await PredefinedMenuItem.new({ item: "Separator" }),
+        await PredefinedMenuItem.new({ item: "Quit", text: "Quit Repo Wizard" }),
+      ],
+    });
+
+    // File Menu
     const fileMenu = await Submenu.new({
       text: "File",
       items: [
@@ -137,8 +159,53 @@ function App() {
       ],
     });
 
-    const appMenu = await Menu.new({ items: [fileMenu] });
-    await appMenu.setAsAppMenu();
+    // Edit Menu (Essential for copy/paste/undo functionality)
+    const editMenu = await Submenu.new({
+      text: "Edit",
+      items: [
+        await PredefinedMenuItem.new({ item: "Undo" }),
+        await PredefinedMenuItem.new({ item: "Redo" }),
+        await PredefinedMenuItem.new({ item: "Separator" }),
+        await PredefinedMenuItem.new({ item: "Cut" }),
+        await PredefinedMenuItem.new({ item: "Copy" }),
+        await PredefinedMenuItem.new({ item: "Paste" }),
+        await PredefinedMenuItem.new({ item: "SelectAll" }),
+      ],
+    });
+
+    // View Menu
+    const viewMenu = await Submenu.new({
+      text: "View",
+      items: [
+        await MenuItem.new({
+          text: "Reload",
+          accelerator: "CmdOrCtrl+R",
+          action: () => window.location.reload(),
+        }),
+        await MenuItem.new({
+          text: "Force Reload",
+          accelerator: "CmdOrCtrl+Shift+R",
+          action: () => window.location.reload(),
+        }),
+      ],
+    });
+
+    // Window Menu
+    const windowMenu = await Submenu.new({
+      text: "Window",
+      items: [
+        await PredefinedMenuItem.new({ item: "Minimize" }),
+        await PredefinedMenuItem.new({ item: "CloseWindow" }),
+        await PredefinedMenuItem.new({ item: "Separator" }),
+        await PredefinedMenuItem.new({ item: "Maximize" }),
+        await PredefinedMenuItem.new({ item: "Fullscreen" }),
+      ],
+    });
+
+    const menu = await Menu.new({ 
+      items: [appMenu, fileMenu, editMenu, viewMenu, windowMenu] 
+    });
+    await menu.setAsAppMenu();
   }, [recentProjects]);
 
   useEffect(() => {
