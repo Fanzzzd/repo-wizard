@@ -1,3 +1,11 @@
+# [1.5.0-next.4](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.3...app-v1.5.0-next.4) (2025-07-09)
+
+
+### Bug Fixes
+
+* **release:** update prepare command and remove GTK dependencies ([6352167](https://github.com/Fanzzzd/repo-wizard/commit/63521676073f76dbf3350b9d1657c6f82a723f4f))
+* **release:** update prepare command in .releaserc.json ([c556729](https://github.com/Fanzzzd/repo-wizard/commit/c55672969f7f2812298ee720cd94370b67f0475c))
+
 # [1.5.0-next.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.2...app-v1.5.0-next.3) (2025-07-09)
 
 
