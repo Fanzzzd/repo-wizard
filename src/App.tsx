@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import {
@@ -7,7 +7,7 @@ import {
   MenuItem,
   PredefinedMenuItem,
 } from "@tauri-apps/api/menu";
-import { platform } from '@tauri-apps/plugin-os';
+import { platform } from "@tauri-apps/plugin-os";
 
 import { Layout } from "./components/Layout";
 import { MainPanel } from "./components/MainPanel";
@@ -31,20 +31,8 @@ declare global {
   }
 }
 
-function ProjectView({ rootPath }: { rootPath: string }) {
-  const { init, isInitialized, isReviewing } = useProjectStore();
-
-  useEffect(() => {
-    init(rootPath);
-  }, [init, rootPath]);
-
-  if (!isInitialized) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        Loading project...
-      </div>
-    );
-  }
+function ProjectView() {
+  const { isReviewing } = useProjectStore();
 
   const workspaceRightPanel = (
     <TabbedPanel
@@ -76,7 +64,7 @@ const WelcomeView = () => {
       }}
     />
   );
-  
+
   return (
     <Layout
       leftPanel={<WorkspaceSidebar />}
@@ -84,14 +72,13 @@ const WelcomeView = () => {
       rightPanel={workspaceRightPanel}
     />
   );
-}
+};
 
 function App() {
-  const [projectRoot, setProjectRoot] = useState<string | null>(null);
-
+  const { isInitialized, setRootPath } = useProjectStore();
   const { open: openDialog } = useDialogStore();
   const { status, updateInfo, install } = useUpdateStore();
-  const { recentProjects, addRecentProject } = useSettingsStore();
+  const { recentProjects } = useSettingsStore();
 
   const setupMenu = useCallback(async () => {
     const osType = await platform();
@@ -115,8 +102,7 @@ function App() {
 
     const allMenuItems: (Submenu | MenuItem | PredefinedMenuItem)[] = [];
 
-    // App Menu (macOS specific)
-    if (osType === 'macos') {
+    if (osType === "macos") {
       const appMenu = await Submenu.new({
         text: "Repo Wizard",
         items: [
@@ -139,7 +125,6 @@ function App() {
       allMenuItems.push(appMenu);
     }
 
-    // File Menu
     const fileMenu = await Submenu.new({
       text: "File",
       items: [
@@ -154,7 +139,7 @@ function App() {
           action: async () => {
             const selected = await open({ directory: true });
             if (typeof selected === "string") {
-              await invoke("open_project_window", { rootPath: selected });
+              await useProjectStore.getState().setRootPath(selected);
             }
           },
         }),
@@ -168,7 +153,6 @@ function App() {
     });
     allMenuItems.push(fileMenu);
 
-    // Edit Menu (Essential for copy/paste/undo functionality)
     const editMenu = await Submenu.new({
       text: "Edit",
       items: [
@@ -183,7 +167,6 @@ function App() {
     });
     allMenuItems.push(editMenu);
 
-    // View Menu
     const viewMenu = await Submenu.new({
       text: "View",
       items: [
@@ -201,7 +184,6 @@ function App() {
     });
     allMenuItems.push(viewMenu);
 
-    // Window Menu
     const windowMenu = await Submenu.new({
       text: "Window",
       items: [
@@ -214,8 +196,8 @@ function App() {
     });
     allMenuItems.push(windowMenu);
 
-    const menu = await Menu.new({ 
-      items: allMenuItems
+    const menu = await Menu.new({
+      items: allMenuItems,
     });
     await menu.setAsAppMenu();
   }, [recentProjects]);
@@ -223,13 +205,11 @@ function App() {
   useEffect(() => {
     const initializeApp = () => {
       if (window.__RPO_WIZ_PROJECT_ROOT__) {
-        const path = window.__RPO_WIZ_PROJECT_ROOT__;
-        setProjectRoot(path);
-        addRecentProject(path);
+        setRootPath(window.__RPO_WIZ_PROJECT_ROOT__);
       }
     };
     initializeApp();
-  }, [addRecentProject]);
+  }, [setRootPath]);
 
   useEffect(() => {
     setupMenu();
@@ -277,7 +257,7 @@ function App() {
     <div className="h-full w-full flex flex-col bg-gray-50">
       <Header />
       <div className="flex-grow min-h-0">
-        {projectRoot ? <ProjectView rootPath={projectRoot} /> : <WelcomeView />}
+        {isInitialized ? <ProjectView /> : <WelcomeView />}
       </div>
 
       <ModalDialog />

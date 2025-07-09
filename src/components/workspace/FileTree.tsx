@@ -2,9 +2,7 @@ import { ChevronRight, ChevronDown, X, FolderOpen } from "lucide-react";
 import { useProjectStore } from "../../store/projectStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useEffect, useState, useMemo, useRef } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { listDirectoryRecursive } from "../../lib/tauri_api";
 import type { FileNode } from "../../types";
 import { FileTypeIcon } from "./FileTypeIcon";
@@ -106,7 +104,6 @@ function FileNodeComponent({
         }`}
         title={node.path}
       >
-        {/* Zone 3: Left-side toggle/display area. Handles indentation. */}
         <div
           style={{ paddingLeft: `${level * 1.25}rem` }}
           className="flex items-center self-stretch p-1 cursor-pointer"
@@ -125,7 +122,6 @@ function FileNodeComponent({
           </div>
         </div>
 
-        {/* Zone 2: Checkbox area. The wrapper div provides a larger, consistent click target. */}
         <div
           className="p-1 flex items-center cursor-pointer"
           onClick={(e) => {
@@ -143,7 +139,6 @@ function FileNodeComponent({
           </div>
         </div>
 
-        {/* Zone 1: Right-side display/toggle area */}
         <div
           className="flex items-center gap-2 flex-grow overflow-hidden p-1 cursor-pointer"
           onClick={(e) => {
@@ -187,20 +182,24 @@ function FileNodeComponent({
 }
 
 export function FileTree() {
-  const { rootPath, fileTree, setFileTree, refreshCounter } = useProjectStore();
+  const {
+    rootPath,
+    fileTree,
+    setFileTree,
+    refreshCounter,
+    setRootPath,
+    closeProject,
+  } = useProjectStore();
   const { respectGitignore, customIgnorePatterns } = useSettingsStore();
 
-  const handleCloseFolder = async () => {
-    await invoke("close_window");
+  const handleCloseFolder = () => {
+    closeProject();
   };
 
   const handleOpenFolder = async () => {
     const selected = await open({ directory: true, multiple: false });
     if (typeof selected === "string") {
-        await invoke("open_project_window", { rootPath: selected });
-        if (!rootPath) {
-            await WebviewWindow.getCurrent().close();
-        }
+      await setRootPath(selected);
     }
   };
 
@@ -213,20 +212,34 @@ export function FileTree() {
     } else {
       setFileTree(null);
     }
-  }, [rootPath, setFileTree, respectGitignore, customIgnorePatterns, refreshCounter]);
+  }, [
+    rootPath,
+    setFileTree,
+    respectGitignore,
+    customIgnorePatterns,
+    refreshCounter,
+  ]);
 
   if (!rootPath) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4 bg-gray-50">
         <div className="text-center">
-            <FolderOpen className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Open a project</h3>
-            <p className="mt-1 text-sm text-gray-500">Get started by opening a folder.</p>
-            <div className="mt-6">
-              <Button onClick={handleOpenFolder} variant="primary" leftIcon={<FolderOpen size={16} />}>
-                Open Folder
-              </Button>
-            </div>
+          <FolderOpen className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">
+            Open a project
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Get started by opening a folder.
+          </p>
+          <div className="mt-6">
+            <Button
+              onClick={handleOpenFolder}
+              variant="primary"
+              leftIcon={<FolderOpen size={16} />}
+            >
+              Open Folder
+            </Button>
+          </div>
         </div>
       </div>
     );
