@@ -1,4 +1,4 @@
-import { ChevronRight, ChevronDown, X, FolderOpen } from "lucide-react";
+import { ChevronRight, ChevronDown, X, FolderOpen, Folder } from "lucide-react";
 import { useProjectStore } from "../../store/projectStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useEffect, useState, useMemo, useRef } from "react";
@@ -9,6 +9,7 @@ import { FileTypeIcon } from "./FileTypeIcon";
 import { AnimatePresence, motion } from "motion/react";
 import { Checkbox } from "../common/Checkbox";
 import { Button } from "../common/Button";
+import { RecentProjectsModal } from "./RecentProjectsModal";
 
 function collectFilePaths(node: FileNode): string[] {
   if (!node.isDirectory) {
@@ -190,7 +191,10 @@ export function FileTree() {
     setRootPath,
     closeProject,
   } = useProjectStore();
-  const { respectGitignore, customIgnorePatterns } = useSettingsStore();
+  const { respectGitignore, customIgnorePatterns, recentProjects } =
+    useSettingsStore();
+  const [isRecentProjectsModalOpen, setIsRecentProjectsModalOpen] =
+    useState(false);
 
   const handleCloseFolder = () => {
     closeProject();
@@ -221,6 +225,73 @@ export function FileTree() {
   ]);
 
   if (!rootPath) {
+    if (recentProjects.length > 0) {
+      return (
+        <>
+          <div className="flex flex-col h-full text-gray-800 p-4 bg-gray-50">
+            <h3 className="text-lg font-bold text-gray-800 mb-4 px-1">
+              Recent Projects
+            </h3>
+            <div className="flex-grow overflow-y-auto thin-scrollbar pr-1">
+              <ul className="space-y-1">
+                {recentProjects.map((path) => (
+                  <li key={path}>
+                    <button
+                      onClick={() => setRootPath(path)}
+                      className="w-full text-left p-2 rounded-md hover:bg-gray-200 text-gray-700 hover:text-gray-900 transition-colors flex items-center gap-2"
+                      title={path}
+                    >
+                      <Folder
+                        size={18}
+                        className="text-yellow-600 flex-shrink-0"
+                      />
+                      <div className="flex-grow overflow-hidden">
+                        <div className="font-semibold text-sm truncate">
+                          {path.split(/[\\/]/).pop()}
+                        </div>
+                        <div className="text-xs text-gray-500 truncate">
+                          {path}
+                        </div>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-200 space-y-2 flex-shrink-0">
+              <Button
+                onClick={() => setIsRecentProjectsModalOpen(true)}
+                variant="secondary"
+                className="w-full"
+              >
+                View All / Search...
+              </Button>
+              <Button
+                onClick={handleOpenFolder}
+                variant="primary"
+                leftIcon={<FolderOpen size={16} />}
+                className="w-full"
+              >
+                Open Project from Disk...
+              </Button>
+            </div>
+          </div>
+          <RecentProjectsModal
+            isOpen={isRecentProjectsModalOpen}
+            onClose={() => setIsRecentProjectsModalOpen(false)}
+            onSelectProject={async (path) => {
+              await setRootPath(path);
+              setIsRecentProjectsModalOpen(false);
+            }}
+            onOpenAnother={() => {
+              setIsRecentProjectsModalOpen(false);
+              setTimeout(handleOpenFolder, 100);
+            }}
+          />
+        </>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4 bg-gray-50">
         <div className="text-center">
