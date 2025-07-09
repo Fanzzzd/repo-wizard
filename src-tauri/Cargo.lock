@@ -3458,7 +3458,7 @@ dependencies = [
 
 [[package]]
 name = "repo-wizard"
-version = "1.0.4"
+version = "1.5.0"
 dependencies = [
  "anyhow",
  "async-recursion",
