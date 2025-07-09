@@ -1,3 +1,10 @@
+# [1.5.0-next.5](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.4...app-v1.5.0-next.5) (2025-07-09)
+
+
+### Features
+
+* **FileTree:** add recent projects feature and modal for project selection ([369a438](https://github.com/Fanzzzd/repo-wizard/commit/369a438e62decb2d714cac4a82cd488f463b0881))
+
 # [1.5.0-next.4](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.3...app-v1.5.0-next.4) (2025-07-09)
 
 
