@@ -1,3 +1,11 @@
+# [1.5.0-next.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.2...app-v1.5.0-next.3) (2025-07-09)
+
+
+### Features
+
+* add @tauri-apps/plugin-os dependency and enhance app menu structure ([59a45d3](https://github.com/Fanzzzd/repo-wizard/commit/59a45d3e33c353f4a06f67de9e317c422041e5ba))
+* add macOS-specific app menu and enhance menu structure ([4e9483e](https://github.com/Fanzzzd/repo-wizard/commit/4e9483e948264a2e3d9dc08843bd621cf55762ee))
+
 # [1.5.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.1...app-v1.5.0-next.2) (2025-07-09)
 
 
