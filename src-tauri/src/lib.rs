@@ -17,8 +17,10 @@ pub struct IgnoreSettings {
 
 #[tauri::command]
 async fn open_project_window(app: tauri::AppHandle, root_path: String) -> Result<(), String> {
-    let window_label =
-        format!("project-{}", general_purpose::URL_SAFE_NO_PAD.encode(&root_path));
+    let window_label = format!(
+        "project-{}",
+        general_purpose::URL_SAFE_NO_PAD.encode(&root_path)
+    );
     if let Some(window) = app.get_webview_window(&window_label) {
         window.set_focus().map_err(|e| e.to_string())?;
         return Ok(());
@@ -149,6 +151,7 @@ async fn delete_backup(backup_id: String) -> Result<(), String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())

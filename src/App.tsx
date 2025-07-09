@@ -7,6 +7,7 @@ import {
   MenuItem,
   PredefinedMenuItem,
 } from "@tauri-apps/api/menu";
+import { platform } from '@tauri-apps/plugin-os';
 
 import { Layout } from "./components/Layout";
 import { MainPanel } from "./components/MainPanel";
@@ -93,6 +94,8 @@ function App() {
   const { recentProjects, addRecentProject } = useSettingsStore();
 
   const setupMenu = useCallback(async () => {
+    const osType = await platform();
+
     const openRecentSubmenu =
       recentProjects.length > 0
         ? [
@@ -110,26 +113,31 @@ function App() {
           ]
         : [];
 
+    const allMenuItems: (Submenu | MenuItem | PredefinedMenuItem)[] = [];
+
     // App Menu (macOS specific)
-    const appMenu = await Submenu.new({
-      text: "Repo Wizard",
-      items: [
-        await MenuItem.new({
-          text: "About Repo Wizard",
-          action: () => {
-            console.log("About Repo Wizard");
-          },
-        }),
-        await PredefinedMenuItem.new({ item: "Separator" }),
-        await PredefinedMenuItem.new({ item: "Services" }),
-        await PredefinedMenuItem.new({ item: "Separator" }),
-        await PredefinedMenuItem.new({ item: "Hide", text: "Hide Repo Wizard" }),
-        await PredefinedMenuItem.new({ item: "HideOthers" }),
-        await PredefinedMenuItem.new({ item: "ShowAll" }),
-        await PredefinedMenuItem.new({ item: "Separator" }),
-        await PredefinedMenuItem.new({ item: "Quit", text: "Quit Repo Wizard" }),
-      ],
-    });
+    if (osType === 'macos') {
+      const appMenu = await Submenu.new({
+        text: "Repo Wizard",
+        items: [
+          await MenuItem.new({
+            text: "About Repo Wizard",
+            action: () => {
+              console.log("About Repo Wizard");
+            },
+          }),
+          await PredefinedMenuItem.new({ item: "Separator" }),
+          await PredefinedMenuItem.new({ item: "Services" }),
+          await PredefinedMenuItem.new({ item: "Separator" }),
+          await PredefinedMenuItem.new({ item: "Hide", text: "Hide Repo Wizard" }),
+          await PredefinedMenuItem.new({ item: "HideOthers" }),
+          await PredefinedMenuItem.new({ item: "ShowAll" }),
+          await PredefinedMenuItem.new({ item: "Separator" }),
+          await PredefinedMenuItem.new({ item: "Quit", text: "Quit Repo Wizard" }),
+        ],
+      });
+      allMenuItems.push(appMenu);
+    }
 
     // File Menu
     const fileMenu = await Submenu.new({
@@ -158,6 +166,7 @@ function App() {
         }),
       ],
     });
+    allMenuItems.push(fileMenu);
 
     // Edit Menu (Essential for copy/paste/undo functionality)
     const editMenu = await Submenu.new({
@@ -172,6 +181,7 @@ function App() {
         await PredefinedMenuItem.new({ item: "SelectAll" }),
       ],
     });
+    allMenuItems.push(editMenu);
 
     // View Menu
     const viewMenu = await Submenu.new({
@@ -189,6 +199,7 @@ function App() {
         }),
       ],
     });
+    allMenuItems.push(viewMenu);
 
     // Window Menu
     const windowMenu = await Submenu.new({
@@ -201,9 +212,10 @@ function App() {
         await PredefinedMenuItem.new({ item: "Fullscreen" }),
       ],
     });
+    allMenuItems.push(windowMenu);
 
     const menu = await Menu.new({ 
-      items: [appMenu, fileMenu, editMenu, viewMenu, windowMenu] 
+      items: allMenuItems
     });
     await menu.setAsAppMenu();
   }, [recentProjects]);
