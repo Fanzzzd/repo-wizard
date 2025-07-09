@@ -1,13 +1,11 @@
 import Editor from "@monaco-editor/react";
-import { useWorkspaceStore } from "../../store/workspaceStore";
-import { useReviewStore } from "../../store/reviewStore";
+import { useProjectStore } from "../../store/projectStore";
 import { useEffect, useState } from "react";
 import { readFileContent } from "../../lib/tauri_api";
 import { getLanguageForFilePath } from "../../lib/language_service";
 
 export function CodeEditor() {
-  const { activeFilePath } = useWorkspaceStore();
-  const { isReviewing } = useReviewStore();
+  const { activeFilePath, isReviewing } = useProjectStore();
   const [content, setContent] = useState("");
 
   useEffect(() => {

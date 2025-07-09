@@ -1,8 +1,11 @@
 mod core;
 
 use crate::core::{fs_utils, patcher, path_utils};
+use base64::{engine::general_purpose, Engine as _};
 use serde::Deserialize;
 use std::path::PathBuf;
+use tauri::Manager;
+use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
 pub struct IgnoreSettings {
@@ -10,6 +13,48 @@ pub struct IgnoreSettings {
     pub respect_gitignore: bool,
     #[serde(rename = "customIgnorePatterns")]
     pub custom_ignore_patterns: String,
+}
+
+#[tauri::command]
+async fn open_project_window(app: tauri::AppHandle, root_path: String) -> Result<(), String> {
+    let window_label =
+        format!("project-{}", general_purpose::URL_SAFE_NO_PAD.encode(&root_path));
+    if let Some(window) = app.get_webview_window(&window_label) {
+        window.set_focus().map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+
+    let root_path_json = serde_json::to_string(&root_path).map_err(|e| e.to_string())?;
+    let init_script = format!("window.__RPO_WIZ_PROJECT_ROOT__ = {};", root_path_json);
+
+    tauri::WebviewWindowBuilder::new(
+        &app,
+        window_label,
+        tauri::WebviewUrl::App("index.html".into()),
+    )
+    .title("Repo Wizard")
+    .initialization_script(&init_script)
+    .inner_size(1200.0, 800.0)
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn create_new_window(app: tauri::AppHandle) -> Result<(), String> {
+    let label = format!("main-{}", Uuid::new_v4());
+    tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App("index.html".into()))
+        .title("Repo Wizard")
+        .inner_size(1200.0, 800.0)
+        .build()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn close_window(window: tauri::Window) -> Result<(), String> {
+    window.close().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -104,6 +149,7 @@ async fn delete_backup(backup_id: String) -> Result<(), String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -113,6 +159,9 @@ pub fn run() {
         .plugin(tauri_plugin_log::Builder::default().build())
         .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![
+            open_project_window,
+            create_new_window,
+            close_window,
             list_directory_recursive,
             get_relative_path,
             read_file_content,

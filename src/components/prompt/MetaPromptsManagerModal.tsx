@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useSettingsStore } from "../../store/settingsStore";
+import { useProjectStore } from "../../store/projectStore";
 import { useContextMenuStore } from "../../store/contextMenuStore";
-import type { MetaPrompt } from "../../types";
-import { v4 as uuidv4 } from "uuid";
+import type { MetaPrompt, MetaPromptDefinition } from "../../types";
 import {
   X,
   Plus,
@@ -49,52 +49,19 @@ interface MetaPromptsManagerModalProps {
 const templateFiles = ["architect.md", "engineer.md", "code-reviewer.md"];
 type PromptMode = "universal" | "edit" | "qa";
 
-// A simple component for rendering the visual of a prompt item, used in the DragOverlay.
-function PromptItemDisplay({
-  prompt,
-  isSelected,
-}: {
-  prompt: MetaPrompt;
-  isSelected: boolean;
-}) {
-  const [isLifted, setIsLifted] = useState(false);
-
-  useEffect(() => {
-    // If the item starts as selected, we want it to be blue initially,
-    // then transition to white. A timeout allows the initial state to render
-    // before the class change triggers the transition.
-    if (isSelected) {
-      const timer = setTimeout(() => setIsLifted(true), 10);
-      return () => clearTimeout(timer);
-    } else {
-      // If it's not a selected item being dragged, it's just white.
-      setIsLifted(true);
-    }
-  }, [isSelected]);
-
-  const colorClasses =
-    isSelected && !isLifted
-      ? "bg-blue-100 text-blue-800"
-      : "bg-white text-gray-800";
-
-  const gripColorClass =
-    isSelected && !isLifted ? "text-blue-600" : "text-gray-600";
-
+function PromptItemDisplay({ prompt }: { prompt: MetaPrompt }) {
   return (
     <div
-      className={`w-full text-left flex items-center justify-between p-2 rounded-md text-sm shadow-lg border border-gray-200 select-none cursor-default transition-colors duration-200 ${colorClasses}`}
+      className={`w-full text-left flex items-center justify-between p-2 rounded-md text-sm shadow-lg border border-gray-200 select-none cursor-default bg-white text-gray-800`}
     >
       <div className="flex items-center gap-2 truncate">
-        <GripVertical
-          size={16}
-          className={`flex-shrink-0 transition-colors duration-200 ${gripColorClass}`}
-        />
+        <GripVertical size={16} className="flex-shrink-0 text-gray-600" />
         <span className="truncate">{prompt.name}</span>
       </div>
       <div className="ml-2 flex-shrink-0">
         <ToggleSwitch
           checked={prompt.enabled}
-          onChange={() => {}} // Dummy, no-op for display
+          onChange={() => {}}
           title={prompt.enabled ? "Enabled" : "Disabled"}
         />
       </div>
@@ -128,10 +95,7 @@ function SortablePromptItem({
       >
         <div className="flex items-center gap-2 truncate">
           <DragHandle>
-            <GripVertical
-              size={16}
-              className="text-gray-400 group-hover:text-gray-600 flex-shrink-0"
-            />
+            <GripVertical size={16} className="text-gray-400 group-hover:text-gray-600 flex-shrink-0" />
           </DragHandle>
           <span className="truncate">{prompt.name}</span>
         </div>
@@ -164,7 +128,7 @@ function PromptListSection({
   onSelect: (id: string | null) => void;
   onUpdateList: (mode: PromptMode, prompts: MetaPrompt[]) => void;
   selectedPromptId: string | null;
-  onUpdatePrompt: (id: string, update: Partial<Omit<MetaPrompt, "id">>) => void;
+  onUpdatePrompt: (prompt: MetaPrompt, update: Partial<Omit<MetaPrompt, "id">>) => void;
 }) {
   const { open: openContextMenu } = useContextMenuStore();
   const promptIds = useMemo(() => prompts.map((p) => p.id), [prompts]);
@@ -179,7 +143,7 @@ function PromptListSection({
         onClick: () => {
           const newPrompt: MetaPrompt = {
             ...prompt,
-            id: uuidv4(),
+            id: window.crypto.randomUUID(),
             name: `${prompt.name} (Copy)`,
           };
           const sourceIndex = prompts.findIndex((p) => p.id === prompt.id);
@@ -218,11 +182,7 @@ function PromptListSection({
         {icon}
         {title}
       </div>
-      <SortableContext
-        items={promptIds}
-        strategy={verticalListSortingStrategy}
-        id={mode}
-      >
+      <SortableContext items={promptIds} strategy={verticalListSortingStrategy} id={mode}>
         <div className="space-y-1 min-h-[1px]">
           {prompts.map((prompt) => (
             <SortablePromptItem
@@ -231,7 +191,7 @@ function PromptListSection({
               onSelect={onSelect}
               selectedPromptId={selectedPromptId}
               onContextMenu={handleContextMenu}
-              onUpdate={(update) => onUpdatePrompt(prompt.id, update)}
+              onUpdate={(update) => onUpdatePrompt(prompt, update)}
             />
           ))}
         </div>
@@ -240,19 +200,14 @@ function PromptListSection({
   );
 }
 
-export function MetaPromptsManagerModal({
-  isOpen,
-  onClose,
-}: MetaPromptsManagerModalProps) {
-  const { metaPrompts, setMetaPrompts } = useSettingsStore();
+export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerModalProps) {
+  const { metaPrompts: promptDefs, setMetaPrompts: setPromptDefs } = useSettingsStore();
+  const { enabledMetaPromptIds, setEnabledMetaPromptIds } = useProjectStore();
+  
   const [localPrompts, setLocalPrompts] = useState<MetaPrompt[]>([]);
-  const [selectedPromptId, setSelectedPromptId] = useState<string | null>(
-    null
-  );
-  const [activePrompt, setActivePrompt] = useState<MetaPrompt | null>(null);
-  const [availableTemplates, setAvailableTemplates] = useState<
-    { name: string; content: string }[]
-  >([]);
+  const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
+  const [activeDragPrompt, setActiveDragPrompt] = useState<MetaPrompt | null>(null);
+  const [availableTemplates, setAvailableTemplates] = useState<{ name: string; content: string }[]>([]);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const addMenuRef = useRef<HTMLDivElement>(null);
 
@@ -267,11 +222,7 @@ export function MetaPromptsManagerModal({
   }, [localPrompts]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor)
   );
 
@@ -283,30 +234,26 @@ export function MetaPromptsManagerModal({
 
   useEffect(() => {
     if (isOpen) {
-      const migratedPrompts = JSON.parse(
-        JSON.stringify(metaPrompts)
-      ).map((p: MetaPrompt) => ({ ...p, mode: p.mode ?? "edit" }));
+      const currentPrompts = promptDefs.map((def) => ({
+        ...def,
+        enabled: enabledMetaPromptIds.includes(def.id),
+      }));
+      setLocalPrompts(currentPrompts);
 
-      setLocalPrompts(migratedPrompts);
-
-      if (migratedPrompts.length > 0 && !selectedPromptId) {
-        setSelectedPromptId(migratedPrompts[0].id);
-      } else if (migratedPrompts.length === 0) {
+      if (currentPrompts.length > 0 && !selectedPromptId) {
+        setSelectedPromptId(currentPrompts[0].id);
+      } else if (currentPrompts.length === 0) {
         setSelectedPromptId(null);
       }
-
+      
       const fetchTemplates = async () => {
         try {
           const templatesData = await Promise.all(
             templateFiles.map(async (filename) => {
               const response = await fetch(`/meta-prompts/${filename}`);
-              if (!response.ok)
-                throw new Error(`Failed to fetch ${filename}`);
+              if (!response.ok) throw new Error(`Failed to fetch ${filename}`);
               const content = await response.text();
-              const name = filename
-                .replace(".md", "")
-                .replace(/-/g, " ")
-                .replace(/\b\w/g, (l) => l.toUpperCase());
+              const name = filename.replace(".md", "").replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
               return { name, content };
             })
           );
@@ -317,14 +264,11 @@ export function MetaPromptsManagerModal({
       };
       fetchTemplates();
     }
-  }, [isOpen, metaPrompts]);
+  }, [isOpen, promptDefs, enabledMetaPromptIds]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        addMenuRef.current &&
-        !addMenuRef.current.contains(event.target as Node)
-      ) {
+      if (addMenuRef.current && !addMenuRef.current.contains(event.target as Node)) {
         setIsAddMenuOpen(false);
       }
     }
@@ -333,142 +277,86 @@ export function MetaPromptsManagerModal({
   }, []);
 
   const handleSave = () => {
-    setMetaPrompts(localPrompts);
+    const definitionsToSave = localPrompts.map(({ enabled, ...def }) => def);
+    const enabledIdsToSave = localPrompts.filter(p => p.enabled).map(p => p.id);
+    
+    setPromptDefs(definitionsToSave);
+    setEnabledMetaPromptIds(enabledIdsToSave);
     onClose();
   };
 
-  const handleUpdatePrompt = (
-    id: string,
-    update: Partial<Omit<MetaPrompt, "id">>
-  ) => {
+  const handleUpdatePrompt = (prompt: MetaPrompt, update: Partial<Omit<MetaPrompt, "id">>) => {
     setLocalPrompts((currentPrompts) =>
-      currentPrompts.map((p) => (p.id === id ? { ...p, ...update } : p))
+      currentPrompts.map((p) => (p.id === prompt.id ? { ...p, ...update } : p))
     );
   };
+  
+  const handleUpdatePromptById = (id: string, update: Partial<Omit<MetaPrompt, "id">>) => {
+     const prompt = localPrompts.find(p => p.id === id);
+     if (prompt) handleUpdatePrompt(prompt, update);
+  }
 
   const handleUpdateList = (mode: PromptMode, updatedSublist: MetaPrompt[]) => {
     setLocalPrompts((currentPrompts) => {
-      const currentGrouped = {
-        universal: currentPrompts.filter((p) => p.mode === "universal"),
-        edit: currentPrompts.filter((p) => p.mode === "edit"),
-        qa: currentPrompts.filter((p) => p.mode === "qa"),
-      };
-      currentGrouped[mode] = updatedSublist;
-      return [
-        ...currentGrouped.universal,
-        ...currentGrouped.edit,
-        ...currentGrouped.qa,
-      ];
+      const otherPrompts = currentPrompts.filter((p) => p.mode !== mode);
+      return [...otherPrompts, ...updatedSublist];
     });
   };
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActivePrompt(localPrompts.find((p) => p.id === event.active.id) || null);
+    setActiveDragPrompt(localPrompts.find((p) => p.id === event.active.id) || null);
   };
 
-  const handleDragCancel = () => {
-    setActivePrompt(null);
-  };
+  const handleDragCancel = () => setActiveDragPrompt(null);
 
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
-    if (!over) return;
+    if (!over || active.id === over.id) return;
 
-    const activeId = active.id;
-    const overId = over.id;
-
-    if (activeId === overId) return;
-
-    const activeContainer = active.data.current?.sortable
-      .containerId as PromptMode;
-    const overContainer = (over.data.current?.sortable.containerId ??
-      over.id) as PromptMode;
+    const activeContainer = active.data.current?.sortable.containerId as PromptMode;
+    const overContainer = (over.data.current?.sortable.containerId ?? over.id) as PromptMode;
 
     if (activeContainer && overContainer && activeContainer !== overContainer) {
       setLocalPrompts((prompts) => {
-        const activePrompt = prompts.find((p) => p.id === activeId);
-        if (!activePrompt) return prompts;
-
-        const overIndex = prompts.findIndex((p) => p.id === overId);
-        const otherPrompts = prompts.filter((p) => p.id !== activeId);
-        const updatedPrompt = { ...activePrompt, mode: overContainer };
-
-        if (overIndex !== -1) {
-          // Dragging over an item: insert before it.
-          const overItemInOthersIndex = otherPrompts.findIndex(
-            (p) => p.id === overId
-          );
-          otherPrompts.splice(overItemInOthersIndex, 0, updatedPrompt);
-          return otherPrompts;
-        } else {
-          // Dragging over a container: append to the new group and re-flatten.
-          const grouped = {
-            universal: otherPrompts.filter((p) => p.mode === "universal"),
-            edit: otherPrompts.filter((p) => p.mode === "edit"),
-            qa: otherPrompts.filter((p) => p.mode === "qa"),
-          };
-          grouped[overContainer].push(updatedPrompt);
-          return [
-            ...grouped.universal,
-            ...grouped.edit,
-            ...grouped.qa,
-          ];
-        }
+        const activeIndex = prompts.findIndex((p) => p.id === active.id);
+        prompts[activeIndex].mode = overContainer;
+        return arrayMove(prompts, activeIndex, activeIndex);
       });
     }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    setActivePrompt(null);
+    setActiveDragPrompt(null);
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
       setLocalPrompts((prompts) => {
         const oldIndex = prompts.findIndex((item) => item.id === active.id);
         const newIndex = prompts.findIndex((item) => item.id === over.id);
-
-        if (oldIndex !== -1 && newIndex !== -1) {
-          return arrayMove(prompts, oldIndex, newIndex);
-        }
-        return prompts;
+        return (oldIndex !== -1 && newIndex !== -1) ? arrayMove(prompts, oldIndex, newIndex) : prompts;
       });
     }
   };
 
-  const addPrompt = (prompt: Omit<MetaPrompt, "id">) => {
-    const newPrompt: MetaPrompt = { ...prompt, id: uuidv4() };
+  const addPrompt = (promptDef: Omit<MetaPromptDefinition, "id">) => {
+    const newPrompt: MetaPrompt = { ...promptDef, id: window.crypto.randomUUID(), enabled: true };
     setLocalPrompts((prev) => [newPrompt, ...prev]);
     setSelectedPromptId(newPrompt.id);
     setIsAddMenuOpen(false);
   };
 
-  const handleAddFromTemplate = (template: {
-    name: string;
-    content: string;
-  }) => {
-    addPrompt({
-      name: template.name,
-      content: template.content,
-      enabled: true,
-      mode: "edit",
-    });
+  const handleAddFromTemplate = (template: { name: string; content: string }) => {
+    addPrompt({ name: template.name, content: template.content, mode: "edit" });
   };
 
   const handleAddBlankPrompt = (mode: PromptMode) => {
-    addPrompt({
-      name: `New ${mode.charAt(0).toUpperCase() + mode.slice(1)} Prompt`,
-      content: "",
-      enabled: true,
-      mode: mode,
-    });
+    addPrompt({ name: `New ${mode} Prompt`, content: "", mode: mode });
   };
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
+    if (e.target === e.currentTarget) onClose();
   };
-
+  
   const promptSections = {
     universal: { prompts: universalPrompts, icon: <Wand2 size={14} />, title: "Universal" },
     edit: { prompts: editPrompts, icon: <Edit size={14} />, title: "Edit Mode" },
@@ -479,197 +367,80 @@ export function MetaPromptsManagerModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
           className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
           onClick={handleBackdropClick}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }}
             className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <header className="p-4 border-b flex items-center justify-between flex-shrink-0">
-              <h2 className="text-lg font-bold text-gray-900">
-                Manage Meta Prompts
-              </h2>
-              <button
-                onClick={onClose}
-                className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100"
-              >
+              <h2 className="text-lg font-bold text-gray-900">Manage Meta Prompts</h2>
+              <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100">
                 <X size={20} />
               </button>
             </header>
 
             <main className="flex-grow flex min-h-0 bg-gray-50">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCorners}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDragEnd={handleDragEnd}
-                onDragCancel={handleDragCancel}
-              >
+              <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
                 <div className="w-1/3 border-r border-gray-200 flex flex-col bg-white">
                   <div className="flex-grow p-2 overflow-y-auto select-none">
-                    {Object.entries(promptSections).map(
-                      ([mode, { prompts, icon, title }]) => (
+                    {Object.entries(promptSections).map(([mode, { prompts, icon, title }]) => (
                         <PromptListSection
-                          key={mode}
-                          mode={mode as PromptMode}
-                          title={title}
-                          prompts={prompts}
-                          icon={icon}
-                          selectedPromptId={selectedPromptId}
-                          onSelect={setSelectedPromptId}
-                          onUpdateList={handleUpdateList}
-                          onUpdatePrompt={handleUpdatePrompt}
+                          key={mode} mode={mode as PromptMode} title={title} prompts={prompts} icon={icon}
+                          selectedPromptId={selectedPromptId} onSelect={setSelectedPromptId} onUpdateList={handleUpdateList} onUpdatePrompt={handleUpdatePrompt}
                         />
                       )
                     )}
                   </div>
-                  <div
-                    className="flex-shrink-0 p-2 border-t border-gray-200 relative"
-                    ref={addMenuRef}
-                  >
+                  <div className="flex-shrink-0 p-2 border-t border-gray-200 relative" ref={addMenuRef}>
                     <AnimatePresence>
                       {isAddMenuOpen && (
                         <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          transition={{ duration: 0.15 }}
+                          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} transition={{ duration: 0.15 }}
                           className="absolute bottom-full left-2 right-2 mb-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-1"
                         >
-                          <Button
-                            onClick={() => handleAddBlankPrompt("universal")}
-                            variant="ghost"
-                            size="md"
-                            className="w-full justify-start text-gray-600 hover:text-gray-800"
-                            leftIcon={<Wand2 size={16} />}
-                          >
-                            Add Blank (Universal)
-                          </Button>
-                          <Button
-                            onClick={() => handleAddBlankPrompt("edit")}
-                            variant="ghost"
-                            size="md"
-                            className="w-full justify-start text-gray-600 hover:text-gray-800"
-                            leftIcon={<Edit size={16} />}
-                          >
-                            Add Blank (Edit)
-                          </Button>
-                          <Button
-                            onClick={() => handleAddBlankPrompt("qa")}
-                            variant="ghost"
-                            size="md"
-                            className="w-full justify-start text-gray-600 hover:text-gray-800"
-                            leftIcon={<MessageSquare size={16} />}
-                          >
-                            Add Blank (QA)
-                          </Button>
-
+                          <Button onClick={() => handleAddBlankPrompt("universal")} variant="ghost" size="md" className="w-full justify-start text-gray-600" leftIcon={<Wand2 size={16} />}>Add Blank (Universal)</Button>
+                          <Button onClick={() => handleAddBlankPrompt("edit")} variant="ghost" size="md" className="w-full justify-start text-gray-600" leftIcon={<Edit size={16} />}>Add Blank (Edit)</Button>
+                          <Button onClick={() => handleAddBlankPrompt("qa")} variant="ghost" size="md" className="w-full justify-start text-gray-600" leftIcon={<MessageSquare size={16} />}>Add Blank (QA)</Button>
                           {availableTemplates.map((template, index) => (
-                            <Button
-                              key={index}
-                              onClick={() => handleAddFromTemplate(template)}
-                              variant="ghost"
-                              size="md"
-                              className="w-full justify-start text-gray-600 hover:text-gray-800"
-                              title={`Add the "${template.name}" template`}
-                              leftIcon={<Combine size={16} />}
-                            >
-                              {template.name}
-                            </Button>
+                            <Button key={index} onClick={() => handleAddFromTemplate(template)} variant="ghost" size="md" className="w-full justify-start text-gray-600" title={`Add "${template.name}" template`} leftIcon={<Combine size={16} />}>{template.name}</Button>
                           ))}
                         </motion.div>
                       )}
                     </AnimatePresence>
-                    <Button
-                      onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
-                      variant="primary"
-                      size="md"
-                      className="w-full"
-                      leftIcon={<Plus size={16} />}
-                    >
+                    <Button onClick={() => setIsAddMenuOpen(!isAddMenuOpen)} variant="primary" size="md" className="w-full" leftIcon={<Plus size={16} />}>
                       Add Prompt
-                      <ChevronUp
-                        size={16}
-                        className={`transition-transform ml-auto ${
-                          isAddMenuOpen ? "rotate-0" : "rotate-180"
-                        }`}
-                      />
+                      <ChevronUp size={16} className={`transition-transform ml-auto ${ isAddMenuOpen ? "rotate-0" : "rotate-180" }`} />
                     </Button>
                   </div>
                 </div>
-
-                <SortableOverlay>
-                  {activePrompt ? (
-                    <PromptItemDisplay
-                      prompt={activePrompt}
-                      isSelected={activePrompt.id === selectedPromptId}
-                    />
-                  ) : null}
-                </SortableOverlay>
+                <SortableOverlay>{activeDragPrompt ? <PromptItemDisplay prompt={activeDragPrompt} /> : null}</SortableOverlay>
               </DndContext>
 
               <div className="w-2/3 p-6 overflow-y-auto">
                 {selectedPrompt ? (
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">
-                        Mode
-                      </label>
-                      <SegmentedControl
-                        options={modeOptions}
-                        value={selectedPrompt.mode}
-                        onChange={(mode) => handleUpdatePrompt(selectedPrompt.id, { mode })}
-                        layoutId="prompt-mode-slider"
-                      />
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Mode</label>
+                      <SegmentedControl options={modeOptions} value={selectedPrompt.mode} onChange={(mode) => handleUpdatePromptById(selectedPrompt.id, { mode })} layoutId="prompt-mode-slider" />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">
-                        Name
-                      </label>
-                      <Input
-                        type="text"
-                        value={selectedPrompt.name}
-                        onChange={(e) =>
-                          handleUpdatePrompt(selectedPrompt.id, {
-                            name: e.target.value,
-                          })
-                        }
-                        placeholder="Meta Prompt Name"
-                      />
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Name</label>
+                      <Input type="text" value={selectedPrompt.name} onChange={(e) => handleUpdatePromptById(selectedPrompt.id, { name: e.target.value })} placeholder="Meta Prompt Name" />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">
-                        Content
-                      </label>
-                      <Textarea
-                        value={selectedPrompt.content}
-                        onChange={(e) =>
-                          handleUpdatePrompt(selectedPrompt.id, {
-                            content: e.target.value,
-                          })
-                        }
-                        className="h-48 text-xs"
-                        placeholder="Enter meta prompt content..."
-                      />
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Content</label>
+                      <Textarea value={selectedPrompt.content} onChange={(e) => handleUpdatePromptById(selectedPrompt.id, { content: e.target.value })} className="h-48 text-xs" placeholder="Enter meta prompt content..." />
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full text-center text-gray-500">
                     <div>
                       <p>No meta prompts yet.</p>
-                      <p className="text-sm">
-                        Click "Add Prompt" to get started.
-                      </p>
+                      <p className="text-sm">Click "Add Prompt" to get started.</p>
                     </div>
                   </div>
                 )}
@@ -677,12 +448,8 @@ export function MetaPromptsManagerModal({
             </main>
 
             <footer className="bg-gray-100 px-4 py-3 flex justify-end gap-3 border-t flex-shrink-0">
-              <Button onClick={onClose} variant="secondary" size="md">
-                Cancel
-              </Button>
-              <Button onClick={handleSave} variant="primary" size="md">
-                Save & Close
-              </Button>
+              <Button onClick={onClose} variant="secondary" size="md">Cancel</Button>
+              <Button onClick={handleSave} variant="primary" size="md">Save & Close</Button>
             </footer>
           </motion.div>
         </motion.div>

@@ -1,14 +1,12 @@
 import { DiffEditor as MonacoDiffEditor } from "@monaco-editor/react";
-import { useWorkspaceStore } from "../../store/workspaceStore";
-import { useReviewStore } from "../../store/reviewStore";
+import { useProjectStore } from "../../store/projectStore";
 import { useEffect, useState } from "react";
 import { readFileContent } from "../../lib/tauri_api";
 import { applyPatch } from "diff";
 import { getLanguageForFilePath } from "../../lib/language_service";
 
 export function DiffEditor() {
-  const { rootPath } = useWorkspaceStore();
-  const { changes, activeChangeId } = useReviewStore();
+  const { rootPath, changes, activeChangeId } = useProjectStore();
 
   const [originalContent, setOriginalContent] = useState("");
   const [modifiedContent, setModifiedContent] = useState("");

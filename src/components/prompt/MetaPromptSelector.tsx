@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useSettingsStore } from "../../store/settingsStore";
+import { useProjectStore } from "../../store/projectStore";
 import type { MetaPrompt } from "../../types";
 import { X, ChevronDown, Wand2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -19,22 +20,21 @@ export function MetaPromptSelector({
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const selectorContainerRef = useRef<HTMLDivElement>(null);
 
-  const { metaPrompts, setMetaPrompts } = useSettingsStore();
+  const { metaPrompts: promptDefs } = useSettingsStore();
+  const { enabledMetaPromptIds, setEnabledMetaPromptIds } = useProjectStore();
+
+  const allPromptsForMode = useMemo<MetaPrompt[]>(() => {
+    return promptDefs
+        .filter(p => p.mode === composerMode || p.mode === "universal")
+        .map(def => ({
+            ...def,
+            enabled: enabledMetaPromptIds.includes(def.id)
+        }));
+  }, [promptDefs, enabledMetaPromptIds, composerMode]);
 
   const enabledPrompts = useMemo(
-    () =>
-      metaPrompts.filter(
-        (p) => p.enabled && (p.mode === composerMode || p.mode === "universal")
-      ),
-    [metaPrompts, composerMode]
-  );
-  
-  const selectablePrompts = useMemo(
-    () =>
-      metaPrompts.filter(
-        (p) => p.mode === composerMode || p.mode === "universal"
-      ),
-    [metaPrompts, composerMode]
+    () => allPromptsForMode.filter(p => p.enabled),
+    [allPromptsForMode]
   );
 
   useEffect(() => {
@@ -50,16 +50,18 @@ export function MetaPromptSelector({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [selectorContainerRef]);
 
-  const handleUpdateMetaPrompt = (
-    id: string,
-    update: Partial<Omit<MetaPrompt, "id">>
-  ) => {
-    setMetaPrompts(
-      metaPrompts.map((p) => (p.id === id ? { ...p, ...update } : p))
-    );
+  const togglePrompt = (id: string, shouldBeEnabled: boolean) => {
+    const currentIds = new Set(enabledMetaPromptIds);
+    if (shouldBeEnabled) {
+        currentIds.add(id);
+    } else {
+        currentIds.delete(id);
+    }
+    setEnabledMetaPromptIds(Array.from(currentIds));
   };
 
-  if (metaPrompts.length === 0) {
+
+  if (promptDefs.length === 0) {
     return (
       <div
         onClick={onManageRequest}
@@ -110,9 +112,7 @@ export function MetaPromptSelector({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleUpdateMetaPrompt(prompt.id, {
-                              enabled: false,
-                            });
+                            togglePrompt(prompt.id, false);
                           }}
                           className={`p-0.5 rounded-full ${
                             prompt.mode === 'universal'
@@ -154,15 +154,11 @@ export function MetaPromptSelector({
             className="absolute top-full left-0 right-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-20 p-2"
           >
             <div className="flex flex-col gap-1 max-h-60 overflow-y-auto p-1 thin-scrollbar">
-              {selectablePrompts.map((prompt) => (
+              {allPromptsForMode.map((prompt) => (
                   <Checkbox
                     key={prompt.id}
                     checked={prompt.enabled}
-                    onChange={(e) =>
-                      handleUpdateMetaPrompt(prompt.id, {
-                        enabled: e.target.checked,
-                      })
-                    }
+                    onChange={(e) => togglePrompt(prompt.id, e.target.checked)}
                     className="w-full px-3 py-2 hover:bg-blue-50 rounded-md transition-colors text-gray-700"
                   >
                     <div className="flex items-center justify-between w-full">
@@ -176,7 +172,7 @@ export function MetaPromptSelector({
                     </div>
                   </Checkbox>
                 ))}
-              {selectablePrompts.length === 0 && (
+              {allPromptsForMode.length === 0 && (
                 <div className="text-center text-xs text-gray-400 p-4">
                   No prompts available for {composerMode} mode.
                 </div>

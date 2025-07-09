@@ -1,13 +1,16 @@
-import { FolderOpen, ChevronRight, ChevronDown, X } from "lucide-react";
-import { useWorkspaceStore } from "../../store/workspaceStore";
+import { ChevronRight, ChevronDown, X, FolderOpen } from "lucide-react";
+import { useProjectStore } from "../../store/projectStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useEffect, useState, useMemo, useRef } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { listDirectoryRecursive } from "../../lib/tauri_api";
 import type { FileNode } from "../../types";
 import { FileTypeIcon } from "./FileTypeIcon";
 import { AnimatePresence, motion } from "motion/react";
 import { Checkbox } from "../common/Checkbox";
+import { Button } from "../common/Button";
 
 function collectFilePaths(node: FileNode): string[] {
   if (!node.isDirectory) {
@@ -39,7 +42,7 @@ function FileNodeComponent({
     addSelectedFilePath,
     removeSelectedFilePath,
     setSelectedFilePaths,
-  } = useWorkspaceStore();
+  } = useProjectStore();
   const checkboxRef = useRef<HTMLInputElement>(null);
 
   const isDirectory = node.isDirectory;
@@ -165,50 +168,55 @@ function FileNodeComponent({
 }
 
 export function FileTree() {
-  const { rootPath, fileTree, setRootPath, setFileTree, refreshCounter } = useWorkspaceStore();
+  const { rootPath, fileTree, setFileTree, refreshCounter } = useProjectStore();
   const { respectGitignore, customIgnorePatterns } = useSettingsStore();
 
-  const handleOpenFolder = async () => {
-    try {
-      const selected = await open({
-        directory: true,
-        multiple: false,
-      });
-      if (typeof selected === "string") {
-        setRootPath(selected);
-      }
-    } catch (error) {
-      console.error("Failed to open folder dialog:", error);
-    }
+  const handleCloseFolder = async () => {
+    await invoke("close_window");
   };
 
-  const handleCloseFolder = () => {
-    setRootPath(null);
+  const handleOpenFolder = async () => {
+    const selected = await open({ directory: true, multiple: false });
+    if (typeof selected === "string") {
+        await invoke("open_project_window", { rootPath: selected });
+        if (!rootPath) {
+            await WebviewWindow.getCurrent().close();
+        }
+    }
   };
 
   useEffect(() => {
     if (rootPath) {
       const settings = { respectGitignore, customIgnorePatterns };
       listDirectoryRecursive(rootPath, settings)
-        .then((tree) => {
-          setFileTree(tree);
-        })
+        .then(setFileTree)
         .catch(console.error);
     } else {
       setFileTree(null);
     }
   }, [rootPath, setFileTree, respectGitignore, customIgnorePatterns, refreshCounter]);
 
+  if (!rootPath) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4 bg-gray-50">
+        <div className="text-center">
+            <FolderOpen className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">Open a project</h3>
+            <p className="mt-1 text-sm text-gray-500">Get started by opening a folder.</p>
+            <div className="mt-6">
+              <Button onClick={handleOpenFolder} variant="primary" leftIcon={<FolderOpen size={16} />}>
+                Open Folder
+              </Button>
+            </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!fileTree) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4 bg-gray-50">
-        <button
-          onClick={handleOpenFolder}
-          className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 border border-gray-300 rounded-md"
-        >
-          <FolderOpen size={18} />
-          Open Project Folder
-        </button>
+        <p>Loading file tree...</p>
       </div>
     );
   }
@@ -225,7 +233,7 @@ export function FileTree() {
         <button
           onClick={handleCloseFolder}
           className="p-1 rounded-full hover:bg-gray-200 text-gray-600 hover:text-gray-900 flex-shrink-0"
-          title="Close Folder"
+          title="Close Project"
         >
           <X size={16} />
         </button>

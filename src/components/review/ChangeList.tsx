@@ -1,6 +1,5 @@
 import { useDialogStore } from "../../store/dialogStore";
-import { useReviewStore } from "../../store/reviewStore";
-import { useWorkspaceStore } from "../../store/workspaceStore";
+import { useProjectStore } from "../../store/projectStore";
 import { FileTypeIcon } from "../workspace/FileTypeIcon";
 import {
   Check,
@@ -21,7 +20,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
     applyChange,
     revertChange,
     errors,
-  } = useReviewStore();
+  } = useProjectStore();
   const openDialog = useDialogStore((s) => s.open);
   const isActive = change.id === activeChangeId;
 
@@ -156,14 +155,12 @@ export function ChangeList() {
     endReview,
     applyAllPendingChanges,
     revertAllAppliedChanges,
-  } = useReviewStore();
-  const { triggerFileTreeRefresh } = useWorkspaceStore();
+    triggerFileTreeRefresh
+  } = useProjectStore();
 
   const appliedChanges = changes.filter((c) => c.status === "applied");
 
   const handleFinishReview = () => {
-    // Applying changes already modified the file system. Finishing review
-    // now just finalizes the session and cleans up the temporary backup.
     endReview();
     if (appliedChanges.length > 0) {
       triggerFileTreeRefresh();

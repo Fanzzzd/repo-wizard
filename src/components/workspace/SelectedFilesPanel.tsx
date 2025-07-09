@@ -1,4 +1,4 @@
-import { useWorkspaceStore } from "../../store/workspaceStore";
+import { useProjectStore } from "../../store/projectStore";
 import { X, ArrowDownAZ, ArrowDown10 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { getRelativePath, readFileContent } from "../../lib/tauri_api";
@@ -12,7 +12,7 @@ export function SelectedFilesPanel() {
     removeSelectedFilePath,
     activeFilePath,
     setActiveFilePath,
-  } = useWorkspaceStore();
+  } = useProjectStore();
   const [fileDetails, setFileDetails] = useState<
     { path: string; shortPath: string; tokens: number }[]
   >([]);

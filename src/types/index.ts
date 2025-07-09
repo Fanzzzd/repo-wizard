@@ -27,10 +27,20 @@ export const createReviewChange = (operation: ChangeOperation): ReviewChange => 
   status: "pending",
 });
 
-export interface MetaPrompt {
+export interface MetaPromptDefinition {
   id: string;
   name: string;
   content: string;
-  enabled: boolean;
   mode: "edit" | "qa" | "universal";
+}
+
+// This is a transient type for UI, combining definition with project-specific 'enabled' status.
+export interface MetaPrompt extends MetaPromptDefinition {
+  enabled: boolean;
+}
+
+export interface PromptHistoryEntry {
+  id: string;
+  timestamp: number;
+  instructions: string;
 }

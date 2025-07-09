@@ -1,25 +1,28 @@
 import { useState, useCallback } from "react";
-import {
-  usePromptHistoryStore,
-  type PromptHistoryEntry,
-} from "../../store/promptHistoryStore";
-import { usePromptStore } from "../../store/promptStore";
+import { useProjectStore } from "../../store/projectStore";
 import { useDialogStore } from "../../store/dialogStore";
-import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { getRelativePath, readFileContent } from "../../lib/tauri_api";
 import { buildPrompt } from "../../lib/prompt_builder";
 import { History, Trash2, Copy, Clipboard, Check } from "lucide-react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { Button } from "../common/Button";
+import type { MetaPrompt, PromptHistoryEntry } from "../../types";
 
 export function PromptHistoryPanel() {
-  const { prompts, clearHistory } = usePromptHistoryStore();
-  const { setInstructions, composerMode } = usePromptStore();
+  const {
+    promptHistory,
+    clearPromptHistory,
+    setInstructions,
+    composerMode,
+    selectedFilePaths,
+    rootPath,
+    removeSelectedFilePath,
+    enabledMetaPromptIds,
+  } = useProjectStore();
+  
   const { open: openDialog } = useDialogStore();
-  const { selectedFilePaths, rootPath, removeSelectedFilePath } =
-    useWorkspaceStore();
-  const { customSystemPrompt, editFormat, metaPrompts } = useSettingsStore();
+  const { customSystemPrompt, editFormat, metaPrompts: promptDefs } = useSettingsStore();
 
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
 
@@ -27,18 +30,14 @@ export function PromptHistoryPanel() {
     const confirmed = await openDialog({
       title: "Confirm Clear Prompt History",
       content:
-        "Are you sure you want to clear all of your saved prompts? This cannot be undone.",
+        "Are you sure you want to clear all prompts for this project? This cannot be undone.",
       type: "confirm",
       status: "warning",
     });
 
     if (confirmed) {
-      clearHistory();
+      clearPromptHistory();
     }
-  };
-
-  const handleCopyInstructions = async (instructions: string) => {
-    await writeText(instructions);
   };
 
   const getFilesWithRelativePaths = useCallback(
@@ -56,7 +55,6 @@ export function PromptHistoryPanel() {
               (error.includes("No such file") ||
                 error.includes("The system cannot find the file specified"))
             ) {
-              console.warn(`Removing non-existent file from selection: ${path}`);
               removeSelectedFilePath(path);
             }
             return null;
@@ -75,6 +73,11 @@ export function PromptHistoryPanel() {
     if (!rootPath) return;
 
     setInstructions(entry.instructions);
+
+    const metaPrompts: MetaPrompt[] = promptDefs.map(def => ({
+        ...def,
+        enabled: enabledMetaPromptIds.includes(def.id)
+    }));
 
     const files = await getFilesWithRelativePaths(selectedFilePaths, rootPath);
     const fullPrompt = buildPrompt(
@@ -103,20 +106,20 @@ export function PromptHistoryPanel() {
           onClick={handleClearHistory}
           variant="danger"
           size="sm"
-          disabled={prompts.length === 0}
+          disabled={promptHistory.length === 0}
           leftIcon={<Trash2 size={14} />}
         >
           Clear History
         </Button>
       </div>
       <div className="flex-grow overflow-y-auto thin-scrollbar">
-        {prompts.length === 0 ? (
+        {promptHistory.length === 0 ? (
           <div className="flex-grow flex items-center justify-center text-gray-500">
-            <p>Your prompt history will appear here.</p>
+            <p>Your prompt history for this project will appear here.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {prompts.map((entry) => (
+            {promptHistory.map((entry) => (
               <div
                 key={entry.id}
                 className="bg-white p-3 rounded-lg border border-gray-200"
@@ -129,7 +132,7 @@ export function PromptHistoryPanel() {
                 </p>
                 <div className="flex items-center justify-end gap-2">
                   <Button
-                    onClick={() => handleCopyInstructions(entry.instructions)}
+                    onClick={() => writeText(entry.instructions)}
                     size="sm"
                     variant="secondary"
                     leftIcon={<Copy size={14} />}

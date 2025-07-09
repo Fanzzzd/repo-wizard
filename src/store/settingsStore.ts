@@ -1,6 +1,8 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { EditFormat, MetaPrompt } from "../types";
+import { Store as TauriStore } from "@tauri-apps/plugin-store";
+import type { EditFormat, MetaPromptDefinition } from "../types";
+
+const SETTINGS_FILE = "app-settings.json";
 
 const defaultSystemPrompt = `Act as an expert software developer.
 Always use best practices when coding.
@@ -11,52 +13,105 @@ If the request is ambiguous, ask questions.
 `;
 
 interface SettingsState {
+  // Store state
   respectGitignore: boolean;
   customIgnorePatterns: string;
   customSystemPrompt: string;
   editFormat: EditFormat;
-  metaPrompts: MetaPrompt[];
+  metaPrompts: MetaPromptDefinition[];
   autoReviewOnPaste: boolean;
+  recentProjects: string[];
+
+  // Actions
   setRespectGitignore: (value: boolean) => void;
   setCustomIgnorePatterns: (value: string) => void;
   setCustomSystemPrompt: (prompt: string) => void;
   setEditFormat: (format: EditFormat) => void;
-  setMetaPrompts: (prompts: MetaPrompt[]) => void;
+  setMetaPrompts: (prompts: MetaPromptDefinition[]) => void;
   setAutoReviewOnPaste: (value: boolean) => void;
+  addRecentProject: (path: string) => void;
+
+  // Internal
+  _isInitialized: boolean;
+  _hasHydrated: boolean;
+  _init: () => Promise<void>;
 }
 
-export const useSettingsStore = create<SettingsState>()(
-  persist(
-    (set) => ({
-      respectGitignore: true,
-      customIgnorePatterns: "",
-      customSystemPrompt: defaultSystemPrompt,
-      editFormat: "whole",
-      metaPrompts: [],
-      autoReviewOnPaste: true,
-      setRespectGitignore: (value) => set({ respectGitignore: value }),
-      setCustomIgnorePatterns: (value) => set({ customIgnorePatterns: value }),
-      setCustomSystemPrompt: (prompt) => set({ customSystemPrompt: prompt }),
-      setEditFormat: (format) => set({ editFormat: format }),
-      setMetaPrompts: (prompts) => set({ metaPrompts: prompts }),
-      setAutoReviewOnPaste: (value) => set({ autoReviewOnPaste: value }),
-    }),
-    {
-      name: "repo-wizard-settings",
-      version: 1, // Add versioning for migration
-      migrate: (persistedState: unknown, version: number) => {
-        if (version < 1) {
-          const state = persistedState as any;
-          if (state && state.metaPrompts) {
-            // Migrate old meta prompts to include the 'mode' property
-            state.metaPrompts = state.metaPrompts.map((p: any) => ({
-              ...p,
-              mode: p.mode ?? "edit",
-            }));
-          }
+let tauriStoreInstance: TauriStore | null = null;
+const getTauriStore = async (): Promise<TauriStore> => {
+  if (tauriStoreInstance === null) {
+    tauriStoreInstance = await TauriStore.load(SETTINGS_FILE);
+  }
+  return tauriStoreInstance;
+};
+
+export const useSettingsStore = create<SettingsState>((set, get) => {
+  const initialState = {
+    respectGitignore: true,
+    customIgnorePatterns: "",
+    customSystemPrompt: defaultSystemPrompt,
+    editFormat: "whole" as EditFormat,
+    metaPrompts: [] as MetaPromptDefinition[],
+    autoReviewOnPaste: true,
+    recentProjects: [] as string[],
+  };
+
+  // Debounce saving to prevent rapid writes
+  let saveTimeout: NodeJS.Timeout | null = null;
+  const debouncedSave = (state: SettingsState) => {
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { _isInitialized, _hasHydrated, _init, ...stateToSave } = state;
+      const store = await getTauriStore();
+      await store.set("state", stateToSave);
+      await store.save();
+    }, 500);
+  };
+
+  return {
+    ...initialState,
+    _isInitialized: false,
+    _hasHydrated: false,
+
+    _init: async () => {
+      if (get()._isInitialized) return;
+
+      const store = await getTauriStore();
+      const savedState = await store.get<Partial<SettingsState>>("state");
+      
+      if (savedState) {
+        // Ensure recentProjects is always an array for robustness
+        if (savedState.recentProjects && !Array.isArray(savedState.recentProjects)) {
+            savedState.recentProjects = [];
         }
-        return persistedState as SettingsState;
-      },
-    }
-  )
-);
+        set(savedState);
+      }
+      
+      set({ _isInitialized: true, _hasHydrated: true });
+
+      // Subscribe to changes AFTER initial hydration
+      useSettingsStore.subscribe((state) => {
+        if (state._hasHydrated) {
+            debouncedSave(state);
+        }
+      });
+    },
+
+    setRespectGitignore: (value) => set({ respectGitignore: value }),
+    setCustomIgnorePatterns: (value) => set({ customIgnorePatterns: value }),
+    setCustomSystemPrompt: (prompt) => set({ customSystemPrompt: prompt }),
+    setEditFormat: (format) => set({ editFormat: format }),
+    setMetaPrompts: (prompts) => set({ metaPrompts: prompts }),
+    setAutoReviewOnPaste: (value) => set({ autoReviewOnPaste: value }),
+    addRecentProject: (path) =>
+      set((state) => {
+        const otherProjects = state.recentProjects.filter((p) => p !== path);
+        const newRecentProjects = [path, ...otherProjects].slice(0, 10); // Keep last 10
+        return { recentProjects: newRecentProjects };
+      }),
+  };
+});
+
+// Initialize the store on app load
+useSettingsStore.getState()._init();

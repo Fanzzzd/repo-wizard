@@ -1,9 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { open } from "@tauri-apps/plugin-dialog";
+import { invoke } from "@tauri-apps/api/core";
+import {
+  Menu,
+  Submenu,
+  MenuItem,
+  PredefinedMenuItem,
+} from "@tauri-apps/api/menu";
+
 import { Layout } from "./components/Layout";
 import { MainPanel } from "./components/MainPanel";
-import { useReviewStore } from "./store/reviewStore";
-import { useDialogStore } from "./store/dialogStore";
-import { useUpdateStore } from "./store/updateStore";
 import { ChangeList } from "./components/review/ChangeList";
 import { PromptComposer } from "./components/prompt/PromptComposer";
 import { TabbedPanel } from "./components/TabbedPanel";
@@ -13,22 +19,147 @@ import { WorkspaceSidebar } from "./components/workspace/WorkspaceSidebar";
 import { ModalDialog } from "./components/common/ModalDialog";
 import { Tooltip } from "./components/common/Tooltip";
 import { ContextMenu } from "./components/common/ContextMenu";
+import { useProjectStore } from "./store/projectStore";
+import { useDialogStore } from "./store/dialogStore";
+import { useUpdateStore } from "./store/updateStore";
+import { useSettingsStore } from "./store/settingsStore";
 
-/**
- * The root component of the application.
- * It orchestrates the main layout and switches between workspace and review modes.
- */
-function App() {
-  const { isReviewing } = useReviewStore();
-  const { open: openDialog } = useDialogStore();
-  const { status, updateInfo, install } = useUpdateStore();
+declare global {
+  interface Window {
+    __RPO_WIZ_PROJECT_ROOT__?: string;
+  }
+}
+
+function ProjectView({ rootPath }: { rootPath: string }) {
+  const { init, isInitialized, isReviewing } = useProjectStore();
 
   useEffect(() => {
-    // React to the update status to show a dialog when the update is downloaded and ready.
+    init(rootPath);
+  }, [init, rootPath]);
+
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        Loading project...
+      </div>
+    );
+  }
+
+  const workspaceRightPanel = (
+    <TabbedPanel
+      tabs={{
+        "Compose & Review": <PromptComposer />,
+        "Prompt History": <PromptHistoryPanel />,
+      }}
+    />
+  );
+
+  const leftPanel = isReviewing ? <ChangeList /> : <WorkspaceSidebar />;
+  const rightPanel = isReviewing ? undefined : workspaceRightPanel;
+
+  return (
+    <Layout
+      leftPanel={leftPanel}
+      mainPanel={<MainPanel />}
+      rightPanel={rightPanel}
+    />
+  );
+}
+
+const WelcomeView = () => {
+  const workspaceRightPanel = (
+    <TabbedPanel
+      tabs={{
+        "Compose & Review": <PromptComposer />,
+        "Prompt History": <PromptHistoryPanel />,
+      }}
+    />
+  );
+  
+  return (
+    <Layout
+      leftPanel={<WorkspaceSidebar />}
+      mainPanel={<MainPanel />}
+      rightPanel={workspaceRightPanel}
+    />
+  );
+}
+
+function App() {
+  const [projectRoot, setProjectRoot] = useState<string | null>(null);
+
+  const { open: openDialog } = useDialogStore();
+  const { status, updateInfo, install } = useUpdateStore();
+  const { recentProjects, addRecentProject } = useSettingsStore();
+
+  const setupMenu = useCallback(async () => {
+    const openRecentSubmenu =
+      recentProjects.length > 0
+        ? [
+            await Submenu.new({
+              text: "Open Recent",
+              items: await Promise.all(
+                recentProjects.map((path) =>
+                  MenuItem.new({
+                    text: path,
+                    action: () => invoke("open_project_window", { rootPath: path }),
+                  })
+                )
+              ),
+            }),
+          ]
+        : [];
+
+    const fileMenu = await Submenu.new({
+      text: "File",
+      items: [
+        await MenuItem.new({
+          text: "New Window",
+          accelerator: "CmdOrCtrl+N",
+          action: () => invoke("create_new_window"),
+        }),
+        await MenuItem.new({
+          text: "Open...",
+          accelerator: "CmdOrCtrl+O",
+          action: async () => {
+            const selected = await open({ directory: true });
+            if (typeof selected === "string") {
+              await invoke("open_project_window", { rootPath: selected });
+            }
+          },
+        }),
+        ...openRecentSubmenu,
+        await PredefinedMenuItem.new({ item: "Separator" }),
+        await PredefinedMenuItem.new({
+          item: "CloseWindow",
+          text: "Close Window",
+        }),
+      ],
+    });
+
+    const appMenu = await Menu.new({ items: [fileMenu] });
+    await appMenu.setAsAppMenu();
+  }, [recentProjects]);
+
+  useEffect(() => {
+    const initializeApp = () => {
+      if (window.__RPO_WIZ_PROJECT_ROOT__) {
+        const path = window.__RPO_WIZ_PROJECT_ROOT__;
+        setProjectRoot(path);
+        addRecentProject(path);
+      }
+    };
+    initializeApp();
+  }, [addRecentProject]);
+
+  useEffect(() => {
+    setupMenu();
+  }, [setupMenu]);
+
+  useEffect(() => {
     const showUpdateDialog = async () => {
       if (status === "ready" && updateInfo) {
         const isDev = __APP_VERSION__.includes("-");
-
         const confirmed = await openDialog({
           title: isDev ? "Update Available" : "Update Ready",
           content: (
@@ -63,33 +194,13 @@ function App() {
     showUpdateDialog();
   }, [status, updateInfo, openDialog, install]);
 
-  const workspaceRightPanel = (
-    <TabbedPanel
-      tabs={{
-        "Compose & Review": <PromptComposer />,
-        "Prompt History": <PromptHistoryPanel />,
-      }}
-    />
-  );
-
-  // Dynamically set the layout panels based on the review state.
-  // - In review mode, the layout becomes a two-panel view: [ChangeList | DiffEditor].
-  // - In workspace mode, it's a three-panel view: [WorkspaceSidebar | CodeEditor | RightPanel].
-  const leftPanel = isReviewing ? <ChangeList /> : <WorkspaceSidebar />;
-  const rightPanel = isReviewing ? undefined : workspaceRightPanel;
-
   return (
     <div className="h-full w-full flex flex-col bg-gray-50">
       <Header />
       <div className="flex-grow min-h-0">
-        <Layout
-          leftPanel={leftPanel}
-          mainPanel={<MainPanel />}
-          rightPanel={rightPanel}
-        />
+        {projectRoot ? <ProjectView rootPath={projectRoot} /> : <WelcomeView />}
       </div>
-      
-      {/* Global components that can be displayed as overlays. */}
+
       <ModalDialog />
       <Tooltip />
       <ContextMenu />
