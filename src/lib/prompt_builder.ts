@@ -1,4 +1,4 @@
-import type { ComposerMode, EditFormat, MetaPrompt } from "../types";
+import type { ComposerMode, EditFormat, MetaPrompt, FileNode, FileTreeConfig } from "../types";
 
 interface File {
   path: string;
@@ -109,13 +109,95 @@ const formattingRulesMap = {
   whole: wholeFileFormattingRules,
 };
 
+const parseIgnorePatterns = (patternsStr: string) => {
+  const patterns = patternsStr.split(',').map(p => p.trim()).filter(Boolean);
+  const filePatterns: ((name: string) => boolean)[] = [];
+  const dirPatterns: ((name: string) => boolean)[] = [];
+
+  patterns.forEach(pattern => {
+    if (pattern.endsWith('/')) {
+      const dirName = pattern.slice(0, -1);
+      dirPatterns.push(name => name === dirName);
+    } else if (pattern.startsWith('*.')) {
+      const extension = pattern.slice(1);
+      filePatterns.push(name => name.endsWith(extension));
+    } else {
+      const matchFn = (name: string) => name === pattern;
+      filePatterns.push(matchFn);
+      dirPatterns.push(matchFn);
+    }
+  });
+
+  return (node: FileNode) => {
+    const patternsToCheck = node.isDirectory ? dirPatterns : filePatterns;
+    return patternsToCheck.some(p => p(node.name));
+  };
+};
+
+const formatFileTree = (node: FileNode, config?: FileTreeConfig): string => {
+  let result = `${node.name}\n`;
+  const isIgnoredFn = config?.ignorePatterns ? parseIgnorePatterns(config.ignorePatterns) : () => false;
+
+  const buildTree = (children: FileNode[], prefix: string) => {
+    let childrenToDisplay = children.filter(child => !isIgnoredFn(child));
+
+    const maxFiles = config?.maxFilesPerDirectory;
+    if (typeof maxFiles === 'number' && maxFiles >= 0 && childrenToDisplay.length > maxFiles) {
+        const truncated = childrenToDisplay.slice(0, maxFiles);
+        const ellipsisNode: FileNode = { name: '...', path: '', isDirectory: false, children: [] };
+        childrenToDisplay = [...truncated, ellipsisNode];
+    }
+
+    childrenToDisplay.forEach((child, index) => {
+      const isLast = index === childrenToDisplay.length - 1;
+      result += `${prefix}${isLast ? "└── " : "├── "}${child.name}\n`;
+      if (child.children && child.name !== '...') {
+        buildTree(child.children, `${prefix}${isLast ? "    " : "│   "}`);
+      }
+    });
+  };
+
+  if (node.children) {
+    buildTree(node.children, "");
+  }
+  return result;
+};
+
+const filterFileTreeBySelection = (
+  node: FileNode,
+  selectedPaths: Set<string>,
+  rootPath: string
+): FileNode | null => {
+  const nodeRelativePath = node.path.startsWith(rootPath)
+    ? node.path.substring(rootPath.length + 1).replace(/\\/g, '/')
+    : node.path.replace(/\\/g, '/');
+
+  if (selectedPaths.has(nodeRelativePath)) {
+    return { ...node, children: undefined };
+  }
+
+  if (node.isDirectory && node.children) {
+    const newChildren = node.children
+      .map(child => filterFileTreeBySelection(child, selectedPaths, rootPath))
+      .filter((c): c is FileNode => c !== null);
+
+    if (newChildren.length > 0) {
+      return { ...node, children: newChildren };
+    }
+  }
+
+  return null;
+}
+
 export const buildPrompt = (
   files: File[],
   instructions: string,
   customSystemPrompt: string,
   editFormat: EditFormat,
   metaPrompts: MetaPrompt[],
-  composerMode: ComposerMode
+  composerMode: ComposerMode,
+  fileTree: FileNode | null,
+  rootPath: string | null,
 ): string => {
   let prompt = "";
 
@@ -132,8 +214,20 @@ export const buildPrompt = (
     prompt +=
       "In addition to my instructions, you must also follow the rules in these blocks:\n\n";
     for (const metaPrompt of enabledMetaPrompts) {
+      let content = metaPrompt.content;
+
+      if (metaPrompt.promptType === 'magic' && metaPrompt.magicType === 'file-tree') {
+        let treeToRender = fileTree;
+        if (metaPrompt.fileTreeConfig?.scope === 'selected' && rootPath && fileTree) {
+            const selectedRelativePaths = new Set(files.map(f => f.path));
+            treeToRender = filterFileTreeBySelection(fileTree, selectedRelativePaths, rootPath);
+        }
+        const fileTreeString = treeToRender ? formatFileTree(treeToRender, metaPrompt.fileTreeConfig) : 'No project is open or no files selected.';
+        content = content.replace('{FILE_TREE_CONTENT}', fileTreeString);
+      }
+
       prompt += `--- BEGIN META PROMPT: "${metaPrompt.name}" ---\n`;
-      prompt += metaPrompt.content;
+      prompt += content;
       prompt += `\n--- END META PROMPT: "${metaPrompt.name}" ---\n\n`;
     }
   }

@@ -30,11 +30,23 @@ export const createReviewChange = (operation: ChangeOperation): ReviewChange => 
   status: "pending",
 });
 
+export type PromptType = "meta" | "magic";
+export type MagicPromptType = "file-tree";
+
+export interface FileTreeConfig {
+  scope: "all" | "selected";
+  maxFilesPerDirectory: number | null;
+  ignorePatterns: string;
+}
+
 export interface MetaPromptDefinition {
   id: string;
-  name: string;
+  name:string;
   content: string;
   mode: PromptMode;
+  promptType: PromptType;
+  magicType?: MagicPromptType;
+  fileTreeConfig?: FileTreeConfig;
 }
 
 // This is a transient type for UI, combining definition with project-specific 'enabled' status.

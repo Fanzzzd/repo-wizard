@@ -15,7 +15,7 @@ export function PromptHistoryPanel() {
   const { promptHistory, clearPromptHistory } = useHistoryStore();
   const { setInstructions, composerMode, enabledMetaPromptIds } =
     useComposerStore();
-  const { selectedFilePaths, rootPath } = useWorkspaceStore();
+  const { selectedFilePaths, rootPath, fileTree } = useWorkspaceStore();
   const { open: openDialog } = useDialogStore();
   const { customSystemPrompt, editFormat, metaPrompts: promptDefs } =
     useSettingsStore();
@@ -54,7 +54,9 @@ export function PromptHistoryPanel() {
       customSystemPrompt,
       editFormat,
       metaPrompts,
-      composerMode
+      composerMode,
+      fileTree,
+      rootPath
     );
     await writeText(fullPrompt);
 

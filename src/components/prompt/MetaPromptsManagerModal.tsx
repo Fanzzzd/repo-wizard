@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import type { MetaPrompt, PromptMode } from "../../types";
+import type { MetaPrompt, PromptMode, FileTreeConfig } from "../../types";
 import {
   X,
   Plus,
@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Wand2,
   GripVertical,
+  FolderTree,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { Input } from "../common/Input";
@@ -39,12 +40,33 @@ interface MetaPromptsManagerModalProps {
 }
 
 function PromptItemDisplay({ prompt }: { prompt: MetaPrompt }) {
+  const { icon } = useMemo(() => {
+    if (prompt.promptType === "magic") {
+      return {
+        icon: <FolderTree size={16} className="text-green-600 flex-shrink-0" />,
+      };
+    }
+    if (prompt.mode === "universal") {
+      return {
+        icon: <Wand2 size={16} className="text-purple-500 flex-shrink-0" />,
+      };
+    }
+    const iconEl =
+      prompt.mode === "edit" ? (
+        <Edit size={16} className="text-blue-500 flex-shrink-0" />
+      ) : (
+        <MessageSquare size={16} className="text-blue-500 flex-shrink-0" />
+      );
+    return {
+      icon: iconEl,
+    };
+  }, [prompt]);
+
   return (
-    <div
-      className={`w-full text-left flex items-center justify-between p-2 rounded-md text-sm shadow-lg border border-gray-200 select-none cursor-default bg-white text-gray-800`}
-    >
-      <div className="flex items-center gap-2 truncate">
+    <div className="w-full text-left flex items-center justify-between p-2 rounded-md text-sm shadow-xl border border-gray-200 select-none cursor-grabbing bg-white">
+      <div className="flex items-center gap-2 truncate text-gray-800">
         <GripVertical size={16} className="flex-shrink-0 text-gray-600" />
+        {icon}
         <span className="truncate">{prompt.name}</span>
       </div>
       <div className="ml-2 flex-shrink-0">
@@ -71,21 +93,52 @@ function SortablePromptItem({
   onContextMenu: (e: React.MouseEvent, prompt: MetaPrompt) => void;
   onUpdate: (update: Partial<Omit<MetaPrompt, "id">>) => void;
 }) {
+  const isSelected = selectedPromptId === prompt.id;
+
+  const { selectedClasses, icon } = useMemo(() => {
+    if (prompt.promptType === "magic") {
+      return {
+        selectedClasses: "bg-green-100 text-green-800",
+        icon: <FolderTree size={16} className="text-green-600 flex-shrink-0" />,
+      };
+    }
+    if (prompt.mode === "universal") {
+      return {
+        selectedClasses: "bg-purple-100 text-purple-800",
+        icon: <Wand2 size={16} className="text-purple-500 flex-shrink-0" />,
+      };
+    }
+    const iconEl =
+      prompt.mode === "edit" ? (
+        <Edit size={16} className="text-blue-500 flex-shrink-0" />
+      ) : (
+        <MessageSquare size={16} className="text-blue-500 flex-shrink-0" />
+      );
+    return {
+      selectedClasses: "bg-blue-100 text-blue-800",
+      icon: iconEl,
+    };
+  }, [prompt]);
+
+  const itemClasses = isSelected
+    ? selectedClasses
+    : "text-gray-700 hover:bg-gray-100";
+
   return (
     <SortableItem id={prompt.id}>
       <div
         onContextMenu={(e) => onContextMenu(e, prompt)}
         onClick={() => onSelect(prompt.id)}
-        className={`w-full text-left flex items-center justify-between p-2 rounded-md text-sm mb-1 group select-none cursor-default ${
-          selectedPromptId === prompt.id
-            ? "bg-blue-100 text-blue-800"
-            : "text-gray-700 hover:bg-gray-100"
-        }`}
+        className={`w-full text-left flex items-center justify-between p-2 rounded-md text-sm mb-1 group select-none cursor-default ${itemClasses}`}
       >
         <div className="flex items-center gap-2 truncate">
           <DragHandle>
-            <GripVertical size={16} className="text-gray-400 group-hover:text-gray-600 flex-shrink-0" />
+            <GripVertical
+              size={16}
+              className="text-gray-400 group-hover:text-gray-600 flex-shrink-0"
+            />
           </DragHandle>
+          {icon}
           <span className="truncate">{prompt.name}</span>
         </div>
         <div className="ml-2 flex-shrink-0">
@@ -116,7 +169,10 @@ function PromptListSection({
   icon: React.ReactNode;
   onSelect: (id: string | null) => void;
   selectedPromptId: string | null;
-  onUpdatePrompt: (prompt: MetaPrompt, update: Partial<Omit<MetaPrompt, "id">>) => void;
+  onUpdatePrompt: (
+    prompt: MetaPrompt,
+    update: Partial<Omit<MetaPrompt, "id">>
+  ) => void;
   onContextMenu: (e: React.MouseEvent, prompt: MetaPrompt) => void;
 }) {
   const promptIds = useMemo(() => prompts.map((p) => p.id), [prompts]);
@@ -128,7 +184,11 @@ function PromptListSection({
         {icon}
         {title}
       </div>
-      <SortableContext items={promptIds} strategy={verticalListSortingStrategy} id={mode}>
+      <SortableContext
+        items={promptIds}
+        strategy={verticalListSortingStrategy}
+        id={mode}
+      >
         <div className="space-y-1 min-h-[1px]">
           {prompts.map((prompt) => (
             <SortablePromptItem
@@ -146,7 +206,93 @@ function PromptListSection({
   );
 }
 
-export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerModalProps) {
+function FileTreeConfigEditor({
+  prompt,
+  onUpdate,
+}: {
+  prompt: MetaPrompt;
+  onUpdate: (update: Partial<Omit<MetaPrompt, "id">>) => void;
+}) {
+  const config = prompt.fileTreeConfig ?? {
+    scope: "all",
+    maxFilesPerDirectory: null,
+    ignorePatterns: "",
+  };
+
+  const handleConfigChange = (update: Partial<FileTreeConfig>) => {
+    onUpdate({ fileTreeConfig: { ...config, ...update } });
+  };
+
+  const scopeOptions: { value: FileTreeConfig["scope"]; label: string }[] = [
+    { value: "all", label: "All Files" },
+    { value: "selected", label: "Selected Files" },
+  ];
+
+  return (
+    <div className="space-y-4 border-t border-gray-200 pt-4 mt-4">
+      <h3 className="text-base font-semibold text-gray-800">
+        File Tree Configuration
+      </h3>
+      <div>
+        <label className="text-sm font-medium text-gray-700 mb-1 block">
+          Scope
+        </label>
+        <SegmentedControl
+          options={scopeOptions}
+          value={config.scope}
+          onChange={(scope) => handleConfigChange({ scope })}
+          layoutId="filetree-scope-slider"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          {config.scope === "all"
+            ? "The tree will include all files in the project."
+            : "The tree will only include files currently selected in the workspace."}
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-gray-700 mb-1 block">
+          Max items per directory
+        </label>
+        <Input
+          type="number"
+          placeholder="No limit"
+          value={config.maxFilesPerDirectory ?? ""}
+          onChange={(e) =>
+            handleConfigChange({
+              maxFilesPerDirectory: e.target.value
+                ? parseInt(e.target.value, 10)
+                : null,
+            })
+          }
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Leave blank for no limit. If exceeded, an ellipsis (...) will be
+          shown.
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium text-gray-700 mb-1 block">
+          Exclude patterns
+        </label>
+        <Textarea
+          placeholder="e.g., *.log, node_modules/, .DS_Store"
+          className="h-24 text-xs"
+          value={config.ignorePatterns}
+          onChange={(e) => handleConfigChange({ ignorePatterns: e.target.value })}
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Comma-separated list. Use `*` for wildcards (e.g., `*.tmp`) and end
+          with `/` for directories.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function MetaPromptsManagerModal({
+  isOpen,
+  onClose,
+}: MetaPromptsManagerModalProps) {
   const {
     selectedPromptId,
     setSelectedPromptId,
@@ -165,9 +311,10 @@ export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerM
     handleDragEnd,
     handleAddFromTemplate,
     handleAddBlankPrompt,
-    handleContextMenu
+    handleAddMagicPrompt,
+    handleContextMenu,
   } = useMetaPromptManager({ isOpen });
-  
+
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const addMenuRef = useRef<HTMLDivElement>(null);
 
@@ -176,7 +323,7 @@ export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerM
     useSensor(KeyboardSensor)
   );
 
-  const modeOptions: { value: PromptMode, label: string }[] = [
+  const modeOptions: { value: PromptMode; label: string }[] = [
     { value: "universal", label: "Universal" },
     { value: "edit", label: "Edit Mode" },
     { value: "qa", label: "QA Mode" },
@@ -184,7 +331,10 @@ export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerM
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (addMenuRef.current && !addMenuRef.current.contains(event.target as Node)) {
+      if (
+        addMenuRef.current &&
+        !addMenuRef.current.contains(event.target as Node)
+      ) {
         setIsAddMenuOpen(false);
       }
     }
@@ -195,11 +345,19 @@ export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerM
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
   };
-  
+
   const promptSections = {
-    universal: { prompts: universalPrompts, icon: <Wand2 size={14} />, title: "Universal" },
+    universal: {
+      prompts: universalPrompts,
+      icon: <Wand2 size={14} />,
+      title: "Universal",
+    },
     edit: { prompts: editPrompts, icon: <Edit size={14} />, title: "Edit Mode" },
-    qa: { prompts: qaPrompts, icon: <MessageSquare size={14} />, title: "QA Mode" },
+    qa: {
+      prompts: qaPrompts,
+      icon: <MessageSquare size={14} />,
+      title: "QA Mode",
+    },
   };
 
   const onSaveAndClose = () => {
@@ -211,90 +369,225 @@ export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerM
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
           className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
           onClick={handleBackdropClick}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
             className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <header className="p-4 border-b flex items-center justify-between flex-shrink-0">
-              <h2 className="text-lg font-bold text-gray-900">Manage Meta Prompts</h2>
-              <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100">
+            <header className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+              <h2 className="text-lg font-bold text-gray-900">
+                Manage Meta Prompts
+              </h2>
+              <button
+                onClick={onClose}
+                className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100"
+              >
                 <X size={20} />
               </button>
             </header>
 
             <main className="flex-grow flex min-h-0 bg-gray-50">
-              <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCorners}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+                onDragCancel={handleDragCancel}
+              >
                 <div className="w-1/3 border-r border-gray-200 flex flex-col bg-white">
                   <div className="flex-grow p-2 overflow-y-auto select-none">
-                    {Object.entries(promptSections).map(([mode, { prompts, icon, title }]) => (
+                    {Object.entries(promptSections).map(
+                      ([mode, { prompts, icon, title }]) => (
                         <PromptListSection
-                          key={mode} mode={mode as PromptMode} title={title} prompts={prompts} icon={icon}
-                          selectedPromptId={selectedPromptId} onSelect={setSelectedPromptId} onUpdatePrompt={handleUpdatePrompt}
+                          key={mode}
+                          mode={mode as PromptMode}
+                          title={title}
+                          prompts={prompts}
+                          icon={icon}
+                          selectedPromptId={selectedPromptId}
+                          onSelect={setSelectedPromptId}
+                          onUpdatePrompt={handleUpdatePrompt}
                           onContextMenu={handleContextMenu}
                         />
                       )
                     )}
                   </div>
-                  <div className="flex-shrink-0 p-2 border-t border-gray-200 relative" ref={addMenuRef}>
+                  <div
+                    className="flex-shrink-0 p-2 border-t border-gray-200 relative"
+                    ref={addMenuRef}
+                  >
                     <AnimatePresence>
                       {isAddMenuOpen && (
                         <motion.div
-                          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} transition={{ duration: 0.15 }}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          transition={{ duration: 0.15 }}
                           className="absolute bottom-full left-2 right-2 mb-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-1"
                         >
-                          <Button onClick={() => { handleAddBlankPrompt("universal"); setIsAddMenuOpen(false); }} variant="ghost" size="md" className="w-full justify-start text-gray-600" leftIcon={<Wand2 size={16} />}>Add Blank (Universal)</Button>
-                          <Button onClick={() => { handleAddBlankPrompt("edit"); setIsAddMenuOpen(false); }} variant="ghost" size="md" className="w-full justify-start text-gray-600" leftIcon={<Edit size={16} />}>Add Blank (Edit)</Button>
-                          <Button onClick={() => { handleAddBlankPrompt("qa"); setIsAddMenuOpen(false); }} variant="ghost" size="md" className="w-full justify-start text-gray-600" leftIcon={<MessageSquare size={16} />}>Add Blank (QA)</Button>
+                          <div className="text-xs font-semibold text-gray-500 px-2 pt-1 uppercase tracking-wider">
+                            Magic Prompt
+                          </div>
+                          <Button
+                            onClick={() => {
+                              handleAddMagicPrompt("file-tree");
+                              setIsAddMenuOpen(false);
+                            }}
+                            variant="ghost"
+                            size="md"
+                            className="w-full justify-start text-gray-600"
+                            leftIcon={<FolderTree size={16} />}
+                          >
+                            File Tree
+                          </Button>
+                          <div className="border-t border-gray-200 my-1 mx-2" />
+                          <div className="text-xs font-semibold text-gray-500 px-2 pt-1 uppercase tracking-wider">
+                            Meta Prompt
+                          </div>
+                          <Button
+                            onClick={() => {
+                              handleAddBlankPrompt("universal");
+                              setIsAddMenuOpen(false);
+                            }}
+                            variant="ghost"
+                            size="md"
+                            className="w-full justify-start text-gray-600"
+                            leftIcon={<Plus size={16} />}
+                          >
+                            Add Blank Prompt
+                          </Button>
                           {availableTemplates.map((template, index) => (
-                            <Button key={index} onClick={() => { handleAddFromTemplate(template); setIsAddMenuOpen(false); }} variant="ghost" size="md" className="w-full justify-start text-gray-600" title={`Add "${template.name}" template`} leftIcon={<Combine size={16} />}>{template.name}</Button>
+                            <Button
+                              key={index}
+                              onClick={() => {
+                                handleAddFromTemplate(template);
+                                setIsAddMenuOpen(false);
+                              }}
+                              variant="ghost"
+                              size="md"
+                              className="w-full justify-start text-gray-600"
+                              title={`Add "${template.name}" template`}
+                              leftIcon={<Combine size={16} />}
+                            >
+                              {template.name}
+                            </Button>
                           ))}
                         </motion.div>
                       )}
                     </AnimatePresence>
-                    <Button onClick={() => setIsAddMenuOpen(!isAddMenuOpen)} variant="primary" size="md" className="w-full" leftIcon={<Plus size={16} />}>
+                    <Button
+                      onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+                      variant="primary"
+                      size="md"
+                      className="w-full"
+                      leftIcon={<Plus size={16} />}
+                    >
                       Add Prompt
-                      <ChevronUp size={16} className={`transition-transform ml-auto ${ isAddMenuOpen ? "rotate-0" : "rotate-180" }`} />
+                      <ChevronUp
+                        size={16}
+                        className={`transition-transform ml-auto ${
+                          isAddMenuOpen ? "rotate-0" : "rotate-180"
+                        }`}
+                      />
                     </Button>
                   </div>
                 </div>
-                <SortableOverlay>{activeDragPrompt ? <PromptItemDisplay prompt={activeDragPrompt} /> : null}</SortableOverlay>
+                <SortableOverlay>
+                  {activeDragPrompt ? (
+                    <PromptItemDisplay prompt={activeDragPrompt} />
+                  ) : null}
+                </SortableOverlay>
               </DndContext>
 
               <div className="w-2/3 p-6 overflow-y-auto">
                 {selectedPrompt ? (
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Mode</label>
-                      <SegmentedControl options={modeOptions} value={selectedPrompt.mode} onChange={(mode) => handleUpdatePromptById(selectedPrompt.id, { mode })} layoutId="prompt-mode-slider" />
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">
+                        Name
+                      </label>
+                      <Input
+                        type="text"
+                        value={selectedPrompt.name}
+                        onChange={(e) =>
+                          handleUpdatePromptById(selectedPrompt.id, {
+                            name: e.target.value,
+                          })
+                        }
+                        placeholder="Meta Prompt Name"
+                      />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Name</label>
-                      <Input type="text" value={selectedPrompt.name} onChange={(e) => handleUpdatePromptById(selectedPrompt.id, { name: e.target.value })} placeholder="Meta Prompt Name" />
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">
+                        Mode
+                      </label>
+                      <SegmentedControl
+                        options={modeOptions}
+                        value={selectedPrompt.mode}
+                        onChange={(mode) =>
+                          handleUpdatePromptById(selectedPrompt.id, { mode })
+                        }
+                        layoutId="prompt-mode-slider"
+                      />
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Content</label>
-                      <Textarea value={selectedPrompt.content} onChange={(e) => handleUpdatePromptById(selectedPrompt.id, { content: e.target.value })} className="h-48 text-xs" placeholder="Enter meta prompt content..." />
-                    </div>
+
+                    {selectedPrompt.promptType === "magic" &&
+                    selectedPrompt.magicType === "file-tree" ? (
+                      <FileTreeConfigEditor
+                        prompt={selectedPrompt}
+                        onUpdate={(update) =>
+                          handleUpdatePromptById(selectedPrompt.id, update)
+                        }
+                      />
+                    ) : (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-1 block">
+                          Content
+                        </label>
+                        <Textarea
+                          value={selectedPrompt.content}
+                          onChange={(e) =>
+                            handleUpdatePromptById(selectedPrompt.id, {
+                              content: e.target.value,
+                            })
+                          }
+                          className="h-48 text-xs"
+                          placeholder="Enter meta prompt content..."
+                        />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full text-center text-gray-500">
                     <div>
                       <p>No meta prompts yet.</p>
-                      <p className="text-sm">Click "Add Prompt" to get started.</p>
+                      <p className="text-sm">
+                        Click "Add Prompt" to get started.
+                      </p>
                     </div>
                   </div>
                 )}
               </div>
             </main>
 
-            <footer className="bg-gray-100 px-4 py-3 flex justify-end gap-3 border-t flex-shrink-0">
-              <Button onClick={onClose} variant="secondary" size="md">Cancel</Button>
-              <Button onClick={onSaveAndClose} variant="primary" size="md">Save & Close</Button>
+            <footer className="bg-gray-100 px-4 py-3 flex justify-end gap-3 border-t border-gray-200 flex-shrink-0">
+              <Button onClick={onClose} variant="secondary" size="md">
+                Cancel
+              </Button>
+              <Button onClick={onSaveAndClose} variant="primary" size="md">
+                Save & Close
+              </Button>
             </footer>
           </motion.div>
         </motion.div>

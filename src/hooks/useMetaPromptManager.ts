@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useSettingsStore } from "../store/settingsStore";
 import { useComposerStore } from "../store/composerStore";
 import { useContextMenuStore } from "../store/contextMenuStore";
-import type { MetaPrompt, MetaPromptDefinition, PromptMode } from "../types";
+import type { MetaPrompt, MetaPromptDefinition, PromptMode, MagicPromptType } from "../types";
 import { Copy, Trash2 } from "lucide-react";
 import { arrayMove } from "@dnd-kit/sortable";
 import type { DragEndEvent, DragOverEvent } from "@dnd-kit/core";
@@ -64,7 +64,8 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
       };
       fetchTemplates();
     }
-  }, [isOpen, promptDefs, enabledMetaPromptIds, selectedPromptId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, promptDefs, enabledMetaPromptIds]);
 
   const handleSave = () => {
     const definitionsToSave = localPrompts.map(({ enabled, ...def }) => def);
@@ -123,18 +124,35 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
     }
   };
   
-  const addPrompt = (promptDef: Omit<MetaPromptDefinition, "id">) => {
-    const newPrompt: MetaPrompt = { ...promptDef, id: window.crypto.randomUUID(), enabled: true };
+  const addPrompt = (promptDef: Partial<MetaPromptDefinition> & Pick<MetaPromptDefinition, 'name' | 'content' | 'mode' | 'promptType'>) => {
+    const newPrompt: MetaPrompt = { id: window.crypto.randomUUID(), enabled: true, ...promptDef };
     setLocalPrompts((prev) => [newPrompt, ...prev]);
     setSelectedPromptId(newPrompt.id);
   };
 
   const handleAddFromTemplate = (template: { name: string; content: string }) => {
-    addPrompt({ name: template.name, content: template.content, mode: "edit" });
+    addPrompt({ name: template.name, content: template.content, mode: "edit", promptType: "meta" });
   };
   
   const handleAddBlankPrompt = (mode: PromptMode) => {
-    addPrompt({ name: `New ${mode} Prompt`, content: "", mode });
+    addPrompt({ name: `New ${mode} Prompt`, content: "", mode, promptType: "meta" });
+  };
+
+  const handleAddMagicPrompt = (magicType: MagicPromptType) => {
+    if (magicType === 'file-tree') {
+      addPrompt({
+        name: "File Tree",
+        content: "Here is the project's file structure based on the configuration:\n\n{FILE_TREE_CONTENT}",
+        mode: "universal",
+        promptType: 'magic',
+        magicType: 'file-tree',
+        fileTreeConfig: {
+          scope: 'all',
+          maxFilesPerDirectory: null,
+          ignorePatterns: '',
+        }
+      });
+    }
   };
 
   const handleContextMenu = (e: React.MouseEvent, prompt: MetaPrompt) => {
@@ -186,6 +204,7 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
     handleDragEnd,
     handleAddFromTemplate,
     handleAddBlankPrompt,
+    handleAddMagicPrompt,
     handleContextMenu
   };
 }

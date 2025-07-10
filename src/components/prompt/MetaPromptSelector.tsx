@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useComposerStore } from "../../store/composerStore";
 import type { MetaPrompt } from "../../types";
-import { X, ChevronDown, Wand2 } from "lucide-react";
+import { X, ChevronDown, Wand2, FolderTree } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Checkbox } from "../common/Checkbox";
 import { HorizontalScroller } from "../common/HorizontalScroller";
@@ -102,12 +102,15 @@ export function MetaPromptSelector({
                         exit={{ opacity: 0, scale: 0.5 }}
                         transition={{ duration: 0.15 }}
                         className={`flex-shrink-0 flex items-center gap-1.5 text-sm font-medium pl-3 pr-1.5 py-1 rounded-full ${
-                          prompt.mode === 'universal'
+                          prompt.promptType === 'magic'
+                            ? 'bg-green-100 text-green-800'
+                            : prompt.mode === 'universal'
                             ? 'bg-purple-100 text-purple-800'
                             : 'bg-blue-100 text-blue-800'
                         }`}
                       >
-                        {prompt.mode === 'universal' && <Wand2 size={12} className="mr-1" />}
+                        {prompt.promptType === 'magic' && <FolderTree size={12} className="mr-0.5" />}
+                        {prompt.promptType !== 'magic' && prompt.mode === 'universal' && <Wand2 size={12} className="mr-0.5" />}
                         <span>{prompt.name}</span>
                         <button
                           onClick={(e) => {
@@ -115,7 +118,9 @@ export function MetaPromptSelector({
                             togglePrompt(prompt.id, false);
                           }}
                           className={`p-0.5 rounded-full ${
-                            prompt.mode === 'universal'
+                             prompt.promptType === 'magic'
+                            ? 'hover:bg-green-200'
+                            : prompt.mode === 'universal'
                             ? 'hover:bg-purple-200'
                             : 'hover:bg-blue-200'
                           }`}
@@ -163,7 +168,8 @@ export function MetaPromptSelector({
                   >
                     <div className="flex items-center justify-between w-full">
                       <span className="flex items-center gap-2">
-                        {prompt.mode === 'universal' && <Wand2 size={14} className="text-purple-500" />}
+                        {prompt.promptType === 'magic' && <FolderTree size={14} className="text-green-600" />}
+                        {prompt.promptType !== 'magic' && prompt.mode === 'universal' && <Wand2 size={14} className="text-purple-500" />}
                         {prompt.name}
                       </span>
                       {prompt.enabled && (

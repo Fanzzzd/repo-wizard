@@ -12,7 +12,7 @@ import { showErrorDialog } from "../lib/errorHandler";
 import { AppError, isFileNotFoundError } from "../lib/error";
 
 export function usePromptGenerator() {
-  const { selectedFilePaths, rootPath, removeSelectedFilePath } = useWorkspaceStore();
+  const { selectedFilePaths, rootPath, removeSelectedFilePath, fileTree } = useWorkspaceStore();
   const { instructions, composerMode, enabledMetaPromptIds } = useComposerStore();
   const { addPromptToHistory } = useHistoryStore();
   const { customSystemPrompt, editFormat, metaPrompts: promptDefs } = useSettingsStore();
@@ -48,23 +48,23 @@ export function usePromptGenerator() {
 
   useEffect(() => {
     const calculate = async () => {
-      const prompt = buildPrompt([], instructions, customSystemPrompt, editFormat, metaPrompts, composerMode);
+      const prompt = buildPrompt([], instructions, customSystemPrompt, editFormat, metaPrompts, composerMode, fileTree, rootPath);
       if (!rootPath) {
         setEstimatedTokens(estimateTokens(prompt));
         return;
       }
       const files = await getFilesWithRelativePaths(selectedFilePaths, rootPath);
-      const fullPrompt = buildPrompt(files, instructions, customSystemPrompt, editFormat, metaPrompts, composerMode);
+      const fullPrompt = buildPrompt(files, instructions, customSystemPrompt, editFormat, metaPrompts, composerMode, fileTree, rootPath);
       setEstimatedTokens(estimateTokens(fullPrompt));
     };
     const handler = setTimeout(calculate, 300);
     return () => clearTimeout(handler);
-  }, [selectedFilePaths, instructions, customSystemPrompt, editFormat, rootPath, metaPrompts, composerMode, getFilesWithRelativePaths]);
+  }, [selectedFilePaths, instructions, customSystemPrompt, editFormat, rootPath, metaPrompts, composerMode, getFilesWithRelativePaths, fileTree]);
 
   const generateAndCopyPrompt = async () => {
     if (!rootPath) return;
     const files = await getFilesWithRelativePaths(selectedFilePaths, rootPath);
-    const fullPrompt = buildPrompt(files, instructions, customSystemPrompt, editFormat, metaPrompts, composerMode);
+    const fullPrompt = buildPrompt(files, instructions, customSystemPrompt, editFormat, metaPrompts, composerMode, fileTree, rootPath);
     await writeText(fullPrompt);
     addPromptToHistory(instructions);
     setIsCopied(true);
