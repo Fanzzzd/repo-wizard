@@ -1,4 +1,4 @@
-use crate::IgnoreSettings;
+use crate::commands::IgnoreSettings;
 use anyhow::{anyhow, Result};
 use ignore::overrides::OverrideBuilder;
 use ignore::WalkBuilder;
