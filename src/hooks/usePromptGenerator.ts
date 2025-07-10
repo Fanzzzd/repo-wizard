@@ -9,7 +9,7 @@ import { buildPrompt } from "../lib/prompt_builder";
 import { estimateTokens } from "../lib/token_estimator";
 import type { MetaPrompt } from "../types";
 import { showErrorDialog } from "../lib/errorHandler";
-import { AppError } from "../lib/error";
+import { AppError, isFileNotFoundError } from "../lib/error";
 
 export function usePromptGenerator() {
   const { selectedFilePaths, rootPath, removeSelectedFilePath } = useWorkspaceStore();
@@ -34,11 +34,12 @@ export function usePromptGenerator() {
         const relativePath = await getRelativePath(path, root);
         return { path: relativePath, content };
       } catch (error) {
-        showErrorDialog(new AppError(`Failed to read file for prompt: ${path}`, error));
-        if (typeof error === "string" && (error.includes("No such file") || error.includes("The system cannot find the file specified"))) {
-          console.warn(`Removing non-existent file from selection: ${path}`);
+        if (isFileNotFoundError(error)) {
+          console.warn(`File not found, removing from selection: ${path}`);
           removeSelectedFilePath(path);
+          return null;
         }
+        showErrorDialog(new AppError(`Failed to read file for prompt: ${path}`, error));
         return null;
       }
     }));

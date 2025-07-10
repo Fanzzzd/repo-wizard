@@ -5,7 +5,7 @@ import { getRelativePath, readFileContent } from "../../services/tauriApi";
 import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
 import { ShortenedPath } from "../common/ShortenedPath";
 import { showErrorDialog } from "../../lib/errorHandler";
-import { AppError } from "../../lib/error";
+import { AppError, isFileNotFoundError } from "../../lib/error";
 
 export function SelectedFilesPanel() {
   const {
@@ -35,14 +35,12 @@ export function SelectedFilesPanel() {
             const shortPath = await getRelativePath(path, rootPath);
             return { path, shortPath, tokens };
           } catch (error) {
-            showErrorDialog(new AppError(`Failed to read file for token count: ${path}`, error));
-            if (
-              typeof error === "string" &&
-              (error.includes("No such file") ||
-                error.includes("The system cannot find the file specified"))
-            ) {
+            if (isFileNotFoundError(error)) {
+              console.warn(`File not found, removing from selection: ${path}`);
               removeSelectedFilePath(path);
+              return null;
             }
+            showErrorDialog(new AppError(`Failed to read file for token count: ${path}`, error));
             return null;
           }
         })
