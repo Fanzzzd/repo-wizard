@@ -38,6 +38,10 @@ lazy_static! {
     static ref UDIFF_HEADER_RE: Regex = Regex::new(r"(?m)^--- (?:a/(.+?)|(/dev/null)|(.+?))\r?\n\+\+\+ (?:b/)?(.+?)\r?\n").unwrap();
 }
 
+fn sanitize_path(path: &str) -> String {
+    path.trim().trim_matches(|c| c == '`' || c == '\'' || c == '"').to_string()
+}
+
 struct Parser<'a> {
     lines: Vec<&'a str>,
     cursor: usize,
@@ -83,19 +87,21 @@ impl<'a> Parser<'a> {
 
     fn parse_command(&mut self, command: &str, rest: &str) -> Result<()> {
         match command {
-            "DELETE" => self.operations.push(ChangeOperation::Delete { file_path: rest.to_string() }),
+            "DELETE" => self.operations.push(ChangeOperation::Delete {
+                file_path: sanitize_path(rest),
+            }),
             "MOVE" => {
                 let rest_lower = rest.to_lowercase();
-                if let Some(to_index) = rest_lower.find(" to ") {
-                    let from_path = rest[..to_index].trim().to_string();
-                    let to_path = rest[to_index + 4..].trim().to_string();
+                if let Some(to_index) = rest_lower.rfind(" to ") {
+                    let from_path = sanitize_path(&rest[..to_index]);
+                    let to_path = sanitize_path(&rest[to_index + 4..]);
                     if !from_path.is_empty() && !to_path.is_empty() {
                         self.operations.push(ChangeOperation::Move { from_path, to_path });
                     }
                 }
             }
             "CREATE" | "REWRITE" | "MODIFY" => {
-                let file_path = rest.to_string();
+                let file_path = sanitize_path(rest);
                 let (content, next_cursor) = self.find_fenced_block(self.cursor)?;
                 self.cursor = next_cursor;
 
