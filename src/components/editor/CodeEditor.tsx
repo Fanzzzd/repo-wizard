@@ -1,16 +1,19 @@
 import Editor from "@monaco-editor/react";
-import { useProjectStore } from "../../store/projectStore";
+import { useWorkspaceStore } from "../../store/workspaceStore";
+import { useReviewStore } from "../../store/reviewStore";
 import { useEffect, useState } from "react";
 import { readFileContent } from "../../services/tauriApi";
 import { getLanguageForFilePath } from "../../lib/language_service";
+import { showErrorDialog } from "../../lib/errorHandler";
 
 export function CodeEditor() {
-  const { activeFilePath, isReviewing } = useProjectStore();
+  const { activeFilePath } = useWorkspaceStore();
+  const { isReviewing } = useReviewStore();
   const [content, setContent] = useState("");
 
   useEffect(() => {
     if (activeFilePath && !isReviewing) {
-      readFileContent(activeFilePath).then(setContent).catch(console.error);
+      readFileContent(activeFilePath).then(setContent).catch(showErrorDialog);
     } else {
       setContent("");
     }

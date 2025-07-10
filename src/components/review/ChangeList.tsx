@@ -1,5 +1,6 @@
 import { useDialogStore } from "../../store/dialogStore";
-import { useProjectStore } from "../../store/projectStore";
+import { useReviewStore } from "../../store/reviewStore";
+import { useWorkspaceStore } from "../../store/workspaceStore";
 import { FileTypeIcon } from "../workspace/FileTypeIcon";
 import {
   Check,
@@ -12,15 +13,10 @@ import {
 import type { ReviewChange } from "../../types";
 import { Button } from "../common/Button";
 import { ShortenedPath } from "../common/ShortenedPath";
+import { useReviewSession } from "../../hooks/useReviewSession";
 
 const ChangeItem = ({ change }: { change: ReviewChange }) => {
-  const {
-    activeChangeId,
-    setActiveChangeId,
-    applyChange,
-    revertChange,
-    errors,
-  } = useProjectStore();
+  const { activeChangeId, setActiveChangeId, applyChange, revertChange, errors } = useReviewStore();
   const openDialog = useDialogStore((s) => s.open);
   const isActive = change.id === activeChangeId;
 
@@ -151,13 +147,9 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
 };
 
 export function ChangeList() {
-  const {
-    changes,
-    endReview,
-    applyAllPendingChanges,
-    revertAllAppliedChanges,
-    triggerFileTreeRefresh
-  } = useProjectStore();
+  const { changes } = useReviewStore();
+  const { triggerFileTreeRefresh } = useWorkspaceStore();
+  const { endReview, applyAll, revertAll } = useReviewSession();
 
   const appliedChanges = changes.filter((c) => c.status === "applied");
 
@@ -174,7 +166,7 @@ export function ChangeList() {
         <h2 className="font-bold text-lg">Changes ({changes.length})</h2>
         <div className="flex gap-2">
           <Button
-            onClick={applyAllPendingChanges}
+            onClick={applyAll}
             size="sm"
             className="bg-green-100 text-green-800 hover:bg-green-200 border-none"
             title="Apply all pending changes"
@@ -182,7 +174,7 @@ export function ChangeList() {
             Apply All
           </Button>
           <Button
-            onClick={revertAllAppliedChanges}
+            onClick={revertAll}
             size="sm"
             className="bg-gray-200 text-gray-800 hover:bg-gray-300 border-none"
             title="Revert all applied changes"

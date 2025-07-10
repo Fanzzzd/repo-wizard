@@ -1,9 +1,11 @@
-import { useProjectStore } from "../../store/projectStore";
+import { useWorkspaceStore } from "../../store/workspaceStore";
 import { X, ArrowDownAZ, ArrowDown10 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { getRelativePath, readFileContent } from "../../services/tauriApi";
 import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
 import { ShortenedPath } from "../common/ShortenedPath";
+import { showErrorDialog } from "../../lib/errorHandler";
+import { AppError } from "../../lib/error";
 
 export function SelectedFilesPanel() {
   const {
@@ -12,7 +14,7 @@ export function SelectedFilesPanel() {
     removeSelectedFilePath,
     activeFilePath,
     setActiveFilePath,
-  } = useProjectStore();
+  } = useWorkspaceStore();
   const [fileDetails, setFileDetails] = useState<
     { path: string; shortPath: string; tokens: number }[]
   >([]);
@@ -33,10 +35,7 @@ export function SelectedFilesPanel() {
             const shortPath = await getRelativePath(path, rootPath);
             return { path, shortPath, tokens };
           } catch (error) {
-            console.error(
-              `Failed to read file for token count: ${path}`,
-              error
-            );
+            showErrorDialog(new AppError(`Failed to read file for token count: ${path}`, error));
             if (
               typeof error === "string" &&
               (error.includes("No such file") ||

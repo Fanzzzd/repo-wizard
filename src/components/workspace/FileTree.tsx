@@ -1,15 +1,15 @@
 import { ChevronRight, ChevronDown, X, FolderOpen, Folder } from "lucide-react";
-import { useProjectStore } from "../../store/projectStore";
+import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { listDirectoryRecursive } from "../../services/tauriApi";
 import type { FileNode } from "../../types";
 import { FileTypeIcon } from "./FileTypeIcon";
 import { AnimatePresence, motion } from "motion/react";
 import { Checkbox } from "../common/Checkbox";
 import { Button } from "../common/Button";
 import { RecentProjectsModal } from "./RecentProjectsModal";
+import { showErrorDialog } from "../../lib/errorHandler";
 
 function collectFilePaths(node: FileNode): string[] {
   if (!node.isDirectory) {
@@ -41,7 +41,7 @@ function FileNodeComponent({
     addSelectedFilePath,
     removeSelectedFilePath,
     setSelectedFilePaths,
-  } = useProjectStore();
+  } = useWorkspaceStore();
   const checkboxRef = useRef<HTMLInputElement>(null);
 
   const isDirectory = node.isDirectory;
@@ -186,11 +186,11 @@ export function FileTree() {
   const {
     rootPath,
     fileTree,
-    setFileTree,
     refreshCounter,
     setRootPath,
     closeProject,
-  } = useProjectStore();
+    loadFileTree,
+  } = useWorkspaceStore();
   const { respectGitignore, customIgnorePatterns, recentProjects } =
     useSettingsStore();
   const [isRecentProjectsModalOpen, setIsRecentProjectsModalOpen] =
@@ -208,17 +208,10 @@ export function FileTree() {
   };
 
   useEffect(() => {
-    if (rootPath) {
-      const settings = { respectGitignore, customIgnorePatterns };
-      listDirectoryRecursive(rootPath, settings)
-        .then(setFileTree)
-        .catch(console.error);
-    } else {
-      setFileTree(null);
-    }
+    loadFileTree().catch(showErrorDialog);
   }, [
     rootPath,
-    setFileTree,
+    loadFileTree,
     respectGitignore,
     customIgnorePatterns,
     refreshCounter,

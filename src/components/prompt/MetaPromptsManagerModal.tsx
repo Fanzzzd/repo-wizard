@@ -1,13 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useSettingsStore } from "../../store/settingsStore";
-import { useProjectStore } from "../../store/projectStore";
-import { useContextMenuStore } from "../../store/contextMenuStore";
-import type { MetaPrompt, MetaPromptDefinition, PromptMode } from "../../types";
+import type { MetaPrompt, PromptMode } from "../../types";
 import {
   X,
   Plus,
-  Trash2,
-  Copy,
   Combine,
   ChevronUp,
   Edit,
@@ -28,25 +23,20 @@ import {
   useSensor,
   useSensors,
   closestCorners,
-  type DragEndEvent,
-  type DragStartEvent,
-  type DragOverEvent,
   useDroppable,
 } from "@dnd-kit/core";
 import {
   SortableContext,
-  arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { ToggleSwitch } from "../common/ToggleSwitch";
 import { SegmentedControl } from "../common/SegmentedControl";
+import { useMetaPromptManager } from "../../hooks/useMetaPromptManager";
 
 interface MetaPromptsManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const templateFiles = ["architect.md", "engineer.md", "code-reviewer.md"];
 
 function PromptItemDisplay({ prompt }: { prompt: MetaPrompt }) {
   return (
@@ -116,64 +106,21 @@ function PromptListSection({
   prompts,
   icon,
   onSelect,
-  onUpdateList,
   selectedPromptId,
   onUpdatePrompt,
+  onContextMenu,
 }: {
   mode: PromptMode;
   title: string;
   prompts: MetaPrompt[];
   icon: React.ReactNode;
   onSelect: (id: string | null) => void;
-  onUpdateList: (mode: PromptMode, prompts: MetaPrompt[]) => void;
   selectedPromptId: string | null;
   onUpdatePrompt: (prompt: MetaPrompt, update: Partial<Omit<MetaPrompt, "id">>) => void;
+  onContextMenu: (e: React.MouseEvent, prompt: MetaPrompt) => void;
 }) {
-  const { open: openContextMenu } = useContextMenuStore();
   const promptIds = useMemo(() => prompts.map((p) => p.id), [prompts]);
   const { setNodeRef } = useDroppable({ id: mode });
-
-  const handleContextMenu = (e: React.MouseEvent, prompt: MetaPrompt) => {
-    e.preventDefault();
-    openContextMenu(e.clientX, e.clientY, [
-      {
-        label: "Duplicate",
-        icon: Copy,
-        onClick: () => {
-          const newPrompt: MetaPrompt = {
-            ...prompt,
-            id: window.crypto.randomUUID(),
-            name: `${prompt.name} (Copy)`,
-          };
-          const sourceIndex = prompts.findIndex((p) => p.id === prompt.id);
-          const newPrompts = [...prompts];
-          newPrompts.splice(sourceIndex + 1, 0, newPrompt);
-          onUpdateList(mode, newPrompts);
-          onSelect(newPrompt.id);
-        },
-      },
-      { isSeparator: true },
-      {
-        label: "Delete",
-        icon: Trash2,
-        isDanger: true,
-        onClick: () => {
-          const newPrompts = prompts.filter((p) => p.id !== prompt.id);
-          onUpdateList(mode, newPrompts);
-
-          if (selectedPromptId === prompt.id) {
-            const index = prompts.findIndex((p) => p.id === prompt.id);
-            if (newPrompts.length === 0) {
-              onSelect(null);
-            } else {
-              const newIndex = Math.max(0, index - 1);
-              onSelect(newPrompts[newIndex]?.id ?? null);
-            }
-          }
-        },
-      },
-    ]);
-  };
 
   return (
     <div ref={setNodeRef}>
@@ -189,7 +136,7 @@ function PromptListSection({
               prompt={prompt}
               onSelect={onSelect}
               selectedPromptId={selectedPromptId}
-              onContextMenu={handleContextMenu}
+              onContextMenu={onContextMenu}
               onUpdate={(update) => onUpdatePrompt(prompt, update)}
             />
           ))}
@@ -200,25 +147,29 @@ function PromptListSection({
 }
 
 export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerModalProps) {
-  const { metaPrompts: promptDefs, setMetaPrompts: setPromptDefs } = useSettingsStore();
-  const { enabledMetaPromptIds, setEnabledMetaPromptIds } = useProjectStore();
+  const {
+    selectedPromptId,
+    setSelectedPromptId,
+    activeDragPrompt,
+    availableTemplates,
+    selectedPrompt,
+    universalPrompts,
+    editPrompts,
+    qaPrompts,
+    handleSave,
+    handleUpdatePrompt,
+    handleUpdatePromptById,
+    handleDragStart,
+    handleDragCancel,
+    handleDragOver,
+    handleDragEnd,
+    handleAddFromTemplate,
+    handleAddBlankPrompt,
+    handleContextMenu
+  } = useMetaPromptManager({ isOpen });
   
-  const [localPrompts, setLocalPrompts] = useState<MetaPrompt[]>([]);
-  const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
-  const [activeDragPrompt, setActiveDragPrompt] = useState<MetaPrompt | null>(null);
-  const [availableTemplates, setAvailableTemplates] = useState<{ name: string; content: string }[]>([]);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const addMenuRef = useRef<HTMLDivElement>(null);
-
-  const selectedPrompt = localPrompts.find((p) => p.id === selectedPromptId);
-
-  const { universalPrompts, editPrompts, qaPrompts } = useMemo(() => {
-    return {
-      universalPrompts: localPrompts.filter((p) => p.mode === "universal"),
-      editPrompts: localPrompts.filter((p) => p.mode === "edit"),
-      qaPrompts: localPrompts.filter((p) => p.mode === "qa"),
-    };
-  }, [localPrompts]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -232,40 +183,6 @@ export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerM
   ];
 
   useEffect(() => {
-    if (isOpen) {
-      const currentPrompts = promptDefs.map((def) => ({
-        ...def,
-        enabled: enabledMetaPromptIds.includes(def.id),
-      }));
-      setLocalPrompts(currentPrompts);
-
-      if (currentPrompts.length > 0 && !selectedPromptId) {
-        setSelectedPromptId(currentPrompts[0].id);
-      } else if (currentPrompts.length === 0) {
-        setSelectedPromptId(null);
-      }
-      
-      const fetchTemplates = async () => {
-        try {
-          const templatesData = await Promise.all(
-            templateFiles.map(async (filename) => {
-              const response = await fetch(`/meta-prompts/${filename}`);
-              if (!response.ok) throw new Error(`Failed to fetch ${filename}`);
-              const content = await response.text();
-              const name = filename.replace(".md", "").replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-              return { name, content };
-            })
-          );
-          setAvailableTemplates(templatesData);
-        } catch (error) {
-          console.error("Failed to load meta prompt templates:", error);
-        }
-      };
-      fetchTemplates();
-    }
-  }, [isOpen, promptDefs, enabledMetaPromptIds]);
-
-  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (addMenuRef.current && !addMenuRef.current.contains(event.target as Node)) {
         setIsAddMenuOpen(false);
@@ -275,83 +192,6 @@ export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerM
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSave = () => {
-    const definitionsToSave = localPrompts.map(({ enabled, ...def }) => def);
-    const enabledIdsToSave = localPrompts.filter(p => p.enabled).map(p => p.id);
-    
-    setPromptDefs(definitionsToSave);
-    setEnabledMetaPromptIds(enabledIdsToSave);
-    onClose();
-  };
-
-  const handleUpdatePrompt = (prompt: MetaPrompt, update: Partial<Omit<MetaPrompt, "id">>) => {
-    setLocalPrompts((currentPrompts) =>
-      currentPrompts.map((p) => (p.id === prompt.id ? { ...p, ...update } : p))
-    );
-  };
-  
-  const handleUpdatePromptById = (id: string, update: Partial<Omit<MetaPrompt, "id">>) => {
-     const prompt = localPrompts.find(p => p.id === id);
-     if (prompt) handleUpdatePrompt(prompt, update);
-  }
-
-  const handleUpdateList = (mode: PromptMode, updatedSublist: MetaPrompt[]) => {
-    setLocalPrompts((currentPrompts) => {
-      const otherPrompts = currentPrompts.filter((p) => p.mode !== mode);
-      return [...otherPrompts, ...updatedSublist];
-    });
-  };
-
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveDragPrompt(localPrompts.find((p) => p.id === event.active.id) || null);
-  };
-
-  const handleDragCancel = () => setActiveDragPrompt(null);
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const activeContainer = active.data.current?.sortable.containerId as PromptMode;
-    const overContainer = (over.data.current?.sortable.containerId ?? over.id) as PromptMode;
-
-    if (activeContainer && overContainer && activeContainer !== overContainer) {
-      setLocalPrompts((prompts) => {
-        const activeIndex = prompts.findIndex((p) => p.id === active.id);
-        prompts[activeIndex].mode = overContainer;
-        return arrayMove(prompts, activeIndex, activeIndex);
-      });
-    }
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    setActiveDragPrompt(null);
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      setLocalPrompts((prompts) => {
-        const oldIndex = prompts.findIndex((item) => item.id === active.id);
-        const newIndex = prompts.findIndex((item) => item.id === over.id);
-        return (oldIndex !== -1 && newIndex !== -1) ? arrayMove(prompts, oldIndex, newIndex) : prompts;
-      });
-    }
-  };
-
-  const addPrompt = (promptDef: Omit<MetaPromptDefinition, "id">) => {
-    const newPrompt: MetaPrompt = { ...promptDef, id: window.crypto.randomUUID(), enabled: true };
-    setLocalPrompts((prev) => [newPrompt, ...prev]);
-    setSelectedPromptId(newPrompt.id);
-    setIsAddMenuOpen(false);
-  };
-
-  const handleAddFromTemplate = (template: { name: string; content: string }) => {
-    addPrompt({ name: template.name, content: template.content, mode: "edit" });
-  };
-
-  const handleAddBlankPrompt = (mode: PromptMode) => {
-    addPrompt({ name: `New ${mode} Prompt`, content: "", mode: mode });
-  };
-
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
   };
@@ -360,6 +200,11 @@ export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerM
     universal: { prompts: universalPrompts, icon: <Wand2 size={14} />, title: "Universal" },
     edit: { prompts: editPrompts, icon: <Edit size={14} />, title: "Edit Mode" },
     qa: { prompts: qaPrompts, icon: <MessageSquare size={14} />, title: "QA Mode" },
+  };
+
+  const onSaveAndClose = () => {
+    handleSave();
+    onClose();
   };
 
   return (
@@ -389,7 +234,8 @@ export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerM
                     {Object.entries(promptSections).map(([mode, { prompts, icon, title }]) => (
                         <PromptListSection
                           key={mode} mode={mode as PromptMode} title={title} prompts={prompts} icon={icon}
-                          selectedPromptId={selectedPromptId} onSelect={setSelectedPromptId} onUpdateList={handleUpdateList} onUpdatePrompt={handleUpdatePrompt}
+                          selectedPromptId={selectedPromptId} onSelect={setSelectedPromptId} onUpdatePrompt={handleUpdatePrompt}
+                          onContextMenu={handleContextMenu}
                         />
                       )
                     )}
@@ -401,11 +247,11 @@ export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerM
                           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} transition={{ duration: 0.15 }}
                           className="absolute bottom-full left-2 right-2 mb-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-1"
                         >
-                          <Button onClick={() => handleAddBlankPrompt("universal")} variant="ghost" size="md" className="w-full justify-start text-gray-600" leftIcon={<Wand2 size={16} />}>Add Blank (Universal)</Button>
-                          <Button onClick={() => handleAddBlankPrompt("edit")} variant="ghost" size="md" className="w-full justify-start text-gray-600" leftIcon={<Edit size={16} />}>Add Blank (Edit)</Button>
-                          <Button onClick={() => handleAddBlankPrompt("qa")} variant="ghost" size="md" className="w-full justify-start text-gray-600" leftIcon={<MessageSquare size={16} />}>Add Blank (QA)</Button>
+                          <Button onClick={() => { handleAddBlankPrompt("universal"); setIsAddMenuOpen(false); }} variant="ghost" size="md" className="w-full justify-start text-gray-600" leftIcon={<Wand2 size={16} />}>Add Blank (Universal)</Button>
+                          <Button onClick={() => { handleAddBlankPrompt("edit"); setIsAddMenuOpen(false); }} variant="ghost" size="md" className="w-full justify-start text-gray-600" leftIcon={<Edit size={16} />}>Add Blank (Edit)</Button>
+                          <Button onClick={() => { handleAddBlankPrompt("qa"); setIsAddMenuOpen(false); }} variant="ghost" size="md" className="w-full justify-start text-gray-600" leftIcon={<MessageSquare size={16} />}>Add Blank (QA)</Button>
                           {availableTemplates.map((template, index) => (
-                            <Button key={index} onClick={() => handleAddFromTemplate(template)} variant="ghost" size="md" className="w-full justify-start text-gray-600" title={`Add "${template.name}" template`} leftIcon={<Combine size={16} />}>{template.name}</Button>
+                            <Button key={index} onClick={() => { handleAddFromTemplate(template); setIsAddMenuOpen(false); }} variant="ghost" size="md" className="w-full justify-start text-gray-600" title={`Add "${template.name}" template`} leftIcon={<Combine size={16} />}>{template.name}</Button>
                           ))}
                         </motion.div>
                       )}
@@ -448,7 +294,7 @@ export function MetaPromptsManagerModal({ isOpen, onClose }: MetaPromptsManagerM
 
             <footer className="bg-gray-100 px-4 py-3 flex justify-end gap-3 border-t flex-shrink-0">
               <Button onClick={onClose} variant="secondary" size="md">Cancel</Button>
-              <Button onClick={handleSave} variant="primary" size="md">Save & Close</Button>
+              <Button onClick={onSaveAndClose} variant="primary" size="md">Save & Close</Button>
             </footer>
           </motion.div>
         </motion.div>

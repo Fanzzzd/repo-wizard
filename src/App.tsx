@@ -20,7 +20,8 @@ import { WorkspaceSidebar } from "./components/workspace/WorkspaceSidebar";
 import { ModalDialog } from "./components/common/ModalDialog";
 import { Tooltip } from "./components/common/Tooltip";
 import { ContextMenu } from "./components/common/ContextMenu";
-import { useProjectStore } from "./store/projectStore";
+import { useWorkspaceStore } from "./store/workspaceStore";
+import { useReviewStore } from "./store/reviewStore";
 import { useDialogStore } from "./store/dialogStore";
 import { useUpdateStore } from "./store/updateStore";
 import { useSettingsStore } from "./store/settingsStore";
@@ -32,7 +33,7 @@ declare global {
 }
 
 function ProjectView() {
-  const { isReviewing } = useProjectStore();
+  const { isReviewing } = useReviewStore();
 
   const workspaceRightPanel = (
     <TabbedPanel
@@ -75,7 +76,7 @@ const WelcomeView = () => {
 };
 
 function App() {
-  const { isInitialized, setRootPath } = useProjectStore();
+  const { isInitialized, setRootPath } = useWorkspaceStore();
   const { open: openDialog } = useDialogStore();
   const { status, updateInfo, install } = useUpdateStore();
   const { recentProjects } = useSettingsStore();
@@ -139,7 +140,7 @@ function App() {
           action: async () => {
             const selected = await open({ directory: true });
             if (typeof selected === "string") {
-              await useProjectStore.getState().setRootPath(selected);
+              await useWorkspaceStore.getState().setRootPath(selected);
             }
           },
         }),

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useSettingsStore } from "../../store/settingsStore";
-import { useProjectStore } from "../../store/projectStore";
+import { useComposerStore } from "../../store/composerStore";
 import type { MetaPrompt } from "../../types";
 import { X, ChevronDown, Wand2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -21,7 +21,7 @@ export function MetaPromptSelector({
   const selectorContainerRef = useRef<HTMLDivElement>(null);
 
   const { metaPrompts: promptDefs } = useSettingsStore();
-  const { enabledMetaPromptIds, setEnabledMetaPromptIds } = useProjectStore();
+  const { enabledMetaPromptIds, setEnabledMetaPromptIds } = useComposerStore();
 
   const allPromptsForMode = useMemo<MetaPrompt[]>(() => {
     return promptDefs

@@ -1,5 +1,7 @@
 import { useState, useCallback } from "react";
-import { useProjectStore } from "../../store/projectStore";
+import { useHistoryStore } from "../../store/historyStore";
+import { useComposerStore } from "../../store/composerStore";
+import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useDialogStore } from "../../store/dialogStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { getRelativePath, readFileContent } from "../../services/tauriApi";
@@ -8,19 +10,13 @@ import { History, Trash2, Copy, Clipboard, Check } from "lucide-react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { Button } from "../common/Button";
 import type { MetaPrompt, PromptHistoryEntry } from "../../types";
+import { showErrorDialog } from "../../lib/errorHandler";
+import { AppError } from "../../lib/error";
 
 export function PromptHistoryPanel() {
-  const {
-    promptHistory,
-    clearPromptHistory,
-    setInstructions,
-    composerMode,
-    selectedFilePaths,
-    rootPath,
-    removeSelectedFilePath,
-    enabledMetaPromptIds,
-  } = useProjectStore();
-  
+  const { promptHistory, clearPromptHistory } = useHistoryStore();
+  const { setInstructions, composerMode, enabledMetaPromptIds } = useComposerStore();
+  const { selectedFilePaths, rootPath, removeSelectedFilePath } = useWorkspaceStore();
   const { open: openDialog } = useDialogStore();
   const { customSystemPrompt, editFormat, metaPrompts: promptDefs } = useSettingsStore();
 
@@ -49,7 +45,7 @@ export function PromptHistoryPanel() {
             const relativePath = await getRelativePath(path, root);
             return { path: relativePath, content };
           } catch (error) {
-            console.error(`Failed to read file for prompt: ${path}`, error);
+            showErrorDialog(new AppError(`Failed to read file for prompt: ${path}`, error));
             if (
               typeof error === "string" &&
               (error.includes("No such file") ||

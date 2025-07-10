@@ -5,10 +5,10 @@ import {
 } from "react-resizable-panels";
 import { FileTree } from "./FileTree";
 import { SelectedFilesPanel } from "./SelectedFilesPanel";
-import { useProjectStore } from "../../store/projectStore";
+import { useWorkspaceStore } from "../../store/workspaceStore";
 
 export function WorkspaceSidebar() {
-  const { rootPath } = useProjectStore();
+  const { rootPath } = useWorkspaceStore();
 
   return (
     <PanelGroup direction="vertical" className="h-full w-full bg-gray-50">
