@@ -1,3 +1,10 @@
+# [1.5.0-next.7](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.6...app-v1.5.0-next.7) (2025-07-10)
+
+
+### Features
+
+* **App, ShortenedPath, ChangeList:** implement zoom functionality and enhance path display ([2941ee8](https://github.com/Fanzzzd/repo-wizard/commit/2941ee8ba652d7105f41331b57aa84896f244737))
+
 # [1.5.0-next.6](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.5...app-v1.5.0-next.6) (2025-07-10)
 
 
