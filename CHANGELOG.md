@@ -1,3 +1,10 @@
+# [1.5.0-next.6](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.5...app-v1.5.0-next.6) (2025-07-10)
+
+
+### Features
+
+* **ChangeList, diff_parser, prompt_builder:** enhance file operation indicators and command parsing ([148efb5](https://github.com/Fanzzzd/repo-wizard/commit/148efb5beeb6e38d69a06e901199182d501a59c3))
+
 # [1.5.0-next.5](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.4...app-v1.5.0-next.5) (2025-07-09)
 
 
