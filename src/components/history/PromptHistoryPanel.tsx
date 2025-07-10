@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useProjectStore } from "../../store/projectStore";
 import { useDialogStore } from "../../store/dialogStore";
 import { useSettingsStore } from "../../store/settingsStore";
-import { getRelativePath, readFileContent } from "../../lib/tauri_api";
+import { getRelativePath, readFileContent } from "../../services/tauriApi";
 import { buildPrompt } from "../../lib/prompt_builder";
 import { History, Trash2, Copy, Clipboard, Check } from "lucide-react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";

@@ -7,7 +7,10 @@ export interface FileNode {
   isDirectory: boolean;
 }
 
+export type ComposerMode = "edit" | "qa";
+export type PromptMode = "universal" | "edit" | "qa";
 export type EditFormat = "udiff" | "diff-fenced" | "whole";
+export type ReviewStatus = "pending" | "applied" | "error" | "identical";
 
 export type ChangeOperation =
   | { type: "modify"; filePath: string; diff: string; isNewFile: boolean }
@@ -16,9 +19,9 @@ export type ChangeOperation =
   | { type: "move"; fromPath: string; toPath: string };
 
 export interface ReviewChange {
-  id: string; // unique ID for each change
+  id: string;
   operation: ChangeOperation;
-  status: "pending" | "applied" | "error" | "identical";
+  status: ReviewStatus;
 }
 
 export const createReviewChange = (operation: ChangeOperation): ReviewChange => ({
@@ -31,7 +34,7 @@ export interface MetaPromptDefinition {
   id: string;
   name: string;
   content: string;
-  mode: "edit" | "qa" | "universal";
+  mode: PromptMode;
 }
 
 // This is a transient type for UI, combining definition with project-specific 'enabled' status.

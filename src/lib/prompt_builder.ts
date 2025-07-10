@@ -1,4 +1,4 @@
-import type { EditFormat, MetaPrompt } from "../types";
+import type { ComposerMode, EditFormat, MetaPrompt } from "../types";
 
 interface File {
   path: string;
@@ -115,7 +115,7 @@ export const buildPrompt = (
   customSystemPrompt: string,
   editFormat: EditFormat,
   metaPrompts: MetaPrompt[],
-  composerMode: "edit" | "qa"
+  composerMode: ComposerMode
 ): string => {
   let prompt = "";
 

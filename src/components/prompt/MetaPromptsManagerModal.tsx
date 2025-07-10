@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useProjectStore } from "../../store/projectStore";
 import { useContextMenuStore } from "../../store/contextMenuStore";
-import type { MetaPrompt, MetaPromptDefinition } from "../../types";
+import type { MetaPrompt, MetaPromptDefinition, PromptMode } from "../../types";
 import {
   X,
   Plus,
@@ -47,7 +47,6 @@ interface MetaPromptsManagerModalProps {
 }
 
 const templateFiles = ["architect.md", "engineer.md", "code-reviewer.md"];
-type PromptMode = "universal" | "edit" | "qa";
 
 function PromptItemDisplay({ prompt }: { prompt: MetaPrompt }) {
   return (

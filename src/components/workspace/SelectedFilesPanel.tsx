@@ -1,7 +1,7 @@
 import { useProjectStore } from "../../store/projectStore";
 import { X, ArrowDownAZ, ArrowDown10 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
-import { getRelativePath, readFileContent } from "../../lib/tauri_api";
+import { getRelativePath, readFileContent } from "../../services/tauriApi";
 import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
 import { ShortenedPath } from "../common/ShortenedPath";
 

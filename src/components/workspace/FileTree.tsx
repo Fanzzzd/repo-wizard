@@ -3,7 +3,7 @@ import { useProjectStore } from "../../store/projectStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { listDirectoryRecursive } from "../../lib/tauri_api";
+import { listDirectoryRecursive } from "../../services/tauriApi";
 import type { FileNode } from "../../types";
 import { FileTypeIcon } from "./FileTypeIcon";
 import { AnimatePresence, motion } from "motion/react";

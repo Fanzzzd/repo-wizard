@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useProjectStore } from "../../store/projectStore";
 import { useSettingsStore } from "../../store/settingsStore";
-import { getRelativePath, readFileContent, parseChangesFromMarkdown } from "../../lib/tauri_api";
+import { getRelativePath, readFileContent, parseChangesFromMarkdown } from "../../services/tauriApi";
 import {
   Clipboard,
   Check,
@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { buildPrompt } from "../../lib/prompt_builder";
-import type { EditFormat, MetaPrompt } from "../../types";
+import type { ComposerMode, EditFormat, MetaPrompt } from "../../types";
 import { createReviewChange } from "../../types";
 import { MetaPromptsManagerModal } from "./MetaPromptsManagerModal";
 import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
@@ -26,7 +26,7 @@ const editFormatOptions: { value: EditFormat; label: string }[] = [
   { value: "diff-fenced", label: "Fenced Diff" },
 ];
 
-const composerModeOptions: { value: "edit" | "qa"; label: string }[] = [
+const composerModeOptions: { value: ComposerMode; label: string }[] = [
   { value: "edit", label: "Edit Mode" },
   { value: "qa", label: "QA Mode" },
 ];

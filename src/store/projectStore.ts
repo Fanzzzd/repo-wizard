@@ -5,6 +5,7 @@ import type {
   FileNode,
   PromptHistoryEntry,
   ReviewChange,
+  ComposerMode,
 } from "../types";
 import {
   applyPatch,
@@ -15,7 +16,7 @@ import {
   readFileFromBackup,
   revertFileFromBackup,
   writeFileContent,
-} from "../lib/tauri_api";
+} from "../services/tauriApi";
 import { applyPatch as applyJsPatch } from "diff";
 import { useSettingsStore } from "./settingsStore";
 
@@ -35,7 +36,7 @@ interface WorkspaceSubState {
 }
 
 interface PromptSubState {
-  composerMode: "edit" | "qa";
+  composerMode: ComposerMode;
   instructions: string;
   markdownResponse: string;
   processedMarkdownResponse: string | null;
@@ -75,7 +76,7 @@ interface ProjectState
   addSelectedFilePath: (path: string) => void;
   removeSelectedFilePath: (path: string) => void;
   triggerFileTreeRefresh: () => void;
-  setComposerMode: (mode: "edit" | "qa") => void;
+  setComposerMode: (mode: ComposerMode) => void;
   setInstructions: (instructions: string) => void;
   setMarkdownResponse: (response: string) => void;
   markMarkdownAsProcessed: () => void;
@@ -184,7 +185,7 @@ const createActions = (set: (fn: (state: ProjectState) => ProjectState) => void,
       set((state) => ({ ...state, selectedFilePaths: state.selectedFilePaths.filter((p) => p !== path) })),
     triggerFileTreeRefresh: () =>
       set((state) => ({ ...state, refreshCounter: state.refreshCounter + 1 })),
-    setComposerMode: (mode: "edit" | "qa") => set(s => ({ ...s, composerMode: mode })),
+    setComposerMode: (mode: ComposerMode) => set(s => ({ ...s, composerMode: mode })),
     setInstructions: (instructions: string) => set(s => ({ ...s, instructions })),
     setMarkdownResponse: (response: string) => {
       get().clearReviewSession();
