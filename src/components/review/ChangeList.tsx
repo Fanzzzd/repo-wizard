@@ -5,18 +5,63 @@ import { FileTypeIcon } from "../workspace/FileTypeIcon";
 import {
   Check,
   CircleDot,
-  Trash2,
-  Move,
-  PencilRuler,
   AlertTriangle,
+  CheckCheck,
+  Undo,
 } from "lucide-react";
 import type { ReviewChange } from "../../types";
 import { Button } from "../common/Button";
 import { ShortenedPath } from "../common/ShortenedPath";
 import { useReviewSession } from "../../hooks/useReviewSession";
 
+const ChangeTypeBadge = ({
+  type,
+}: {
+  type: "A" | "M" | "W" | "D" | "R";
+}) => {
+  const typeMap = {
+    A: {
+      char: "A",
+      className: "bg-green-500 text-white",
+      title: "Added",
+    },
+    M: {
+      char: "M",
+      className: "bg-blue-500 text-white",
+      title: "Modified",
+    },
+    W: {
+      char: "W",
+      className: "bg-purple-500 text-white",
+      title: "Rewritten",
+    },
+    D: {
+      char: "D",
+      className: "bg-red-500 text-white",
+      title: "Deleted",
+    },
+    R: {
+      char: "R",
+      className: "bg-orange-500 text-white",
+      title: "Moved / Renamed",
+    },
+  };
+
+  const { char, className, title } = typeMap[type];
+
+  return (
+    <div
+      className={`flex-shrink-0 w-4 h-4 rounded-sm flex items-center justify-center text-[10px] font-bold ${className}`}
+      title={title}
+    >
+      {char}
+    </div>
+  );
+};
+
 const ChangeItem = ({ change }: { change: ReviewChange }) => {
-  const { activeChangeId, setActiveChangeId, applyChange, revertChange, errors } = useReviewStore();
+  const { activeChangeId, setActiveChangeId, applyChange, revertChange, errors } =
+    useReviewStore();
   const openDialog = useDialogStore((s) => s.open);
   const isActive = change.id === activeChangeId;
 
@@ -72,48 +117,49 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
       case "modify":
         return (
           <>
+            <ChangeTypeBadge type={operation.isNewFile ? "A" : "M"} />
             <FileTypeIcon filename={operation.filePath} isDirectory={false} />
-            <ShortenedPath path={operation.filePath} className="truncate min-w-0" />
-            {operation.isNewFile && (
-              <span className="text-xs text-green-600 font-medium ml-auto mr-2 flex-shrink-0">
-                NEW
-              </span>
-            )}
+            <ShortenedPath
+              path={operation.filePath}
+              className="truncate min-w-0"
+            />
           </>
         );
       case "rewrite":
         return (
           <>
-            <PencilRuler size={14} className="text-purple-500" />
-            <ShortenedPath path={operation.filePath} className="truncate min-w-0" />
-            <div className="ml-auto mr-2 flex-shrink-0 flex items-center gap-2">
-              {operation.isNewFile ? (
-                <span className="text-xs text-green-600 font-medium">NEW</span>
-              ) : (
-                <span className="text-xs text-purple-600 font-medium">
-                  REWRITE
-                </span>
-              )}
-            </div>
+            <ChangeTypeBadge type={operation.isNewFile ? "A" : "W"} />
+            <FileTypeIcon filename={operation.filePath} isDirectory={false} />
+            <ShortenedPath
+              path={operation.filePath}
+              className="truncate min-w-0"
+            />
           </>
         );
       case "delete":
         return (
           <>
-            <Trash2 size={14} className="text-red-500" />
+            <ChangeTypeBadge type="D" />
+            <FileTypeIcon filename={operation.filePath} isDirectory={false} />
             <ShortenedPath
               path={operation.filePath}
-              className="truncate line-through min-w-0"
+              className="truncate min-w-0 line-through"
             />
           </>
         );
       case "move":
         return (
           <>
-            <Move size={14} className="text-blue-500" />
-            <ShortenedPath path={operation.fromPath} className="truncate min-w-0" />
+            <ChangeTypeBadge type="R" />
+            <ShortenedPath
+              path={operation.fromPath}
+              className="truncate min-w-0 text-gray-500"
+            />
             <span className="text-gray-500 flex-shrink-0">→</span>
-            <ShortenedPath path={operation.toPath} className="truncate min-w-0" />
+            <ShortenedPath
+              path={operation.toPath}
+              className="truncate min-w-0"
+            />
           </>
         );
     }
@@ -122,7 +168,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
   return (
     <div
       onClick={() => setActiveChangeId(change.id)}
-      className={`flex items-center justify-between gap-2 p-2 rounded text-sm cursor-default ${
+      className={`flex items-center justify-between gap-2 px-2 py-1 rounded text-sm cursor-default ${
         isActive
           ? "bg-blue-100 text-blue-900"
           : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -134,7 +180,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
       <div className="flex items-center gap-1.5 flex-shrink-0">
         <button
           onClick={handleClick}
-          disabled={change.status === 'identical'}
+          disabled={change.status === "identical"}
           title="Cycle Status (Pending -> Applied)"
           className={`flex items-center justify-center w-24 gap-1.5 py-1 text-xs font-medium rounded-full transition-colors ${style} disabled:cursor-default`}
         >
@@ -163,21 +209,25 @@ export function ChangeList() {
   return (
     <div className="p-4 flex flex-col h-full bg-gray-50 text-gray-800">
       <div className="flex justify-between items-center mb-2 flex-shrink-0">
-        <h2 className="font-bold text-lg">Changes ({changes.length})</h2>
-        <div className="flex gap-2">
+        <h2 className="font-bold text-base">Changes ({changes.length})</h2>
+        <div className="flex items-center gap-1">
           <Button
             onClick={applyAll}
+            variant="ghost"
             size="sm"
-            className="bg-green-100 text-green-800 hover:bg-green-200 border-none"
+            className="text-green-600 hover:text-green-700 hover:bg-green-100"
             title="Apply all pending changes"
+            leftIcon={<CheckCheck size={14} />}
           >
             Apply All
           </Button>
           <Button
             onClick={revertAll}
+            variant="ghost"
             size="sm"
-            className="bg-gray-200 text-gray-800 hover:bg-gray-300 border-none"
+            className="text-gray-600 hover:text-gray-700 hover:bg-gray-200"
             title="Revert all applied changes"
+            leftIcon={<Undo size={14} />}
           >
             Reset All
           </Button>

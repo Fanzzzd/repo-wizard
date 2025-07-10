@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import {
@@ -80,6 +80,28 @@ function App() {
   const { open: openDialog } = useDialogStore();
   const { status, updateInfo, install } = useUpdateStore();
   const { recentProjects } = useSettingsStore();
+  const [fontSize, setFontSize] = useState(14);
+
+  useEffect(() => {
+    const handleZoom = (e: CustomEvent) => {
+      if (e.detail === "in") {
+        setFontSize((s) => Math.min(20, s + 1));
+      } else if (e.detail === "out") {
+        setFontSize((s) => Math.max(10, s - 1));
+      } else if (e.detail === "reset") {
+        setFontSize(14);
+      }
+    };
+
+    window.addEventListener("zoom", handleZoom as EventListener);
+    return () => {
+      window.removeEventListener("zoom", handleZoom as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontSize}px`;
+  }, [fontSize]);
 
   const setupMenu = useCallback(async () => {
     const osType = await platform();
@@ -180,6 +202,22 @@ function App() {
           text: "Force Reload",
           accelerator: "CmdOrCtrl+Shift+R",
           action: () => window.location.reload(),
+        }),
+        await PredefinedMenuItem.new({ item: "Separator" }),
+        await MenuItem.new({
+          text: "Zoom In",
+          accelerator: "CmdOrCtrl+=",
+          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'in' })),
+        }),
+        await MenuItem.new({
+          text: "Zoom Out",
+          accelerator: "CmdOrCtrl+-",
+          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'out' })),
+        }),
+        await MenuItem.new({
+          text: "Reset Zoom",
+          accelerator: "CmdOrCtrl+0",
+          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'reset' })),
         }),
       ],
     });
