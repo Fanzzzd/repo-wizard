@@ -56,9 +56,6 @@ importers:
       '@tauri-apps/plugin-updater':
         specifier: ~2.9.0
         version: 2.9.0
-      diff:
-        specifier: ^5.2.0
-        version: 5.2.0
       lucide-react:
         specifier: ^0.411.0
         version: 0.411.0(react@18.3.1)
@@ -114,9 +111,6 @@ importers:
       '@tauri-apps/cli':
         specifier: ^2.6.2
         version: 2.6.2
-      '@types/diff':
-        specifier: ^5.2.3
-        version: 5.2.3
       '@types/node':
         specifier: ^20.19.2
         version: 20.19.2
@@ -1007,9 +1001,6 @@ packages:
   '@types/babel__traverse@7.20.7':
     resolution: {integrity: sha512-dkO5fhS7+/oos4ciWxyEyjWe48zmG6wbCheo/G2ZnHx4fs3EU6YC6UM8rk56gAjNJ9P3MTH2jo5jb92/K6wbng==}
 
-  '@types/diff@5.2.3':
-    resolution: {integrity: sha512-K0Oqlrq3kQMaO2RhfrNQX5trmt+XLyom88zS0u84nnIcLvFnRUMRRHmrGny5GSM+kNO9IZLARsdQHDzkhAgmrQ==}
-
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
@@ -1252,10 +1243,6 @@ packages:
   detect-libc@2.0.4:
     resolution: {integrity: sha512-3UDv+G9CsCKO1WKMGw9fwq/SWJYbI0c5Y7LU1AXYoDdbhE2AHQ6N6Nb34sG8Fj7T5APy8qXDCKuuIHd1BR0tVA==}
     engines: {node: '>=8'}
-
-  diff@5.2.0:
-    resolution: {integrity: sha512-uIFDxqpRZGZ6ThOk84hEfqWoHx2devRFvpTZcTHur85vImfaxUbTW9Ryh4CpCuDnToOP1CEtXKIgytHBPVff5A==}
-    engines: {node: '>=0.3.1'}
 
   dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
@@ -3330,8 +3317,6 @@ snapshots:
     dependencies:
       '@babel/types': 7.27.7
 
-  '@types/diff@5.2.3': {}
-
   '@types/estree@1.0.8': {}
 
   '@types/node@20.19.2':
@@ -3558,8 +3543,6 @@ snapshots:
   detect-libc@1.0.3: {}
 
   detect-libc@2.0.4: {}
-
-  diff@5.2.0: {}
 
   dir-glob@3.0.1:
     dependencies:
