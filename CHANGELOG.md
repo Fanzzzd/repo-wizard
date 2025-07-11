@@ -1,3 +1,10 @@
+# [1.5.0-next.9](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.8...app-v1.5.0-next.9) (2025-07-11)
+
+
+### Features
+
+* **MetaPromptsManagerModal:** integrate dropdown menu for prompt addition ([6e9d56e](https://github.com/Fanzzzd/repo-wizard/commit/6e9d56e2f032805cc68e6ec380c16dd18bd5e768))
+
 # [1.5.0-next.8](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.7...app-v1.5.0-next.8) (2025-07-11)
 
 
