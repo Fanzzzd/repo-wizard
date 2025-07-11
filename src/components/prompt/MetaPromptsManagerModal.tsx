@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type {
   MetaPrompt,
   PromptMode,
@@ -12,7 +12,7 @@ import {
   X,
   Plus,
   Combine,
-  ChevronUp,
+  ChevronDown,
   Edit,
   MessageSquare,
   Wand2,
@@ -46,6 +46,17 @@ import { SegmentedControl } from "../common/SegmentedControl";
 import { useMetaPromptManager } from "../../hooks/useMetaPromptManager";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import * as tauriApi from "../../services/tauriApi";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "../common/DropdownMenu";
 
 interface MetaPromptsManagerModalProps {
   isOpen: boolean;
@@ -531,9 +542,6 @@ export function MetaPromptsManagerModal({
     handleContextMenu,
   } = useMetaPromptManager({ isOpen });
 
-  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
-  const addMenuRef = useRef<HTMLDivElement>(null);
-
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor)
@@ -544,19 +552,6 @@ export function MetaPromptsManagerModal({
     { value: "edit", label: "Edit Mode" },
     { value: "qa", label: "QA Mode" },
   ];
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        addMenuRef.current &&
-        !addMenuRef.current.contains(event.target as Node)
-      ) {
-        setIsAddMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
@@ -639,108 +634,72 @@ export function MetaPromptsManagerModal({
                       )
                     )}
                   </div>
-                  <div
-                    className="flex-shrink-0 p-2 border-t border-gray-200 relative"
-                    ref={addMenuRef}
-                  >
-                    <AnimatePresence>
-                      {isAddMenuOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          transition={{ duration: 0.15 }}
-                          className="absolute bottom-full left-2 right-2 mb-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-1"
+                  <div className="flex-shrink-0 p-2 border-t border-gray-200">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger>
+                        <Button
+                          variant="primary"
+                          size="md"
+                          className="w-full"
+                          leftIcon={<Plus size={16} />}
                         >
-                          <div className="text-xs font-semibold text-gray-500 px-2 pt-1 uppercase tracking-wider">
-                            Magic Prompt
-                          </div>
-                          <Button
-                            onClick={() => {
-                              handleAddMagicPrompt("file-tree");
-                              setIsAddMenuOpen(false);
-                            }}
-                            variant="ghost"
-                            size="md"
-                            className="w-full justify-start text-gray-600"
-                            leftIcon={<FolderTree size={16} />}
+                          Add Prompt
+                          <ChevronDown
+                            size={16}
+                            className="transition-transform ml-auto"
+                          />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuLabel>Magic Prompt</DropdownMenuLabel>
+                        <DropdownMenuItem
+                          onSelect={() => handleAddMagicPrompt("file-tree")}
+                          leftIcon={<FolderTree size={16} />}
+                        >
+                          File Tree
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() => handleAddMagicPrompt("git-diff")}
+                          leftIcon={<GitBranch size={16} />}
+                        >
+                          Git Diff
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() =>
+                            handleAddMagicPrompt("terminal-command")
+                          }
+                          leftIcon={<Terminal size={16} />}
+                        >
+                          Terminal Output
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onSelect={() => handleAddBlankPrompt("universal")}
+                          leftIcon={<Plus size={16} />}
+                        >
+                          Add Blank Prompt
+                        </DropdownMenuItem>
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger
+                            leftIcon={<Combine size={16} />}
                           >
-                            File Tree
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              handleAddMagicPrompt("git-diff");
-                              setIsAddMenuOpen(false);
-                            }}
-                            variant="ghost"
-                            size="md"
-                            className="w-full justify-start text-gray-600"
-                            leftIcon={<GitBranch size={16} />}
-                          >
-                            Git Diff
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              handleAddMagicPrompt("terminal-command");
-                              setIsAddMenuOpen(false);
-                            }}
-                            variant="ghost"
-                            size="md"
-                            className="w-full justify-start text-gray-600"
-                            leftIcon={<Terminal size={16} />}
-                          >
-                            Terminal Output
-                          </Button>
-                          <div className="border-t border-gray-200 my-1 mx-2" />
-                          <div className="text-xs font-semibold text-gray-500 px-2 pt-1 uppercase tracking-wider">
-                            Meta Prompt
-                          </div>
-                          <Button
-                            onClick={() => {
-                              handleAddBlankPrompt("universal");
-                              setIsAddMenuOpen(false);
-                            }}
-                            variant="ghost"
-                            size="md"
-                            className="w-full justify-start text-gray-600"
-                            leftIcon={<Plus size={16} />}
-                          >
-                            Add Blank Prompt
-                          </Button>
-                          {availableTemplates.map((template, index) => (
-                            <Button
-                              key={index}
-                              onClick={() => {
-                                handleAddFromTemplate(template);
-                                setIsAddMenuOpen(false);
-                              }}
-                              variant="ghost"
-                              size="md"
-                              className="w-full justify-start text-gray-600"
-                              title={`Add "${template.name}" template`}
-                              leftIcon={<Combine size={16} />}
-                            >
-                              {template.name}
-                            </Button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    <Button
-                      onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
-                      variant="primary"
-                      size="md"
-                      className="w-full"
-                      leftIcon={<Plus size={16} />}
-                    >
-                      Add Prompt
-                      <ChevronUp
-                        size={16}
-                        className={`transition-transform ml-auto ${
-                          isAddMenuOpen ? "rotate-0" : "rotate-180"
-                        }`}
-                      />
-                    </Button>
+                            From Template
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent align="end">
+                            {availableTemplates.map((template, index) => (
+                              <DropdownMenuItem
+                                key={index}
+                                onSelect={() => handleAddFromTemplate(template)}
+                                title={`Add "${template.name}" template`}
+                                leftIcon={<MessageSquare size={16} />}
+                              >
+                                {template.name}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
                 <SortableOverlay>
