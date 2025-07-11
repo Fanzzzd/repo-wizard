@@ -56,7 +56,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     recentProjects: [] as string[],
   };
 
-  // Debounce saving to prevent rapid writes
   let saveTimeout: NodeJS.Timeout | null = null;
   const debouncedSave = (state: SettingsState) => {
     if (saveTimeout) clearTimeout(saveTimeout);
@@ -81,7 +80,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       const savedState = await store.get<Partial<SettingsState>>("state");
       
       if (savedState) {
-        // Ensure recentProjects is always an array for robustness
         if (savedState.recentProjects && !Array.isArray(savedState.recentProjects)) {
             savedState.recentProjects = [];
         }
@@ -90,7 +88,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       
       set({ _isInitialized: true, _hasHydrated: true });
 
-      // Subscribe to changes AFTER initial hydration
       useSettingsStore.subscribe((state) => {
         if (state._hasHydrated) {
             debouncedSave(state);
@@ -107,11 +104,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     addRecentProject: (path) =>
       set((state) => {
         const otherProjects = state.recentProjects.filter((p) => p !== path);
-        const newRecentProjects = [path, ...otherProjects].slice(0, 10); // Keep last 10
+        const newRecentProjects = [path, ...otherProjects].slice(0, 20); // Keep last 20
         return { recentProjects: newRecentProjects };
       }),
   };
 });
 
-// Initialize the store on app load
 useSettingsStore.getState()._init();

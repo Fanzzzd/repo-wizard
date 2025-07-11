@@ -30,7 +30,15 @@ pub fn run() {
             commands::revert_file_from_backup,
             commands::read_file_from_backup,
             commands::delete_backup,
-            commands::parse_changes_from_markdown
+            commands::parse_changes_from_markdown,
+            commands::is_git_repository,
+            commands::get_git_status,
+            commands::get_recent_commits,
+            commands::get_git_diff,
+            commands::start_pty_session,
+            commands::resize_pty,
+            commands::write_to_pty,
+            commands::kill_pty
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

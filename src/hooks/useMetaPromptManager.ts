@@ -2,21 +2,31 @@ import { useState, useEffect, useMemo } from "react";
 import { useSettingsStore } from "../store/settingsStore";
 import { useComposerStore } from "../store/composerStore";
 import { useContextMenuStore } from "../store/contextMenuStore";
-import type { MetaPrompt, MetaPromptDefinition, PromptMode, MagicPromptType } from "../types";
+import type {
+  MetaPrompt,
+  MetaPromptDefinition,
+  PromptMode,
+  MagicPromptType,
+} from "../types";
 import { Copy, Trash2 } from "lucide-react";
 import { arrayMove } from "@dnd-kit/sortable";
 import type { DragEndEvent, DragOverEvent } from "@dnd-kit/core";
 import { showErrorDialog } from "../lib/errorHandler";
 
 export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
-  const { metaPrompts: promptDefs, setMetaPrompts: setPromptDefs } = useSettingsStore();
+  const { metaPrompts: promptDefs, setMetaPrompts: setPromptDefs } =
+    useSettingsStore();
   const { enabledMetaPromptIds, setEnabledMetaPromptIds } = useComposerStore();
   const { open: openContextMenu } = useContextMenuStore();
 
   const [localPrompts, setLocalPrompts] = useState<MetaPrompt[]>([]);
   const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
-  const [activeDragPrompt, setActiveDragPrompt] = useState<MetaPrompt | null>(null);
-  const [availableTemplates, setAvailableTemplates] = useState<{ name: string; content: string }[]>([]);
+  const [activeDragPrompt, setActiveDragPrompt] = useState<MetaPrompt | null>(
+    null
+  );
+  const [availableTemplates, setAvailableTemplates] = useState<
+    { name: string; content: string }[]
+  >([]);
 
   const selectedPrompt = useMemo(
     () => localPrompts.find((p) => p.id === selectedPromptId),
@@ -24,12 +34,17 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
   );
 
   const { universalPrompts, editPrompts, qaPrompts } = useMemo(() => {
+    const sortedPrompts = [...localPrompts].sort((a, b) => {
+        const aIndex = promptDefs.findIndex(p => p.id === a.id);
+        const bIndex = promptDefs.findIndex(p => p.id === b.id);
+        return aIndex - bIndex;
+    });
     return {
-      universalPrompts: localPrompts.filter((p) => p.mode === "universal"),
-      editPrompts: localPrompts.filter((p) => p.mode === "edit"),
-      qaPrompts: localPrompts.filter((p) => p.mode === "qa"),
+      universalPrompts: sortedPrompts.filter((p) => p.mode === "universal"),
+      editPrompts: sortedPrompts.filter((p) => p.mode === "edit"),
+      qaPrompts: sortedPrompts.filter((p) => p.mode === "qa"),
     };
-  }, [localPrompts]);
+  }, [localPrompts, promptDefs]);
 
   useEffect(() => {
     if (isOpen) {
@@ -43,57 +58,83 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
         setSelectedPromptId(currentPrompts[0].id);
       } else if (currentPrompts.length === 0) {
         setSelectedPromptId(null);
+      } else if (selectedPromptId && !currentPrompts.some(p => p.id === selectedPromptId)) {
+        setSelectedPromptId(currentPrompts[0]?.id ?? null);
       }
 
       const fetchTemplates = async () => {
-        const templateFiles = ["architect.md", "engineer.md", "code-reviewer.md"];
+        const templateFiles = [
+          "architect.md",
+          "engineer.md",
+          "code-reviewer.md",
+        ];
         try {
           const templatesData = await Promise.all(
             templateFiles.map(async (filename) => {
               const response = await fetch(`/meta-prompts/${filename}`);
               if (!response.ok) throw new Error(`Failed to fetch ${filename}`);
               const content = await response.text();
-              const name = filename.replace(".md", "").replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+              const name = filename
+                .replace(".md", "")
+                .replace(/-/g, " ")
+                .replace(/\b\w/g, (l) => l.toUpperCase());
               return { name, content };
             })
           );
           setAvailableTemplates(templatesData);
-        } catch (error){
+        } catch (error) {
           showErrorDialog(error);
         }
       };
       fetchTemplates();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, promptDefs, enabledMetaPromptIds]);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if(isOpen) {
+        setLocalPrompts(currentPrompts => {
+            const currentIds = new Set(currentPrompts.map(p => p.id));
+            const defsToAdd = promptDefs.filter(def => !currentIds.has(def.id));
+            if (defsToAdd.length > 0) {
+                return [ ...currentPrompts, ...defsToAdd.map(def => ({...def, enabled: enabledMetaPromptIds.includes(def.id)}))];
+            }
+            return currentPrompts;
+        })
+    }
+  }, [promptDefs, isOpen, enabledMetaPromptIds]);
+
 
   const handleSave = () => {
     const definitionsToSave = localPrompts.map(({ enabled, ...def }) => def);
-    const enabledIdsToSave = localPrompts.filter((p) => p.enabled).map((p) => p.id);
+    const enabledIdsToSave = localPrompts
+      .filter((p) => p.enabled)
+      .map((p) => p.id);
     setPromptDefs(definitionsToSave);
     setEnabledMetaPromptIds(enabledIdsToSave);
   };
 
-  const handleUpdatePrompt = (prompt: MetaPrompt, update: Partial<Omit<MetaPrompt, "id">>) => {
+  const handleUpdatePrompt = (
+    prompt: MetaPrompt,
+    update: Partial<Omit<MetaPrompt, "id">>
+  ) => {
     setLocalPrompts((currentPrompts) =>
       currentPrompts.map((p) => (p.id === prompt.id ? { ...p, ...update } : p))
     );
   };
 
-  const handleUpdatePromptById = (id: string, update: Partial<Omit<MetaPrompt, "id">>) => {
+  const handleUpdatePromptById = (
+    id: string,
+    update: Partial<Omit<MetaPrompt, "id">>
+  ) => {
     const prompt = localPrompts.find((p) => p.id === id);
     if (prompt) handleUpdatePrompt(prompt, update);
   };
 
-  const handleUpdateList = (mode: PromptMode, updatedSublist: MetaPrompt[]) => {
-    setLocalPrompts((currentPrompts) => {
-      const otherPrompts = currentPrompts.filter((p) => p.mode !== mode);
-      return [...otherPrompts, ...updatedSublist];
-    });
-  };
-
   const handleDragStart = (event: { active: { id: React.Key } }) => {
-    setActiveDragPrompt(localPrompts.find((p) => p.id === event.active.id) || null);
+    setActiveDragPrompt(
+      localPrompts.find((p) => p.id === event.active.id) || null
+    );
   };
 
   const handleDragCancel = () => setActiveDragPrompt(null);
@@ -101,11 +142,14 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const activeContainer = active.data.current?.sortable.containerId as PromptMode;
-    const overContainer = (over.data.current?.sortable.containerId ?? over.id) as PromptMode;
+    const activeContainer = active.data.current?.sortable
+      .containerId as PromptMode;
+    const overContainer = (over.data.current?.sortable.containerId ??
+      over.id) as PromptMode;
     if (activeContainer && overContainer && activeContainer !== overContainer) {
       setLocalPrompts((prompts) => {
         const activeIndex = prompts.findIndex((p) => p.id === active.id);
+        if (activeIndex === -1) return prompts;
         prompts[activeIndex].mode = overContainer;
         return arrayMove(prompts, activeIndex, activeIndex);
       });
@@ -119,38 +163,81 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
       setLocalPrompts((prompts) => {
         const oldIndex = prompts.findIndex((item) => item.id === active.id);
         const newIndex = prompts.findIndex((item) => item.id === over.id);
-        return oldIndex !== -1 && newIndex !== -1 ? arrayMove(prompts, oldIndex, newIndex) : prompts;
+        return oldIndex !== -1 && newIndex !== -1
+          ? arrayMove(prompts, oldIndex, newIndex)
+          : prompts;
       });
     }
   };
-  
-  const addPrompt = (promptDef: Partial<MetaPromptDefinition> & Pick<MetaPromptDefinition, 'name' | 'content' | 'mode' | 'promptType'>) => {
-    const newPrompt: MetaPrompt = { id: window.crypto.randomUUID(), enabled: true, ...promptDef };
+
+  const addPrompt = (
+    promptDef: Partial<MetaPromptDefinition> &
+      Pick<MetaPromptDefinition, "name" | "content" | "mode" | "promptType">
+  ) => {
+    const newPrompt: MetaPrompt = {
+      id: window.crypto.randomUUID(),
+      enabled: true,
+      ...promptDef,
+    };
     setLocalPrompts((prev) => [newPrompt, ...prev]);
     setSelectedPromptId(newPrompt.id);
   };
 
-  const handleAddFromTemplate = (template: { name: string; content: string }) => {
-    addPrompt({ name: template.name, content: template.content, mode: "edit", promptType: "meta" });
+  const handleAddFromTemplate = (template: {
+    name: string;
+    content: string;
+  }) => {
+    addPrompt({
+      name: template.name,
+      content: template.content,
+      mode: "edit",
+      promptType: "meta",
+    });
   };
-  
+
   const handleAddBlankPrompt = (mode: PromptMode) => {
-    addPrompt({ name: `New ${mode} Prompt`, content: "", mode, promptType: "meta" });
+    addPrompt({
+      name: `New ${mode} Prompt`,
+      content: "",
+      mode,
+      promptType: "meta",
+    });
   };
 
   const handleAddMagicPrompt = (magicType: MagicPromptType) => {
-    if (magicType === 'file-tree') {
+    if (magicType === "file-tree") {
       addPrompt({
         name: "File Tree",
-        content: "Here is the project's file structure based on the configuration:\n\n{FILE_TREE_CONTENT}",
+        content:
+          "Here is the project's file structure based on the configuration:\n\n{FILE_TREE_CONTENT}",
         mode: "universal",
-        promptType: 'magic',
-        magicType: 'file-tree',
+        promptType: "magic",
+        magicType: "file-tree",
         fileTreeConfig: {
-          scope: 'all',
+          scope: "all",
           maxFilesPerDirectory: null,
-          ignorePatterns: '',
-        }
+          ignorePatterns: "",
+        },
+      });
+    } else if (magicType === "git-diff") {
+      addPrompt({
+        name: "Git Diff",
+        content:
+          "Here are the recent code changes from the project repository. Please use this as context for my request.\n\n```diff\n{GIT_DIFF_CONTENT}\n```",
+        mode: "universal",
+        promptType: "magic",
+        magicType: "git-diff",
+        gitDiffConfig: { type: "unstaged", hash: null },
+      });
+    } else if (magicType === "terminal-command") {
+      addPrompt({
+        name: "Terminal Output",
+        content:
+          "Here is the output of a command I ran. Please use this as context for my request.\n\n```\n{TERMINAL_COMMAND_OUTPUT}\n```",
+        mode: "universal",
+        promptType: "magic",
+        magicType: "terminal-command",
+        terminalCommandConfig: { command: "pnpm check" },
       });
     }
   };
@@ -158,8 +245,15 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
   const handleContextMenu = (e: React.MouseEvent, prompt: MetaPrompt) => {
     e.preventDefault();
     openContextMenu(e.clientX, e.clientY, [
-      { label: "Duplicate", icon: Copy, onClick: () => {
-          const newPrompt: MetaPrompt = { ...prompt, id: window.crypto.randomUUID(), name: `${prompt.name} (Copy)` };
+      {
+        label: "Duplicate",
+        icon: Copy,
+        onClick: () => {
+          const newPrompt: MetaPrompt = {
+            ...prompt,
+            id: window.crypto.randomUUID(),
+            name: `${prompt.name} (Copy)`,
+          };
           const sourceIndex = localPrompts.findIndex((p) => p.id === prompt.id);
           const newPrompts = [...localPrompts];
           newPrompts.splice(sourceIndex + 1, 0, newPrompt);
@@ -168,7 +262,11 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
         },
       },
       { isSeparator: true },
-      { label: "Delete", icon: Trash2, isDanger: true, onClick: () => {
+      {
+        label: "Delete",
+        icon: Trash2,
+        isDanger: true,
+        onClick: () => {
           const newPrompts = localPrompts.filter((p) => p.id !== prompt.id);
           setLocalPrompts(newPrompts);
           if (selectedPromptId === prompt.id) {
@@ -197,7 +295,6 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
     handleSave,
     handleUpdatePrompt,
     handleUpdatePromptById,
-    handleUpdateList,
     handleDragStart,
     handleDragCancel,
     handleDragOver,
@@ -205,6 +302,6 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
     handleAddFromTemplate,
     handleAddBlankPrompt,
     handleAddMagicPrompt,
-    handleContextMenu
+    handleContextMenu,
   };
 }

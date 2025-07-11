@@ -25,6 +25,7 @@ import { useReviewStore } from "./store/reviewStore";
 import { useDialogStore } from "./store/dialogStore";
 import { useUpdateStore } from "./store/updateStore";
 import { useSettingsStore } from "./store/settingsStore";
+import { CommandRunnerModal } from "./components/common/CommandRunnerModal";
 
 declare global {
   interface Window {
@@ -132,7 +133,12 @@ function App() {
           await MenuItem.new({
             text: "About Repo Wizard",
             action: () => {
-              console.log("About Repo Wizard");
+              openDialog({
+                title: `About Repo Wizard v${__APP_VERSION__}`,
+                content: "A code refactoring staging area to safely and efficiently apply LLM-suggested code changes.",
+                status: 'info',
+                type: 'alert'
+              })
             },
           }),
           await PredefinedMenuItem.new({ item: "Separator" }),
@@ -239,7 +245,7 @@ function App() {
       items: allMenuItems,
     });
     await menu.setAsAppMenu();
-  }, [recentProjects]);
+  }, [recentProjects, openDialog]);
 
   useEffect(() => {
     const initializeApp = () => {
@@ -302,6 +308,7 @@ function App() {
       <ModalDialog />
       <Tooltip />
       <ContextMenu />
+      <CommandRunnerModal />
     </div>
   );
 }

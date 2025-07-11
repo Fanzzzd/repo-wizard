@@ -1,8 +1,10 @@
-use crate::core::{fs_utils, parser, patcher, path_utils};
+use crate::core::{fs_utils, git_utils, parser, patcher, path_utils, pty_utils};
+use crate::core::pty_utils::CommandStreamPayload;
 use crate::error::Result;
 use base64::{engine::general_purpose, Engine as _};
 use serde::Deserialize;
 use std::path::PathBuf;
+use tauri::ipc::Channel;
 use tauri::Manager;
 use uuid::Uuid;
 
@@ -138,4 +140,61 @@ pub async fn delete_backup(backup_id: String) -> Result<()> {
 #[tauri::command]
 pub async fn parse_changes_from_markdown(markdown: String) -> Result<Vec<parser::ChangeOperation>> {
     Ok(parser::parse_changes_from_markdown(&markdown)?)
+}
+
+#[tauri::command]
+pub async fn is_git_repository(path: String) -> Result<bool> {
+    Ok(git_utils::is_git_repository(&PathBuf::from(path))?)
+}
+
+#[tauri::command]
+pub async fn get_git_status(repo_path: String) -> Result<git_utils::GitStatus> {
+    Ok(git_utils::get_git_status(&PathBuf::from(repo_path))?)
+}
+
+#[tauri::command]
+pub async fn get_recent_commits(
+    repo_path: String,
+    count: u32,
+) -> Result<Vec<git_utils::Commit>> {
+    Ok(git_utils::get_recent_commits(
+        &PathBuf::from(repo_path),
+        count,
+    )?)
+}
+
+#[tauri::command]
+pub async fn get_git_diff(
+    repo_path: String,
+    option: git_utils::DiffOption,
+) -> Result<String> {
+    Ok(git_utils::get_git_diff(&PathBuf::from(repo_path), option)?)
+}
+
+#[tauri::command]
+pub async fn start_pty_session(
+    root_path: String,
+    command: Option<String>,
+    on_event: Channel<CommandStreamPayload>,
+) -> Result<()> {
+    pty_utils::start_pty_session(&PathBuf::from(root_path), command, on_event).await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn resize_pty(rows: u16, cols: u16) -> Result<()> {
+    pty_utils::resize_pty(rows, cols)?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn write_to_pty(text: String) -> Result<()> {
+    pty_utils::write_to_pty(text).await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn kill_pty() -> Result<()> {
+    pty_utils::kill_pty()?;
+    Ok(())
 }

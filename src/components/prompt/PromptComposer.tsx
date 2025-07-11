@@ -5,7 +5,7 @@ import { useSettingsStore } from "../../store/settingsStore";
 import { useReviewStore } from "../../store/reviewStore";
 import { usePromptGenerator } from "../../hooks/usePromptGenerator";
 import { useReviewSession } from "../../hooks/useReviewSession";
-import { Clipboard, Check, SlidersHorizontal, History, FileSearch2 } from "lucide-react";
+import { Clipboard, Check, SlidersHorizontal, History, FileSearch2, RefreshCw } from "lucide-react";
 import type { ComposerMode, EditFormat } from "../../types";
 import { MetaPromptsManagerModal } from "./MetaPromptsManagerModal";
 import { formatTokenCount } from "../../lib/token_estimator";
@@ -34,7 +34,7 @@ export function PromptComposer() {
   
   const { editFormat, setEditFormat, autoReviewOnPaste } = useSettingsStore();
 
-  const { estimatedTokens, generateAndCopyPrompt, isCopied } = usePromptGenerator();
+  const { estimatedTokens, generateAndCopyPrompt, isCopied, isGenerating } = usePromptGenerator();
   const { startReview, reenterReview, hasUnprocessedResponse, canReenterReview } = useReviewSession();
 
   const responsePlaceholder = composerMode === "edit" && autoReviewOnPaste ? "Paste response to auto-start review..." : "Paste response and click 'Review'.";
@@ -53,6 +53,17 @@ export function PromptComposer() {
     }
     return <Button onClick={startReview} disabled={!markdownResponse.trim()} size="sm" variant="ghost" className="bg-gray-200 text-gray-800" title="Start a new review" leftIcon={<FileSearch2 size={14} />}>Review</Button>;
   };
+
+  const renderGenerateButtonContent = () => {
+    if (isGenerating) {
+      return { icon: <RefreshCw size={16} className="animate-spin" />, text: "Generating..." };
+    }
+    if (isCopied) {
+      return { icon: <Check size={16} />, text: "Copied!" };
+    }
+    return { icon: <Clipboard size={16} />, text: "Generate & Copy Prompt" };
+  };
+  const { icon: generateIcon, text: generateText } = renderGenerateButtonContent();
 
   return (
     <div className="p-4 flex flex-col h-full bg-gray-50 text-gray-800 overflow-y-auto">
@@ -86,8 +97,8 @@ export function PromptComposer() {
 
         <Textarea className="flex-grow mb-2" placeholder="Enter your refactoring instructions here..." value={instructions} onChange={(e) => setInstructions(e.target.value)} />
         <div className="text-right text-xs text-gray-500 mb-2">Estimated Tokens: ~{formatTokenCount(estimatedTokens)}</div>
-        <Button onClick={generateAndCopyPrompt} variant="primary" size="md" className="bg-indigo-600 hover:bg-indigo-500" disabled={selectedFilePaths.length === 0 || !instructions} leftIcon={isCopied ? <Check size={16} /> : <Clipboard size={16} />}>
-          {isCopied ? "Copied!" : "Generate & Copy Prompt"}
+        <Button onClick={() => generateAndCopyPrompt()} variant="primary" size="md" className="bg-indigo-600 hover:bg-indigo-500" disabled={selectedFilePaths.length === 0 || !instructions || isGenerating} leftIcon={generateIcon}>
+          {generateText}
         </Button>
       </div>
 

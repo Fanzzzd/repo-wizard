@@ -1,5 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import type { MetaPrompt, PromptMode, FileTreeConfig } from "../../types";
+import type {
+  MetaPrompt,
+  PromptMode,
+  FileTreeConfig,
+  GitDiffConfig,
+  TerminalCommandConfig,
+  Commit,
+  GitStatus,
+} from "../../types";
 import {
   X,
   Plus,
@@ -10,6 +18,9 @@ import {
   Wand2,
   GripVertical,
   FolderTree,
+  GitBranch,
+  Terminal,
+  AlertCircle,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { Input } from "../common/Input";
@@ -33,6 +44,8 @@ import {
 import { ToggleSwitch } from "../common/ToggleSwitch";
 import { SegmentedControl } from "../common/SegmentedControl";
 import { useMetaPromptManager } from "../../hooks/useMetaPromptManager";
+import { useWorkspaceStore } from "../../store/workspaceStore";
+import * as tauriApi from "../../services/tauriApi";
 
 interface MetaPromptsManagerModalProps {
   isOpen: boolean;
@@ -42,9 +55,29 @@ interface MetaPromptsManagerModalProps {
 function PromptItemDisplay({ prompt }: { prompt: MetaPrompt }) {
   const { icon } = useMemo(() => {
     if (prompt.promptType === "magic") {
-      return {
-        icon: <FolderTree size={16} className="text-green-600 flex-shrink-0" />,
-      };
+      let magicIcon;
+      switch (prompt.magicType) {
+        case "file-tree":
+          magicIcon = (
+            <FolderTree size={16} className="text-green-600 flex-shrink-0" />
+          );
+          break;
+        case "git-diff":
+          magicIcon = (
+            <GitBranch size={16} className="text-indigo-600 flex-shrink-0" />
+          );
+          break;
+        case "terminal-command":
+          magicIcon = (
+            <Terminal size={16} className="text-yellow-600 flex-shrink-0" />
+          );
+          break;
+        default:
+          magicIcon = (
+            <Wand2 size={16} className="text-gray-500 flex-shrink-0" />
+          );
+      }
+      return { icon: magicIcon };
     }
     if (prompt.mode === "universal") {
       return {
@@ -97,11 +130,35 @@ function SortablePromptItem({
 
   const { selectedClasses, icon } = useMemo(() => {
     if (prompt.promptType === "magic") {
-      return {
-        selectedClasses: "bg-green-100 text-green-800",
-        icon: <FolderTree size={16} className="text-green-600 flex-shrink-0" />,
-      };
+      let magicIcon, selectedBg;
+      switch (prompt.magicType) {
+        case "file-tree":
+          magicIcon = (
+            <FolderTree size={16} className="text-green-600 flex-shrink-0" />
+          );
+          selectedBg = "bg-green-100 text-green-800";
+          break;
+        case "git-diff":
+          magicIcon = (
+            <GitBranch size={16} className="text-indigo-600 flex-shrink-0" />
+          );
+          selectedBg = "bg-indigo-100 text-indigo-800";
+          break;
+        case "terminal-command":
+          magicIcon = (
+            <Terminal size={16} className="text-yellow-600 flex-shrink-0" />
+          );
+          selectedBg = "bg-yellow-100 text-yellow-800";
+          break;
+        default:
+          magicIcon = (
+            <Wand2 size={16} className="text-gray-500 flex-shrink-0" />
+          );
+          selectedBg = "bg-gray-200 text-gray-800";
+      }
+      return { selectedClasses: selectedBg, icon: magicIcon };
     }
+
     if (prompt.mode === "universal") {
       return {
         selectedClasses: "bg-purple-100 text-purple-800",
@@ -278,7 +335,9 @@ function FileTreeConfigEditor({
           placeholder="e.g., *.log, node_modules/, .DS_Store"
           className="h-24 text-xs"
           value={config.ignorePatterns}
-          onChange={(e) => handleConfigChange({ ignorePatterns: e.target.value })}
+          onChange={(e) =>
+            handleConfigChange({ ignorePatterns: e.target.value })
+          }
         />
         <p className="text-xs text-gray-500 mt-1">
           Comma-separated list. Use `*` for wildcards (e.g., `*.tmp`) and end
@@ -289,10 +348,167 @@ function FileTreeConfigEditor({
   );
 }
 
+function GitDiffConfigEditor({
+  prompt,
+  onUpdate,
+  rootPath,
+}: {
+  prompt: MetaPrompt;
+  onUpdate: (update: Partial<Omit<MetaPrompt, "id">>) => void;
+  rootPath: string | null;
+}) {
+  const config = prompt.gitDiffConfig ?? { type: "unstaged", hash: null };
+  const [isRepo, setIsRepo] = useState(false);
+  const [status, setStatus] = useState<GitStatus | null>(null);
+  const [commits, setCommits] = useState<Commit[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!rootPath) {
+      setIsLoading(false);
+      return;
+    }
+    const fetchGitInfo = async () => {
+      setIsLoading(true);
+      const repo = await tauriApi.isGitRepository(rootPath);
+      setIsRepo(repo);
+      if (repo) {
+        const [gitStatus, recentCommits] = await Promise.all([
+          tauriApi.getGitStatus(rootPath),
+          tauriApi.getRecentCommits(rootPath, 20),
+        ]);
+        setStatus(gitStatus);
+        setCommits(recentCommits);
+      }
+      setIsLoading(false);
+    };
+    fetchGitInfo();
+  }, [rootPath]);
+
+  const handleConfigChange = (update: Partial<GitDiffConfig>) => {
+    onUpdate({ gitDiffConfig: { ...config, ...update } });
+  };
+
+  const diffTypeOptions: { value: GitDiffConfig["type"]; label: string }[] = [
+    { value: "unstaged", label: "Unstaged" },
+    { value: "staged", label: "Staged" },
+    { value: "commit", label: "Commit" },
+  ];
+
+  if (isLoading) {
+    return <div>Loading Git info...</div>;
+  }
+
+  if (!isRepo) {
+    return (
+      <div className="p-4 bg-yellow-50 text-yellow-800 rounded-md flex items-center gap-2">
+        <AlertCircle size={20} />
+        <div>
+          The current project is not a Git repository, or Git is not installed.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 border-t border-gray-200 pt-4 mt-4">
+      <h3 className="text-base font-semibold text-gray-800">
+        Git Diff Configuration
+      </h3>
+      <div>
+        <label className="text-sm font-medium text-gray-700 mb-1 block">
+          Diff Type
+        </label>
+        <SegmentedControl
+          options={diffTypeOptions}
+          value={config.type}
+          onChange={(type) => handleConfigChange({ type, hash: null })}
+          layoutId="gitdiff-type-slider"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          {config.type === "unstaged" &&
+            `Includes ${
+              status?.hasUnstagedChanges ? "" : "no"
+            } unstaged changes.`}
+          {config.type === "staged" &&
+            `Includes ${
+              status?.hasStagedChanges ? "" : "no"
+            } staged changes.`}
+          {config.type === "commit" && "Shows changes from a specific commit."}
+        </p>
+      </div>
+      {config.type === "commit" && (
+        <div>
+          <label className="text-sm font-medium text-gray-700 mb-1 block">
+            Select Commit
+          </label>
+          {commits.length > 0 ? (
+            <select
+              value={config.hash ?? ""}
+              onChange={(e) => handleConfigChange({ hash: e.target.value })}
+              className="form-input-base w-full"
+            >
+              <option value="" disabled>
+                -- Select a commit --
+              </option>
+              {commits.map((commit) => (
+                <option key={commit.hash} value={commit.hash}>
+                  {commit.hash.slice(0, 7)} - {commit.message} ({commit.author},{" "}
+                  {commit.date})
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="text-xs text-gray-500">No recent commits found.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TerminalCommandConfigEditor({
+  prompt,
+  onUpdate,
+}: {
+  prompt: MetaPrompt;
+  onUpdate: (update: Partial<Omit<MetaPrompt, "id">>) => void;
+}) {
+  const config = prompt.terminalCommandConfig ?? { command: "" };
+
+  const handleConfigChange = (update: Partial<TerminalCommandConfig>) => {
+    onUpdate({ terminalCommandConfig: { ...config, ...update } });
+  };
+
+  return (
+    <div className="space-y-4 border-t border-gray-200 pt-4 mt-4">
+      <h3 className="text-base font-semibold text-gray-800">
+        Terminal Command Configuration
+      </h3>
+      <div>
+        <label className="text-sm font-medium text-gray-700 mb-1 block">
+          Command
+        </label>
+        <Input
+          type="text"
+          placeholder="e.g., pnpm test"
+          value={config.command}
+          onChange={(e) => handleConfigChange({ command: e.target.value })}
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          The command will be executed in the project root. Output will be
+          included in the prompt.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function MetaPromptsManagerModal({
   isOpen,
   onClose,
 }: MetaPromptsManagerModalProps) {
+  const { rootPath } = useWorkspaceStore();
   const {
     selectedPromptId,
     setSelectedPromptId,
@@ -451,6 +667,30 @@ export function MetaPromptsManagerModal({
                           >
                             File Tree
                           </Button>
+                          <Button
+                            onClick={() => {
+                              handleAddMagicPrompt("git-diff");
+                              setIsAddMenuOpen(false);
+                            }}
+                            variant="ghost"
+                            size="md"
+                            className="w-full justify-start text-gray-600"
+                            leftIcon={<GitBranch size={16} />}
+                          >
+                            Git Diff
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              handleAddMagicPrompt("terminal-command");
+                              setIsAddMenuOpen(false);
+                            }}
+                            variant="ghost"
+                            size="md"
+                            className="w-full justify-start text-gray-600"
+                            leftIcon={<Terminal size={16} />}
+                          >
+                            Terminal Output
+                          </Button>
                           <div className="border-t border-gray-200 my-1 mx-2" />
                           <div className="text-xs font-semibold text-gray-500 px-2 pt-1 uppercase tracking-wider">
                             Meta Prompt
@@ -542,15 +782,7 @@ export function MetaPromptsManagerModal({
                       />
                     </div>
 
-                    {selectedPrompt.promptType === "magic" &&
-                    selectedPrompt.magicType === "file-tree" ? (
-                      <FileTreeConfigEditor
-                        prompt={selectedPrompt}
-                        onUpdate={(update) =>
-                          handleUpdatePromptById(selectedPrompt.id, update)
-                        }
-                      />
-                    ) : (
+                    {selectedPrompt.promptType !== "magic" && (
                       <div>
                         <label className="text-sm font-medium text-gray-700 mb-1 block">
                           Content
@@ -567,14 +799,53 @@ export function MetaPromptsManagerModal({
                         />
                       </div>
                     )}
+                    {selectedPrompt.promptType === "magic" && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-1 block">
+                          Template
+                        </label>
+                        <Textarea
+                          value={selectedPrompt.content}
+                          onChange={(e) =>
+                            handleUpdatePromptById(selectedPrompt.id, {
+                              content: e.target.value,
+                            })
+                          }
+                          className="h-48 text-xs"
+                          placeholder="Enter meta prompt template..."
+                        />
+                        {selectedPrompt.magicType === "file-tree" && (
+                          <FileTreeConfigEditor
+                            prompt={selectedPrompt}
+                            onUpdate={(update) =>
+                              handleUpdatePromptById(selectedPrompt.id, update)
+                            }
+                          />
+                        )}
+                        {selectedPrompt.magicType === "git-diff" && (
+                          <GitDiffConfigEditor
+                            prompt={selectedPrompt}
+                            onUpdate={(update) =>
+                              handleUpdatePromptById(selectedPrompt.id, update)
+                            }
+                            rootPath={rootPath}
+                          />
+                        )}
+                        {selectedPrompt.magicType === "terminal-command" && (
+                          <TerminalCommandConfigEditor
+                            prompt={selectedPrompt}
+                            onUpdate={(update) =>
+                              handleUpdatePromptById(selectedPrompt.id, update)
+                            }
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full text-center text-gray-500">
                     <div>
-                      <p>No meta prompts yet.</p>
-                      <p className="text-sm">
-                        Click "Add Prompt" to get started.
-                      </p>
+                      <p>Select a prompt to edit or add a new one.</p>
                     </div>
                   </div>
                 )}

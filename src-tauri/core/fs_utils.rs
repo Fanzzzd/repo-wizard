@@ -33,17 +33,22 @@ pub async fn list_directory_recursive(
 
     if !settings.custom_ignore_patterns.is_empty() {
         let mut override_builder = OverrideBuilder::new(root_path);
-        for line in settings.custom_ignore_patterns.lines() {
-            let trimmed = line.trim();
+        for pattern in settings.custom_ignore_patterns.lines() {
+            let trimmed = pattern.trim();
             if trimmed.is_empty() || trimmed.starts_with('#') {
                 continue;
             }
-            let git_pattern = if let Some(unignore_pattern) = trimmed.strip_prefix('!') {
-                unignore_pattern.to_string()
+
+            // The ignore crate uses gitignore syntax, where `!` is unignore.
+            // We want the opposite: a list of patterns to ignore.
+            // So we prepend `!` to each user-provided pattern to make it an ignore pattern for the OverrideBuilder.
+            // If the user provides `!foo`, we treat it as `foo` (unignore).
+            if let Some(unignored_pattern) = trimmed.strip_prefix('!') {
+                override_builder.add(unignored_pattern)?;
             } else {
-                format!("!{}", trimmed)
-            };
-            override_builder.add(&git_pattern)?;
+                let ignore_pattern = format!("!{}", trimmed);
+                override_builder.add(&ignore_pattern)?;
+            }
         }
         let overrides = override_builder.build()?;
         walk_builder.overrides(overrides);

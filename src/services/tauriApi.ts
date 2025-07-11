@@ -1,5 +1,12 @@
-import { invoke } from "@tauri-apps/api/core";
-import type { FileNode, ChangeOperation } from "../types";
+import { invoke, Channel } from "@tauri-apps/api/core";
+import type {
+  FileNode,
+  ChangeOperation,
+  GitStatus,
+  Commit,
+  GitDiffConfig,
+  CommandStreamEvent,
+} from "../types";
 import { AppError } from "../lib/error";
 
 interface IgnoreSettings {
@@ -128,5 +135,90 @@ export const parseChangesFromMarkdown = async (
     return await invoke("parse_changes_from_markdown", { markdown });
   } catch (err) {
     throw new AppError("Failed to parse changes from markdown", err);
+  }
+};
+
+export const isGitRepository = async (path: string): Promise<boolean> => {
+  try {
+    return await invoke("is_git_repository", { path });
+  } catch (err) {
+    throw new AppError(`Failed to check if path is git repo: ${path}`, err);
+  }
+};
+
+export const getGitStatus = async (repoPath: string): Promise<GitStatus> => {
+  try {
+    return await invoke("get_git_status", { repoPath });
+  } catch (err) {
+    throw new AppError(`Failed to get git status for: ${repoPath}`, err);
+  }
+};
+
+export const getRecentCommits = async (
+  repoPath: string,
+  count: number
+): Promise<Commit[]> => {
+  try {
+    return await invoke("get_recent_commits", { repoPath, count });
+  } catch (err) {
+    throw new AppError(`Failed to get recent commits for: ${repoPath}`, err);
+  }
+};
+
+export const getGitDiff = async (
+  repoPath: string,
+  config: GitDiffConfig
+): Promise<string> => {
+  let option: { type: string; hash?: string };
+  if (config.type === "commit") {
+    if (!config.hash) {
+      throw new AppError("Commit hash is required for commit diff.", null);
+    }
+    option = { type: "commit", hash: config.hash };
+  } else {
+    option = { type: config.type };
+  }
+
+  try {
+    return await invoke("get_git_diff", { repoPath, option });
+  } catch (err) {
+    throw new AppError(`Failed to get git diff for: ${repoPath}`, err);
+  }
+};
+
+export const startPtySession = async (
+  rootPath: string,
+  command: string | null,
+  onEvent: Channel<CommandStreamEvent>
+) => {
+  try {
+    await invoke("start_pty_session", { rootPath, command, onEvent });
+  } catch (err) {
+    console.error("Failed to start PTY session:", err);
+    throw err;
+  }
+};
+
+export const resizePty = async (rows: number, cols: number): Promise<void> => {
+  try {
+    await invoke("resize_pty", { rows, cols });
+  } catch (err) {
+    console.warn(`Failed to resize PTY:`, err);
+  }
+};
+
+export const writeToPty = async (text: string): Promise<void> => {
+  try {
+    await invoke("write_to_pty", { text });
+  } catch (err) {
+    console.warn("Failed to write to PTY:", err);
+  }
+};
+
+export const killPty = async (): Promise<void> => {
+  try {
+    await invoke("kill_pty");
+  } catch (err) {
+    console.warn("Failed to kill PTY:", err);
   }
 };

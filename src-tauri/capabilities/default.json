@@ -9,6 +9,21 @@
     "core:default",
     "fs:default",
     "dialog:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "sh",
+          "cmd": "sh",
+          "args": true
+        },
+        {
+          "name": "cmd",
+          "cmd": "cmd",
+          "args": true
+        }
+      ]
+    },
     "shell:default",
     "log:default",
     "clipboard-manager:allow-clear",

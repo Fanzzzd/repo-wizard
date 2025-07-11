@@ -60,7 +60,6 @@ export interface MetaPromptDefinition {
   terminalCommandConfig?: TerminalCommandConfig;
 }
 
-// This is a transient type for UI, combining definition with project-specific 'enabled' status.
 export interface MetaPrompt extends MetaPromptDefinition {
   enabled: boolean;
 }
@@ -82,9 +81,3 @@ export interface Commit {
   author: string;
   date: string;
 }
-
-export type CommandStreamEvent =
-  | { type: "stdout"; data: number[] }
-  | { type: "stderr"; data: number[] }
-  | { type: "error"; data: string }
-  | { type: "finish"; data: string };

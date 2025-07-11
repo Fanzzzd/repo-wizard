@@ -1,27 +1,22 @@
 import { useState } from "react";
 import { useHistoryStore } from "../../store/historyStore";
 import { useComposerStore } from "../../store/composerStore";
-import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useDialogStore } from "../../store/dialogStore";
-import { useSettingsStore } from "../../store/settingsStore";
-import { buildPrompt } from "../../lib/prompt_builder";
-import { History, Trash2, Copy, Clipboard, Check } from "lucide-react";
+import { History, Trash2, Copy, Clipboard, Check, RefreshCw } from "lucide-react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { Button } from "../common/Button";
-import type { MetaPrompt, PromptHistoryEntry } from "../../types";
+import type { PromptHistoryEntry } from "../../types";
 import { usePromptGenerator } from "../../hooks/usePromptGenerator";
 
 export function PromptHistoryPanel() {
   const { promptHistory, clearPromptHistory } = useHistoryStore();
-  const { setInstructions, composerMode, enabledMetaPromptIds } =
-    useComposerStore();
-  const { selectedFilePaths, rootPath, fileTree } = useWorkspaceStore();
+  const { setInstructions } = useComposerStore();
   const { open: openDialog } = useDialogStore();
-  const { customSystemPrompt, editFormat, metaPrompts: promptDefs } =
-    useSettingsStore();
-
+  
+  const { generateAndCopyPrompt, isGenerating } = usePromptGenerator();
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
-  const { getFilesWithRelativePaths } = usePromptGenerator();
+  const [generatingPromptId, setGeneratingPromptId] = useState<string | null>(null);
+
 
   const handleClearHistory = async () => {
     const confirmed = await openDialog({
@@ -36,34 +31,22 @@ export function PromptHistoryPanel() {
       clearPromptHistory();
     }
   };
-
+  
   const handleGenerateAndCopy = async (entry: PromptHistoryEntry) => {
-    if (!rootPath) return;
+    if (isGenerating || generatingPromptId) return;
 
+    setGeneratingPromptId(entry.id);
     setInstructions(entry.instructions);
 
-    const metaPrompts: MetaPrompt[] = promptDefs.map((def) => ({
-      ...def,
-      enabled: enabledMetaPromptIds.includes(def.id),
-    }));
-
-    const files = await getFilesWithRelativePaths(selectedFilePaths, rootPath);
-    const fullPrompt = buildPrompt(
-      files,
-      entry.instructions,
-      customSystemPrompt,
-      editFormat,
-      metaPrompts,
-      composerMode,
-      fileTree,
-      rootPath
-    );
-    await writeText(fullPrompt);
-
-    setCopiedPromptId(entry.id);
-    setTimeout(() => {
-      setCopiedPromptId(null);
-    }, 2000);
+    const success = await generateAndCopyPrompt(entry.instructions);
+    
+    if (success) {
+      setCopiedPromptId(entry.id);
+      setTimeout(() => {
+        setCopiedPromptId(null);
+      }, 2000);
+    }
+    setGeneratingPromptId(null);
   };
 
   return (
@@ -89,51 +72,55 @@ export function PromptHistoryPanel() {
           </div>
         ) : (
           <div className="space-y-3">
-            {promptHistory.map((entry) => (
-              <div
-                key={entry.id}
-                className="bg-white p-3 rounded-lg border border-gray-200"
-              >
-                <p className="text-xs text-gray-500 mb-2">
-                  {new Date(entry.timestamp).toLocaleString()}
-                </p>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap font-mono bg-gray-50 p-2 rounded-md mb-3">
-                  {entry.instructions}
-                </p>
-                <div className="flex items-center justify-end gap-2">
-                  <Button
-                    onClick={() => writeText(entry.instructions)}
-                    size="sm"
-                    variant="secondary"
-                    leftIcon={<Copy size={14} />}
-                  >
-                    Copy
-                  </Button>
-                  <Button
-                    onClick={() => handleGenerateAndCopy(entry)}
-                    size="sm"
-                    variant="primary"
-                    disabled={!rootPath}
-                    title={
-                      !rootPath
-                        ? "Open a project to generate a full prompt"
-                        : "Populate composer and copy full generated prompt"
-                    }
-                    leftIcon={
-                      copiedPromptId === entry.id ? (
-                        <Check size={14} />
-                      ) : (
-                        <Clipboard size={14} />
-                      )
-                    }
-                  >
-                    {copiedPromptId === entry.id
-                      ? "Copied!"
-                      : "Generate & Copy"}
-                  </Button>
+            {promptHistory.map((entry) => {
+              const isCurrentlyGenerating = generatingPromptId === entry.id;
+              const isCopied = copiedPromptId === entry.id;
+
+              let buttonIcon = <Clipboard size={14} />;
+              let buttonText = "Generate & Copy";
+
+              if (isCurrentlyGenerating) {
+                buttonIcon = <RefreshCw size={14} className="animate-spin" />;
+                buttonText = "Generating...";
+              } else if (isCopied) {
+                buttonIcon = <Check size={14} />;
+                buttonText = "Copied!";
+              }
+
+              return (
+                <div
+                  key={entry.id}
+                  className="bg-white p-3 rounded-lg border border-gray-200"
+                >
+                  <p className="text-xs text-gray-500 mb-2">
+                    {new Date(entry.timestamp).toLocaleString()}
+                  </p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap font-mono bg-gray-50 p-2 rounded-md mb-3">
+                    {entry.instructions}
+                  </p>
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      onClick={() => writeText(entry.instructions)}
+                      size="sm"
+                      variant="secondary"
+                      leftIcon={<Copy size={14} />}
+                    >
+                      Copy
+                    </Button>
+                    <Button
+                      onClick={() => handleGenerateAndCopy(entry)}
+                      size="sm"
+                      variant="primary"
+                      disabled={isGenerating || !!generatingPromptId}
+                      title="Populate composer and copy full generated prompt"
+                      leftIcon={buttonIcon}
+                    >
+                      {buttonText}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

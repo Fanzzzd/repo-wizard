@@ -30,6 +30,7 @@ tokio = { version = "1", features = ["full"] }
 tauri-plugin-dialog = "2"
 async-recursion = "1.0.5"
 tauri-plugin-log = "2"
+log = "0.4"
 ignore = "0.4.23"
 tauri-plugin-clipboard-manager = "2"
 uuid = { version = "1.17.0", features = ["v4"] }
@@ -41,6 +42,9 @@ tauri-plugin-os = "2"
 lazy_static = "1.4.0"
 regex = "1.10.5"
 similar = { version = "2.5.0", features = ["inline"] }
+once_cell = "1.19.0"
+portable-pty = "0.9.0"
+
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"
