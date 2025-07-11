@@ -5,6 +5,7 @@ interface HistoryState {
   promptHistory: PromptHistoryEntry[];
   addPromptToHistory: (instructions: string) => void;
   clearPromptHistory: () => void;
+  updatePromptHistoryEntry: (id: string, newInstructions: string) => void;
 
   // For persistence
   _load: (state: Partial<HistoryState>) => void;
@@ -13,7 +14,11 @@ interface HistoryState {
 
 const initialState: Omit<
   HistoryState,
-  "addPromptToHistory" | "clearPromptHistory" | "_load" | "_reset"
+  | "addPromptToHistory"
+  | "clearPromptHistory"
+  | "updatePromptHistoryEntry"
+  | "_load"
+  | "_reset"
 > = {
   promptHistory: [],
 };
@@ -34,6 +39,13 @@ export const useHistoryStore = create<HistoryState>((set) => ({
     }));
   },
   clearPromptHistory: () => set({ promptHistory: [] }),
+  updatePromptHistoryEntry: (id, newInstructions) => {
+    set((state) => ({
+      promptHistory: state.promptHistory.map((entry) =>
+        entry.id === id ? { ...entry, instructions: newInstructions } : entry
+      ),
+    }));
+  },
 
   _load: (state) => set(state),
   _reset: () => set(initialState),
