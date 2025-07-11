@@ -1,3 +1,11 @@
+# [1.5.0-next.8](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.7...app-v1.5.0-next.8) (2025-07-11)
+
+
+### Features
+
+* **MetaPrompts:** add file tree magic prompt functionality and enhance prompt management ([018e95e](https://github.com/Fanzzzd/repo-wizard/commit/018e95ebad75b6329dbad53776d98b4c9e23b1d2))
+* **prompts:** add interactive terminal and git diff magic prompts ([c9d7ac9](https://github.com/Fanzzzd/repo-wizard/commit/c9d7ac93ed9da2eef3a73f0f46b0093a443e5c8b))
+
 # [1.5.0-next.7](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.6...app-v1.5.0-next.7) (2025-07-10)
 
 
