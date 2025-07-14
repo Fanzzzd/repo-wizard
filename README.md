@@ -4,8 +4,11 @@
 </div>
 
 <div align="center">
-  <a href="CONTRIBUTING.md#release-workflow-for-maintainers">
+  <a href="https://github.com/Fanzzzd/repo-wizard/releases/latest">
     <img src="https://img.shields.io/github/v/release/Fanzzzd/repo-wizard?display_name=tag&sort=semver" alt="Latest release">
+  </a>
+  <a href="https://github.com/Fanzzzd/repo-wizard/releases/latest">
+    <img src="https://img.shields.io/github/downloads/Fanzzzd/repo-wizard/total.svg" alt="Total downloads">
   </a>
 </div>
 
@@ -17,6 +20,17 @@
 > This project is under active development. Issues and PRs are welcome!
 
 ---
+
+## Download
+
+You can download the latest version for macOS, Windows, and Linux from the GitHub releases page.
+
+<div align="center">
+  <a href="https://github.com/Fanzzzd/repo-wizard/releases/latest"><img alt="Download for macOS" src="https://img.shields.io/badge/Download%20for-macOS-blue?logo=apple&style=for-the-badge"></a>
+  <a href="https://github.com/Fanzzzd/repo-wizard/releases/latest"><img alt="Download for Windows" src="https://img.shields.io/badge/Download%20for-Windows-blue?logo=windows11&style=for-the-badge"></a>
+  <a href="https://github.com/Fanzzzd/repo-wizard/releases/latest"><img alt="Download for Linux" src="https://img.shields.io/badge/Download%20for-Linux-blue?logo=linux&style=for-the-badge"></a>
+</div>
+<br>
 
 Tired of the tedious copy-paste dance when applying LLM-suggested code changes? Repo Wizard is your **code refactoring staging area**, designed to bridge the gap between AI suggestions and your local codebase safely and efficiently.
 

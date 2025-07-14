@@ -6,8 +6,11 @@
 </div>
 
 <div align="center">
-  <a href="../CONTRIBUTING.md#release-workflow-for-maintainers">
+  <a href="https://github.com/Fanzzzd/repo-wizard/releases/latest">
     <img src="https://img.shields.io/github/v/release/Fanzzzd/repo-wizard?display_name=tag&sort=semver" alt="Latest release">
+  </a>
+  <a href="https://github.com/Fanzzzd/repo-wizard/releases/latest">
+    <img src="https://img.shields.io/github/downloads/Fanzzzd/repo-wizard/total.svg" alt="Total downloads">
   </a>
 </div>
 
@@ -17,6 +20,17 @@
 > 本项目正在活跃开发中，欢迎提交 Issue 和 Pull Request！
 
 ---
+
+## 下载
+
+您可以从 GitHub releases 页面下载适用于 macOS、Windows 和 Linux 的最新版本。
+
+<div align="center">
+  <a href="https://github.com/Fanzzzd/repo-wizard/releases/latest"><img alt="Download for macOS" src="https://img.shields.io/badge/Download%20for-macOS-blue?logo=apple&style=for-the-badge"></a>
+  <a href="https://github.com/Fanzzzd/repo-wizard/releases/latest"><img alt="Download for Windows" src="https://img.shields.io/badge/Download%20for-Windows-blue?logo=windows11&style=for-the-badge"></a>
+  <a href="https://github.com/Fanzzzd/repo-wizard/releases/latest"><img alt="Download for Linux" src="https://img.shields.io/badge/Download%20for-Linux-blue?logo=linux&style=for-the-badge"></a>
+</div>
+<br>
 
 厌倦了在应用大语言模型（LLM）建议的代码变更时，那种繁琐、枯燥的复制粘贴？Repo Wizard 就是你的**代码重构暂存区**，旨在安全、高效地填补 AI 建议与本地代码库之间的鸿沟。
 
