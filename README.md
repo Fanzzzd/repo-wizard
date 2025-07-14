@@ -71,10 +71,10 @@ The quality of the output depends heavily on the model you use. Here are some re
 
 ## A Note from the Developer
 
-Repo Wizard was born out of a personal need and developed at a rapid pace, with a healthy dose of AI assistance in writing the code itself. This means a few things:
+Repo Wizard was born out of a personal need and developed at a rapid pace, with extensive use of AI-assisted coding. This means:
 
--   **Platform Stability**: I developed this primarily on macOS. While it has been tested on Windows, you may encounter more bugs on Windows or Linux. If you do, please **open an issue**! I'm committed to fixing them as quickly as possible.
--   **Help is Welcome**: This is largely a one-person effort. If you're excited about the project, please consider contributing! Check out our [contributing guide](./CONTRIBUTING.md).
+-   **Platform Stability**: I primarily develop on macOS. While it has been tested on Windows, you may encounter more unforeseen bugs on Windows or Linux. If you do, please **open an issue**! I'm committed to fixing them as quickly as possible.
+-   **Help is Welcome**: While currently a personal project, I'm considering applying for a dedicated GitHub organization in the future to expand its reach. If you're interested in the project, please consider contributing! Check out our [contributing guide](./CONTRIBUTING.md).
 
 > [!WARNING]
 > **Please, please, please back up your code!**
