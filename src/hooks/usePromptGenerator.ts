@@ -6,7 +6,7 @@ import { useSettingsStore } from "../store/settingsStore";
 import {
   openCommandRunner,
 } from "../store/commandRunnerStore";
-import { getRelativePath, readFileContent } from "../services/tauriApi";
+import { getRelativePath, readFileContent, isBinaryFile } from "../services/tauriApi";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { buildPrompt } from "../lib/prompt_builder";
 import { estimateTokens } from "../lib/token_estimator";
@@ -40,8 +40,11 @@ export function usePromptGenerator() {
 
   const getFilesWithRelativePaths = useCallback(
     async (paths: string[], root: string) => {
+      const isBinaryResults = await Promise.all(paths.map(isBinaryFile));
+      const textFilePaths = paths.filter((_, i) => !isBinaryResults[i]);
+
       const files = await Promise.all(
-        paths.map(async (path) => {
+        textFilePaths.map(async (path) => {
           try {
             const content = await readFileContent(path);
             const relativePath = await getRelativePath(path, root);

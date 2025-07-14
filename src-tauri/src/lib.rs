@@ -22,6 +22,7 @@ pub fn run() {
             commands::list_directory_recursive,
             commands::get_relative_path,
             commands::read_file_content,
+            commands::is_binary_file,
             commands::write_file_content,
             commands::apply_patch,
             commands::delete_file,

@@ -81,6 +81,11 @@ pub async fn read_file_content(path: String) -> Result<String> {
 }
 
 #[tauri::command]
+pub async fn is_binary_file(path: String) -> Result<bool> {
+    Ok(fs_utils::is_binary(&PathBuf::from(path)).await?)
+}
+
+#[tauri::command]
 pub async fn write_file_content(path: String, content: String) -> Result<()> {
     fs_utils::write_file_content(&PathBuf::from(path), &content).await?;
     Ok(())

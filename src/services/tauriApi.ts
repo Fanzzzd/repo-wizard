@@ -33,6 +33,16 @@ export const readFileContent = async (path: string): Promise<string> => {
   }
 };
 
+export const isBinaryFile = async (path: string): Promise<boolean> => {
+  try {
+    return await invoke("is_binary_file", { path });
+  } catch (err) {
+    // If check fails, assume it's binary to be safe.
+    console.warn(new AppError(`Failed to check if file is binary: ${path}`, err));
+    return true;
+  }
+};
+
 export const writeFileContent = async (
   path: string,
   content: string
