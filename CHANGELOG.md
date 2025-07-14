@@ -1,3 +1,11 @@
+# [1.5.0-next.11](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.10...app-v1.5.0-next.11) (2025-07-14)
+
+
+### Features
+
+* **core:** implement robust binary file detection in backend ([eea5d5d](https://github.com/Fanzzzd/repo-wizard/commit/eea5d5d0acdedb53a5b29fb7c4323878893b5ea7))
+* **viewer:** add support for previewing binary files ([28162eb](https://github.com/Fanzzzd/repo-wizard/commit/28162ebfdcd54d72b0049dbf0c22e6ae1fdd4d8f))
+
 # [1.5.0-next.10](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.9...app-v1.5.0-next.10) (2025-07-14)
 
 
