@@ -1,3 +1,29 @@
+# [1.5.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.4.0...app-v1.5.0) (2025-07-14)
+
+
+### Bug Fixes
+
+* **release:** update prepare command and remove GTK dependencies ([6352167](https://github.com/Fanzzzd/repo-wizard/commit/63521676073f76dbf3350b9d1657c6f82a723f4f))
+* **release:** update prepare command in .releaserc.json ([c556729](https://github.com/Fanzzzd/repo-wizard/commit/c55672969f7f2812298ee720cd94370b67f0475c))
+
+
+### Features
+
+* add @tauri-apps/plugin-os dependency and enhance app menu structure ([59a45d3](https://github.com/Fanzzzd/repo-wizard/commit/59a45d3e33c353f4a06f67de9e317c422041e5ba))
+* add HTTP plugin support and enhance update handling ([06b6a82](https://github.com/Fanzzzd/repo-wizard/commit/06b6a82f7fbfe09e9317bc4c3aa8d74fd21a07cf))
+* add macOS-specific app menu and enhance menu structure ([4e9483e](https://github.com/Fanzzzd/repo-wizard/commit/4e9483e948264a2e3d9dc08843bd621cf55762ee))
+* **App, ShortenedPath, ChangeList:** implement zoom functionality and enhance path display ([2941ee8](https://github.com/Fanzzzd/repo-wizard/commit/2941ee8ba652d7105f41331b57aa84896f244737))
+* **ChangeList, diff_parser, prompt_builder:** enhance file operation indicators and command parsing ([148efb5](https://github.com/Fanzzzd/repo-wizard/commit/148efb5beeb6e38d69a06e901199182d501a59c3))
+* **core:** implement robust binary file detection in backend ([eea5d5d](https://github.com/Fanzzzd/repo-wizard/commit/eea5d5d0acdedb53a5b29fb7c4323878893b5ea7))
+* **FileTree:** add recent projects feature and modal for project selection ([369a438](https://github.com/Fanzzzd/repo-wizard/commit/369a438e62decb2d714cac4a82cd488f463b0881))
+* integrate project store and refactor state management ([44625f7](https://github.com/Fanzzzd/repo-wizard/commit/44625f7878e17e3177e003176d933a5a787e6f58))
+* **MetaPrompts:** add file tree magic prompt functionality and enhance prompt management ([018e95e](https://github.com/Fanzzzd/repo-wizard/commit/018e95ebad75b6329dbad53776d98b4c9e23b1d2))
+* **MetaPromptsManagerModal:** integrate dropdown menu for prompt addition ([6e9d56e](https://github.com/Fanzzzd/repo-wizard/commit/6e9d56e2f032805cc68e6ec380c16dd18bd5e768))
+* **PromptHistoryPanel:** add detail modal and instruction preview functionality ([3164183](https://github.com/Fanzzzd/repo-wizard/commit/31641833cdbd52eaf0f3ca29251ace5a5a1b65bf))
+* **prompts:** add interactive terminal and git diff magic prompts ([c9d7ac9](https://github.com/Fanzzzd/repo-wizard/commit/c9d7ac93ed9da2eef3a73f0f46b0093a443e5c8b))
+* **RecentProjects:** enhance recent projects management with removal functionality ([9c124d9](https://github.com/Fanzzzd/repo-wizard/commit/9c124d9a7a2ca04e03a9d2b08a652126f55a2cf3))
+* **viewer:** add support for previewing binary files ([28162eb](https://github.com/Fanzzzd/repo-wizard/commit/28162ebfdcd54d72b0049dbf0c22e6ae1fdd4d8f))
+
 # [1.5.0-next.11](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.10...app-v1.5.0-next.11) (2025-07-14)
 
 
