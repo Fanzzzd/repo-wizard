@@ -76,6 +76,12 @@ pub fn get_relative_path(full_path: String, root_path: String) -> Result<String>
 }
 
 #[tauri::command]
+pub async fn read_file_as_base64(path: String) -> Result<String> {
+    let bytes = fs_utils::read_file_bytes(&PathBuf::from(path)).await?;
+    Ok(general_purpose::STANDARD.encode(bytes))
+}
+
+#[tauri::command]
 pub async fn read_file_content(path: String) -> Result<String> {
     Ok(fs_utils::read_file_content(&PathBuf::from(path)).await?)
 }

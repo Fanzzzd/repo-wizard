@@ -25,6 +25,14 @@ export const listDirectoryRecursive = async (
   }
 };
 
+export const readFileAsBase64 = async (path: string): Promise<string> => {
+  try {
+    return await invoke("read_file_as_base64", { path });
+  } catch (err) {
+    throw new AppError(`Failed to read file as base64 for: ${path}`, err);
+  }
+};
+
 export const readFileContent = async (path: string): Promise<string> => {
   try {
     return await invoke("read_file_content", { path });

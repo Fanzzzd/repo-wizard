@@ -1,6 +1,6 @@
 import { useReviewStore } from "../store/reviewStore";
-import { CodeEditor } from "./editor/CodeEditor";
 import { DiffEditor } from "./editor/DiffEditor";
+import { FileViewer } from "./viewer/FileViewer";
 
 export function MainPanel() {
   const { isReviewing } = useReviewStore();
@@ -9,5 +9,5 @@ export function MainPanel() {
     return <DiffEditor />;
   }
 
-  return <CodeEditor />;
+  return <FileViewer />;
 }

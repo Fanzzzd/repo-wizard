@@ -134,6 +134,10 @@ pub async fn read_file_content(path: &PathBuf) -> Result<String> {
     Ok(String::from_utf8_lossy(&bytes).to_string())
 }
 
+pub async fn read_file_bytes(path: &PathBuf) -> Result<Vec<u8>> {
+    fs::read(path).await.map_err(anyhow::Error::from)
+}
+
 pub async fn write_file_content(path: &PathBuf, content: &str) -> Result<()> {
     if let Some(parent) = path.parent() {
         if !parent.exists() {
