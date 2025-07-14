@@ -2,9 +2,10 @@ import { DiffEditor as MonacoDiffEditor } from "@monaco-editor/react";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useReviewStore } from "../../store/reviewStore";
 import { useEffect, useState } from "react";
-import { readFileContent } from "../../lib/tauri_api";
+import { readFileContent } from "../../services/tauriApi";
 import { applyPatch } from "diff";
 import { getLanguageForFilePath } from "../../lib/language_service";
+import { showErrorDialog } from "../../lib/errorHandler";
 
 export function DiffEditor() {
   const { rootPath } = useWorkspaceStore();
@@ -85,7 +86,7 @@ export function DiffEditor() {
           applyDiff(content);
         })
         .catch((err) => {
-          console.error(err);
+          showErrorDialog(err);
           const errorMessage = `// Could not load file: ${absolutePath}`;
           setOriginalContent(errorMessage);
           setModifiedContent(errorMessage);

@@ -1,13 +1,15 @@
-import { FolderOpen, ChevronRight, ChevronDown, X } from "lucide-react";
+import { ChevronRight, ChevronDown, X, FolderOpen, Folder } from "lucide-react";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { listDirectoryRecursive } from "../../lib/tauri_api";
 import type { FileNode } from "../../types";
 import { FileTypeIcon } from "./FileTypeIcon";
 import { AnimatePresence, motion } from "motion/react";
 import { Checkbox } from "../common/Checkbox";
+import { Button } from "../common/Button";
+import { RecentProjectsModal } from "./RecentProjectsModal";
+import { showErrorDialog } from "../../lib/errorHandler";
 
 function collectFilePaths(node: FileNode): string[] {
   if (!node.isDirectory) {
@@ -85,11 +87,10 @@ function FileNodeComponent({
     }
   };
 
-  const handleRightAreaClick = () => {
+  const handleDisplayFile = () => {
     if (!isDirectory) {
       setActiveFilePath(node.path);
     }
-    checkboxRef.current?.click();
   };
 
   const isActive = activeFilePath === node.path;
@@ -97,41 +98,58 @@ function FileNodeComponent({
   return (
     <div>
       <div
-        className={`flex items-center p-1 rounded text-sm group select-none cursor-default ${
+        className={`flex items-center rounded text-sm group select-none ${
           isActive
             ? "bg-blue-100 text-blue-900"
             : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
         }`}
         title={node.path}
-        style={{ paddingLeft: `${level * 1.25}rem` }}
       >
         <div
-          onClick={
-            isDirectory
-              ? (e) => {
-                  e.stopPropagation();
-                  setIsOpen(!isOpen);
-                }
-              : undefined
-          }
-          className="w-4 h-4 flex-shrink-0 flex items-center justify-center"
+          style={{ paddingLeft: `${level * 1.25}rem` }}
+          className="flex items-center self-stretch p-1 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (isDirectory) {
+              setIsOpen(!isOpen);
+            } else {
+              handleDisplayFile();
+            }
+          }}
         >
-          {isDirectory &&
-            (isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
+          <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
+            {isDirectory &&
+              (isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
+          </div>
         </div>
 
-        <Checkbox
-          ref={checkboxRef}
-          className="ml-1"
-          checked={isSelected}
-          isIndeterminate={isIndeterminate}
-          onChange={handleCheckboxChange}
-          onClick={(e) => e.stopPropagation()}
-        />
+        <div
+          className="p-1 flex items-center cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            checkboxRef.current?.click();
+          }}
+        >
+          <div className="pointer-events-none">
+            <Checkbox
+              ref={checkboxRef}
+              checked={isSelected}
+              isIndeterminate={isIndeterminate}
+              onChange={handleCheckboxChange}
+            />
+          </div>
+        </div>
 
         <div
-          onClick={handleRightAreaClick}
-          className="flex items-center gap-2 flex-grow overflow-hidden ml-2"
+          className="flex items-center gap-2 flex-grow overflow-hidden p-1 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (isDirectory) {
+              setIsOpen(!isOpen);
+            } else {
+              handleDisplayFile();
+            }
+          }}
         >
           <FileTypeIcon
             filename={node.name}
@@ -165,50 +183,152 @@ function FileNodeComponent({
 }
 
 export function FileTree() {
-  const { rootPath, fileTree, setRootPath, setFileTree, refreshCounter } = useWorkspaceStore();
-  const { respectGitignore, customIgnorePatterns } = useSettingsStore();
-
-  const handleOpenFolder = async () => {
-    try {
-      const selected = await open({
-        directory: true,
-        multiple: false,
-      });
-      if (typeof selected === "string") {
-        setRootPath(selected);
-      }
-    } catch (error) {
-      console.error("Failed to open folder dialog:", error);
-    }
-  };
+  const {
+    rootPath,
+    fileTree,
+    refreshCounter,
+    setRootPath,
+    closeProject,
+    loadFileTree,
+  } = useWorkspaceStore();
+  const {
+    respectGitignore,
+    customIgnorePatterns,
+    recentProjects,
+    removeRecentProject,
+  } = useSettingsStore();
+  const [isRecentProjectsModalOpen, setIsRecentProjectsModalOpen] =
+    useState(false);
 
   const handleCloseFolder = () => {
-    setRootPath(null);
+    closeProject();
+  };
+
+  const handleOpenFolder = async () => {
+    const selected = await open({ directory: true, multiple: false });
+    if (typeof selected === "string") {
+      await setRootPath(selected);
+    }
   };
 
   useEffect(() => {
-    if (rootPath) {
-      const settings = { respectGitignore, customIgnorePatterns };
-      listDirectoryRecursive(rootPath, settings)
-        .then((tree) => {
-          setFileTree(tree);
-        })
-        .catch(console.error);
-    } else {
-      setFileTree(null);
+    loadFileTree().catch(showErrorDialog);
+  }, [
+    rootPath,
+    loadFileTree,
+    respectGitignore,
+    customIgnorePatterns,
+    refreshCounter,
+  ]);
+
+  if (!rootPath) {
+    if (recentProjects.length > 0) {
+      return (
+        <>
+          <div className="flex flex-col h-full text-gray-800 p-4 bg-gray-50">
+            <h3 className="text-lg font-bold text-gray-800 mb-4 px-1">
+              Recent Projects
+            </h3>
+            <div className="flex-grow overflow-y-auto thin-scrollbar pr-1">
+              <ul className="space-y-1">
+                {recentProjects.map((path) => (
+                  <li key={path}>
+                    <div
+                      onClick={() => setRootPath(path)}
+                      className="group w-full text-left p-2 rounded-md hover:bg-gray-200 text-gray-700 hover:text-gray-900 transition-colors flex items-center justify-between gap-2 cursor-pointer"
+                      title={path}
+                    >
+                      <div className="flex items-center gap-2 flex-grow overflow-hidden">
+                        <Folder
+                          size={18}
+                          className="text-yellow-600 flex-shrink-0"
+                        />
+                        <div className="flex-grow overflow-hidden">
+                          <div className="font-semibold text-sm truncate">
+                            {path.split(/[\\/]/).pop()}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {path}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeRecentProject(path);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 p-1 rounded-full flex-shrink-0"
+                        title="Remove from recent projects"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-200 space-y-2 flex-shrink-0">
+              <Button
+                onClick={() => setIsRecentProjectsModalOpen(true)}
+                variant="secondary"
+                className="w-full"
+              >
+                View All / Search...
+              </Button>
+              <Button
+                onClick={handleOpenFolder}
+                variant="primary"
+                leftIcon={<FolderOpen size={16} />}
+                className="w-full"
+              >
+                Open Project from Disk...
+              </Button>
+            </div>
+          </div>
+          <RecentProjectsModal
+            isOpen={isRecentProjectsModalOpen}
+            onClose={() => setIsRecentProjectsModalOpen(false)}
+            onSelectProject={async (path) => {
+              await setRootPath(path);
+              setIsRecentProjectsModalOpen(false);
+            }}
+            onOpenAnother={() => {
+              setIsRecentProjectsModalOpen(false);
+              setTimeout(handleOpenFolder, 100);
+            }}
+          />
+        </>
+      );
     }
-  }, [rootPath, setFileTree, respectGitignore, customIgnorePatterns, refreshCounter]);
+
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4 bg-gray-50">
+        <div className="text-center">
+          <FolderOpen className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">
+            Open a project
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Get started by opening a folder.
+          </p>
+          <div className="mt-6">
+            <Button
+              onClick={handleOpenFolder}
+              variant="primary"
+              leftIcon={<FolderOpen size={16} />}
+            >
+              Open Folder
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!fileTree) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4 bg-gray-50">
-        <button
-          onClick={handleOpenFolder}
-          className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 border border-gray-300 rounded-md"
-        >
-          <FolderOpen size={18} />
-          Open Project Folder
-        </button>
+        <p>Loading file tree...</p>
       </div>
     );
   }
@@ -225,7 +345,7 @@ export function FileTree() {
         <button
           onClick={handleCloseFolder}
           className="p-1 rounded-full hover:bg-gray-200 text-gray-600 hover:text-gray-900 flex-shrink-0"
-          title="Close Folder"
+          title="Close Project"
         >
           <X size={16} />
         </button>

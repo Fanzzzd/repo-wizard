@@ -1,0 +1,1 @@
+Please suggest optimizations to improve its performance. For each suggestion, explain the expected improvement and any trade-offs.

@@ -22,7 +22,7 @@ async function syncVersions() {
     // Update src-tauri/Cargo.toml
     const cargoPath = path.join(__dirname, '../src-tauri/Cargo.toml');
     let cargoContent = await fs.readFile(cargoPath, 'utf-8');
-    cargoContent = cargoContent.replace(/^(version\s*=\s*)"[^"]+"/, `$1"${tauriVersion}"`);
+    cargoContent = cargoContent.replace(/^(\s*version\s*=\s*)"[^"]+"/m, `$1"${tauriVersion}"`);
     await fs.writeFile(cargoPath, cargoContent);
     console.log(`Updated ${path.basename(cargoPath)} to version ${tauriVersion}`);
 

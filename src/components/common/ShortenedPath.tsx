@@ -4,17 +4,20 @@ import { useTooltipStore } from "../../store/tooltipStore";
 interface ShortenedPathProps {
   path: string;
   className?: string;
+  mode?: "truncate-path" | "filename-only";
 }
 
 export const ShortenedPath = React.forwardRef<
   HTMLSpanElement,
   ShortenedPathProps
->(({ path, className }, ref) => {
+>(({ path, className, mode = "filename-only" }, ref) => {
   const { showTooltip, hideTooltip, updatePosition } = useTooltipStore();
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLSpanElement>) => {
-    // Show tooltip only if the text is actually truncated by overflow.
-    if (e.currentTarget.offsetWidth < e.currentTarget.scrollWidth) {
+    // For filename-only mode, always show the full path in tooltip.
+    // For truncate-path mode, show only if text is actually truncated.
+    const isTruncated = e.currentTarget.offsetWidth < e.currentTarget.scrollWidth;
+    if (mode === "filename-only" || isTruncated) {
       showTooltip(path, { x: e.clientX, y: e.clientY });
     }
   };
@@ -27,17 +30,24 @@ export const ShortenedPath = React.forwardRef<
     hideTooltip();
   };
 
+  const displayText =
+    mode === "filename-only" ? path.split(/[\\/]/).pop() || path : path;
+  
+  const style: React.CSSProperties =
+    mode === "truncate-path"
+      ? { direction: "rtl", textAlign: "left" }
+      : {};
+
   return (
     <span
       ref={ref}
       className={className}
-      // This combination of styles makes the browser truncate from the left.
-      style={{ direction: "rtl", textAlign: "left" }}
+      style={style}
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      {path}
+      {displayText}
     </span>
   );
 });

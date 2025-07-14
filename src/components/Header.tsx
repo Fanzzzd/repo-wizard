@@ -1,4 +1,12 @@
-import { Settings, X, DownloadCloud, RefreshCw } from "lucide-react";
+import {
+  Settings,
+  X,
+  RefreshCw,
+  CheckCircle,
+  DownloadCloud,
+  ArrowUpCircle,
+  AlertCircle,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useSettingsStore } from "../store/settingsStore";
 import { useUpdateStore } from "../store/updateStore";
@@ -7,37 +15,65 @@ import { Textarea } from "./common/Textarea";
 import { Checkbox } from "./common/Checkbox";
 import { Button } from "./common/Button";
 
-function UpdateStatusIndicator() {
-  const { status, install } = useUpdateStore();
+function VersionStatus() {
+  const { status, check, error } = useUpdateStore();
 
-  if (status === "downloading") {
-    return (
-      <div
-        className="flex items-center gap-2 text-sm text-gray-600 animate-pulse"
-        title="Downloading update..."
-      >
-        <DownloadCloud size={20} />
-        <span>Downloading...</span>
-      </div>
-    );
-  }
+  const isChecking = status === "pending" || status === "downloading";
 
-  if (status === "ready") {
-    return (
-      <Button
-        onClick={install}
-        variant="ghost"
-        size="sm"
-        className="font-semibold bg-green-100 text-green-700 hover:bg-green-200"
-        title="Relaunch to apply update"
-        leftIcon={<RefreshCw size={16} />}
-      >
-        Relaunch to Update
-      </Button>
-    );
-  }
+  const statusMap = {
+    idle: {
+      icon: <RefreshCw size={14} />,
+      text: `v${__APP_VERSION__}`,
+      style: "text-gray-600 hover:bg-gray-200",
+      title: "Check for updates",
+    },
+    pending: {
+      icon: <RefreshCw size={14} className="animate-spin" />,
+      text: "Checking...",
+      style: "text-gray-500 bg-gray-100",
+      title: "Checking for updates...",
+    },
+    "up-to-date": {
+      icon: <CheckCircle size={14} />,
+      text: "Up to date",
+      style: "text-green-700 bg-green-100",
+      title: `You are on the latest version: v${__APP_VERSION__}`,
+    },
+    downloading: {
+      icon: <DownloadCloud size={14} />,
+      text: "Downloading...",
+      style: "text-blue-700 bg-blue-100 animate-pulse",
+      title: "Downloading update...",
+    },
+    ready: {
+      icon: <ArrowUpCircle size={14} />,
+      text: "Update available",
+      style: "text-green-700 bg-green-100 hover:bg-green-200 font-semibold",
+      title: "An update is ready to install",
+    },
+    error: {
+      icon: <AlertCircle size={14} />,
+      text: "Update failed",
+      style: "text-red-700 bg-red-100 hover:bg-red-200",
+      title: `Error: ${error}`,
+    },
+  };
 
-  return null;
+  const currentStatus = statusMap[status];
+
+  return (
+    <Button
+      onClick={check}
+      disabled={isChecking}
+      variant="ghost"
+      size="sm"
+      className={`font-medium ${currentStatus.style}`}
+      title={currentStatus.title}
+      leftIcon={currentStatus.icon}
+    >
+      {currentStatus.text}
+    </Button>
+  );
 }
 
 export function Header() {
@@ -73,7 +109,7 @@ export function Header() {
     <header className="flex items-center justify-between p-2 border-b border-gray-200 bg-white flex-shrink-0">
       <h1 className="text-lg font-semibold text-gray-800">Repo Wizard</h1>
       <div className="flex items-center gap-4">
-        <UpdateStatusIndicator />
+        <VersionStatus />
         <div className="relative" ref={settingsPanelRef}>
           <button
             onClick={() => setIsSettingsOpen(!isSettingsOpen)}

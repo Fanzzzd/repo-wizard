@@ -37,8 +37,16 @@ jobs:
           node-version: 'lts/*'
           cache: 'pnpm'
 
-      - name: Install dependencies
+      - name: Install Node.js dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
 
       - name: Create Release
         id: semantic_release
@@ -51,7 +59,7 @@ jobs:
     needs: release
     if: needs.release.outputs.released == 'true'
     permissions:
-      contents: write # 允许 tauri-action 上传产物
+      contents: write
     strategy:
       fail-fast: false
       matrix:

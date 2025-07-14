@@ -1,4 +1,4 @@
-use crate::IgnoreSettings;
+use crate::commands::IgnoreSettings;
 use anyhow::{anyhow, Result};
 use ignore::overrides::OverrideBuilder;
 use ignore::WalkBuilder;
@@ -6,6 +6,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tokio::fs;
+use tokio::io::AsyncReadExt;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize)]
@@ -33,18 +34,17 @@ pub async fn list_directory_recursive(
 
     if !settings.custom_ignore_patterns.is_empty() {
         let mut override_builder = OverrideBuilder::new(root_path);
-        for pattern in settings.custom_ignore_patterns.lines() {
-            let trimmed = pattern.trim();
+        for line in settings.custom_ignore_patterns.lines() {
+            let trimmed = line.trim();
             if trimmed.is_empty() || trimmed.starts_with('#') {
                 continue;
             }
-
-            if let Some(unignored_pattern) = trimmed.strip_prefix('!') {
-                override_builder.add(unignored_pattern)?;
+            let git_pattern = if let Some(unignore_pattern) = trimmed.strip_prefix('!') {
+                unignore_pattern.to_string()
             } else {
-                let ignore_pattern = format!("!{}", trimmed);
-                override_builder.add(&ignore_pattern)?;
-            }
+                format!("!{}", trimmed)
+            };
+            override_builder.add(&git_pattern)?;
         }
         let overrides = override_builder.build()?;
         walk_builder.overrides(overrides);
@@ -130,7 +130,12 @@ pub async fn list_directory_recursive(
 }
 
 pub async fn read_file_content(path: &PathBuf) -> Result<String> {
-    fs::read_to_string(path).await.map_err(anyhow::Error::from)
+    let bytes = fs::read(path).await?;
+    Ok(String::from_utf8_lossy(&bytes).to_string())
+}
+
+pub async fn read_file_bytes(path: &PathBuf) -> Result<Vec<u8>> {
+    fs::read(path).await.map_err(anyhow::Error::from)
 }
 
 pub async fn write_file_content(path: &PathBuf, content: &str) -> Result<()> {
@@ -153,6 +158,21 @@ pub async fn move_file(from: &PathBuf, to: &PathBuf) -> Result<()> {
         }
     }
     fs::rename(from, to).await.map_err(anyhow::Error::from)
+}
+
+/// Checks if a file is likely binary by reading its first few bytes and looking for a null byte.
+pub async fn is_binary(path: &Path) -> Result<bool> {
+    let mut file = match fs::File::open(path).await {
+        Ok(f) => f,
+        // If we can't open it, it might be a broken symlink or permissions issue. Treat as non-text.
+        Err(_) => return Ok(true),
+    };
+    // Read up to the first 8000 bytes, a common heuristic for binary detection.
+    let mut buffer = [0; 8000];
+    let n = file.read(&mut buffer).await?;
+
+    // The presence of a null byte is a strong indicator of a binary file.
+    Ok(buffer[..n].contains(&0))
 }
 
 fn get_backup_root_dir() -> PathBuf {

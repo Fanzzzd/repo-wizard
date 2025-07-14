@@ -3,12 +3,27 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": [
-    "main"
+    "*"
   ],
   "permissions": [
     "core:default",
     "fs:default",
     "dialog:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "sh",
+          "cmd": "sh",
+          "args": true
+        },
+        {
+          "name": "cmd",
+          "cmd": "cmd",
+          "args": true
+        }
+      ]
+    },
     "shell:default",
     "log:default",
     "clipboard-manager:allow-clear",
@@ -18,6 +33,16 @@
     "clipboard-manager:allow-write-image",
     "clipboard-manager:allow-write-text",
     "updater:default",
-    "process:default"
+    "process:default",
+    "store:default",
+    "core:window:allow-set-title",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://github.com/Fanzzzd/repo-wizard/releases/latest/download/latest.json"
+        }
+      ]
+    }
   ]
 }

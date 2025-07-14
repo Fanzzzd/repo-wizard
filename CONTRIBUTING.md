@@ -2,9 +2,22 @@
 
 # Contributing to Repo Wizard
 
-First off, thank you for considering contributing to Repo Wizard! It's people like you that make open source great.
+First off, thank you for considering contributing! It's people like you that make open source great.
 
-### Development Workflow
+This project is a bit of a "rush job," born from a personal need and built quickly with a lot of help from AI. That means the contribution process isn't perfect, but your help can make it better!
+
+## Ways to Contribute
+
+There are many ways to help out:
+
+-   **Reporting Bugs**: This is incredibly helpful, especially if you're using **Windows or Linux**. Since the app is primarily developed on macOS, your bug reports for other platforms are invaluable. Please provide as much detail as possible in your issue.
+-   **Suggesting Features**: Have an idea to make Repo Wizard even better? Open an issue to start a discussion.
+-   **Improving the Code**: See some quirky, AI-generated code that could be refactored? Want to improve performance or fix a bug? Feel free to submit a Pull Request.
+-   **Improving Documentation**: If you find parts of the documentation unclear or incomplete, PRs are welcome!
+
+## Development Workflow
+
+If you'd like to submit a Pull Request, please follow these steps.
 
 1.  **Fork & Clone**: Fork the repository on GitHub and clone your fork locally.
 2.  **Branch**: All new features and fixes should be based on the `next` branch. Create your feature branch from `next` (`git checkout -b my-awesome-feature origin/next`).
@@ -15,9 +28,9 @@ First off, thank you for considering contributing to Repo Wizard! It's people li
     *   `docs:`, `style:`, `refactor:`, `perf:`, `test:`, `chore:` for other changes that don't affect the user-facing functionality.
     *   For a breaking change, include `BREAKING CHANGE: <description>` in the footer of your commit message. This will trigger a MAJOR release (`1.2.3` -> `2.0.0`).
 5.  **Push**: Push your feature branch to your fork.
-6.  **Pull Request**: Open a pull request from your feature branch to the `next` branch of the original repository. Ensure your PR has a clear title and description, and that all commits follow the convention.
+6.  **Pull Request**: Open a pull request from your feature branch to the `next` branch of the original repository. Ensure your PR has a clear title and description.
 
-### Release Workflow (for maintainers)
+## Release Workflow (for maintainers)
 
 Our release process is fully automated, based on a `main` and `next` branch strategy, and powered by [semantic-release](https://github.com/semantic-release/semantic-release).
 

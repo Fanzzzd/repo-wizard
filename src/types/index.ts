@@ -7,7 +7,10 @@ export interface FileNode {
   isDirectory: boolean;
 }
 
+export type ComposerMode = "edit" | "qa";
+export type PromptMode = "universal" | "edit" | "qa";
 export type EditFormat = "udiff" | "diff-fenced" | "whole";
+export type ReviewStatus = "pending" | "applied" | "error" | "identical";
 
 export type ChangeOperation =
   | { type: "modify"; filePath: string; diff: string; isNewFile: boolean }
@@ -16,9 +19,9 @@ export type ChangeOperation =
   | { type: "move"; fromPath: string; toPath: string };
 
 export interface ReviewChange {
-  id: string; // unique ID for each change
+  id: string;
   operation: ChangeOperation;
-  status: "pending" | "applied" | "error" | "identical";
+  status: ReviewStatus;
 }
 
 export const createReviewChange = (operation: ChangeOperation): ReviewChange => ({
@@ -27,10 +30,61 @@ export const createReviewChange = (operation: ChangeOperation): ReviewChange => 
   status: "pending",
 });
 
-export interface MetaPrompt {
+export type PromptType = "meta" | "magic";
+export type MagicPromptType = "file-tree" | "git-diff" | "terminal-command";
+
+export interface FileTreeConfig {
+  scope: "all" | "selected";
+  maxFilesPerDirectory: number | null;
+  ignorePatterns: string;
+}
+
+export interface GitDiffConfig {
+  type: "staged" | "unstaged" | "commit";
+  hash: string | null;
+}
+
+export interface TerminalCommandConfig {
+  command: string;
+}
+
+export interface MetaPromptDefinition {
   id: string;
   name: string;
   content: string;
-  enabled: boolean;
-  mode: "edit" | "qa" | "universal";
+  mode: PromptMode;
+  promptType: PromptType;
+  magicType?: MagicPromptType;
+  fileTreeConfig?: FileTreeConfig;
+  gitDiffConfig?: GitDiffConfig;
+  terminalCommandConfig?: TerminalCommandConfig;
 }
+
+// This is a transient type for UI, combining definition with project-specific 'enabled' status.
+export interface MetaPrompt extends MetaPromptDefinition {
+  enabled: boolean;
+}
+
+export interface PromptHistoryEntry {
+  id: string;
+  timestamp: number;
+  instructions: string;
+}
+
+export interface GitStatus {
+  hasStagedChanges: boolean;
+  hasUnstagedChanges: boolean;
+}
+
+export interface Commit {
+  hash: string;
+  message: string;
+  author: string;
+  date: string;
+}
+
+export type CommandStreamEvent =
+  | { type: "stdout"; data: number[] }
+  | { type: "stderr"; data: number[] }
+  | { type: "error"; data: string }
+  | { type: "finish"; data: string };

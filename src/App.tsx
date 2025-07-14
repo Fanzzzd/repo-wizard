@@ -1,9 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useCallback, useState } from "react";
+import { open } from "@tauri-apps/plugin-dialog";
+import { invoke } from "@tauri-apps/api/core";
+import {
+  Menu,
+  Submenu,
+  MenuItem,
+  PredefinedMenuItem,
+} from "@tauri-apps/api/menu";
+import { platform } from "@tauri-apps/plugin-os";
+
 import { Layout } from "./components/Layout";
 import { MainPanel } from "./components/MainPanel";
-import { useReviewStore } from "./store/reviewStore";
-import { useDialogStore } from "./store/dialogStore";
-import { useUpdateStore } from "./store/updateStore";
 import { ChangeList } from "./components/review/ChangeList";
 import { PromptComposer } from "./components/prompt/PromptComposer";
 import { TabbedPanel } from "./components/TabbedPanel";
@@ -13,51 +20,21 @@ import { WorkspaceSidebar } from "./components/workspace/WorkspaceSidebar";
 import { ModalDialog } from "./components/common/ModalDialog";
 import { Tooltip } from "./components/common/Tooltip";
 import { ContextMenu } from "./components/common/ContextMenu";
+import { useWorkspaceStore } from "./store/workspaceStore";
+import { useReviewStore } from "./store/reviewStore";
+import { useDialogStore } from "./store/dialogStore";
+import { useUpdateStore } from "./store/updateStore";
+import { useSettingsStore } from "./store/settingsStore";
+import { CommandRunnerModal } from "./components/common/CommandRunnerModal";
 
-/**
- * The root component of the application.
- * It orchestrates the main layout and switches between workspace and review modes.
- */
-function App() {
+declare global {
+  interface Window {
+    __RPO_WIZ_PROJECT_ROOT__?: string;
+  }
+}
+
+function ProjectView() {
   const { isReviewing } = useReviewStore();
-  const { open: openDialog } = useDialogStore();
-  const { status, updateInfo, install } = useUpdateStore();
-
-  useEffect(() => {
-    // Initiate update check on startup via the store
-    useUpdateStore.getState().check();
-  }, []);
-
-  useEffect(() => {
-    // React to the update status to show a dialog when the update is downloaded and ready.
-    const showUpdateDialog = async () => {
-      if (status === "ready" && updateInfo) {
-        const confirmed = await openDialog({
-          title: "Update Ready",
-          content: (
-            <div>
-              <p>A new version ({updateInfo.version}) has been downloaded. You are using {__APP_VERSION__}.</p>
-              <p className="mt-2 text-sm text-gray-500">Release Notes:</p>
-              <div className="mt-1 max-h-40 overflow-y-auto rounded-md border bg-gray-50 p-2 text-sm">
-                <pre className="whitespace-pre-wrap font-sans">
-                  {updateInfo.body ?? "No release notes available."}
-                </pre>
-              </div>
-              <p className="mt-4">Would you like to restart now to apply the update?</p>
-            </div>
-          ),
-          type: "confirm",
-          status: "info",
-          confirmText: "Relaunch Now",
-        });
-
-        if (confirmed) {
-          await install();
-        }
-      }
-    };
-    showUpdateDialog();
-  }, [status, updateInfo, openDialog, install]);
 
   const workspaceRightPanel = (
     <TabbedPanel
@@ -68,27 +45,270 @@ function App() {
     />
   );
 
-  // Dynamically set the layout panels based on the review state.
-  // - In review mode, the layout becomes a two-panel view: [ChangeList | DiffEditor].
-  // - In workspace mode, it's a three-panel view: [WorkspaceSidebar | CodeEditor | RightPanel].
   const leftPanel = isReviewing ? <ChangeList /> : <WorkspaceSidebar />;
   const rightPanel = isReviewing ? undefined : workspaceRightPanel;
+
+  return (
+    <Layout
+      leftPanel={leftPanel}
+      mainPanel={<MainPanel />}
+      rightPanel={rightPanel}
+    />
+  );
+}
+
+const WelcomeView = () => {
+  const workspaceRightPanel = (
+    <TabbedPanel
+      tabs={{
+        "Compose & Review": <PromptComposer />,
+        "Prompt History": <PromptHistoryPanel />,
+      }}
+    />
+  );
+
+  return (
+    <Layout
+      leftPanel={<WorkspaceSidebar />}
+      mainPanel={<MainPanel />}
+      rightPanel={workspaceRightPanel}
+    />
+  );
+};
+
+function App() {
+  const { isInitialized, setRootPath } = useWorkspaceStore();
+  const { open: openDialog } = useDialogStore();
+  const { status, updateInfo, install } = useUpdateStore();
+  const { recentProjects } = useSettingsStore();
+  const [fontSize, setFontSize] = useState(14);
+
+  useEffect(() => {
+    const handleZoom = (e: CustomEvent) => {
+      if (e.detail === "in") {
+        setFontSize((s) => Math.min(20, s + 1));
+      } else if (e.detail === "out") {
+        setFontSize((s) => Math.max(10, s - 1));
+      } else if (e.detail === "reset") {
+        setFontSize(14);
+      }
+    };
+
+    window.addEventListener("zoom", handleZoom as EventListener);
+    return () => {
+      window.removeEventListener("zoom", handleZoom as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontSize}px`;
+  }, [fontSize]);
+
+  const setupMenu = useCallback(async () => {
+    const osType = await platform();
+
+    const openRecentSubmenu =
+      recentProjects.length > 0
+        ? [
+            await Submenu.new({
+              text: "Open Recent",
+              items: await Promise.all(
+                recentProjects.map((path) =>
+                  MenuItem.new({
+                    text: path,
+                    action: () => invoke("open_project_window", { rootPath: path }),
+                  })
+                )
+              ),
+            }),
+          ]
+        : [];
+
+    const allMenuItems: (Submenu | MenuItem | PredefinedMenuItem)[] = [];
+
+    if (osType === "macos") {
+      const appMenu = await Submenu.new({
+        text: "Repo Wizard",
+        items: [
+          await MenuItem.new({
+            text: "About Repo Wizard",
+            action: () => {
+              openDialog({
+                title: `About Repo Wizard v${__APP_VERSION__}`,
+                content: "A code refactoring staging area to safely and efficiently apply LLM-suggested code changes.",
+                status: 'info',
+                type: 'alert'
+              })
+            },
+          }),
+          await PredefinedMenuItem.new({ item: "Separator" }),
+          await PredefinedMenuItem.new({ item: "Services" }),
+          await PredefinedMenuItem.new({ item: "Separator" }),
+          await PredefinedMenuItem.new({ item: "Hide", text: "Hide Repo Wizard" }),
+          await PredefinedMenuItem.new({ item: "HideOthers" }),
+          await PredefinedMenuItem.new({ item: "ShowAll" }),
+          await PredefinedMenuItem.new({ item: "Separator" }),
+          await PredefinedMenuItem.new({ item: "Quit", text: "Quit Repo Wizard" }),
+        ],
+      });
+      allMenuItems.push(appMenu);
+    }
+
+    const fileMenu = await Submenu.new({
+      text: "File",
+      items: [
+        await MenuItem.new({
+          text: "New Window",
+          accelerator: "CmdOrCtrl+N",
+          action: () => invoke("create_new_window"),
+        }),
+        await MenuItem.new({
+          text: "Open...",
+          accelerator: "CmdOrCtrl+O",
+          action: async () => {
+            const selected = await open({ directory: true });
+            if (typeof selected === "string") {
+              await useWorkspaceStore.getState().setRootPath(selected);
+            }
+          },
+        }),
+        ...openRecentSubmenu,
+        await PredefinedMenuItem.new({ item: "Separator" }),
+        await PredefinedMenuItem.new({
+          item: "CloseWindow",
+          text: "Close Window",
+        }),
+      ],
+    });
+    allMenuItems.push(fileMenu);
+
+    const editMenu = await Submenu.new({
+      text: "Edit",
+      items: [
+        await PredefinedMenuItem.new({ item: "Undo" }),
+        await PredefinedMenuItem.new({ item: "Redo" }),
+        await PredefinedMenuItem.new({ item: "Separator" }),
+        await PredefinedMenuItem.new({ item: "Cut" }),
+        await PredefinedMenuItem.new({ item: "Copy" }),
+        await PredefinedMenuItem.new({ item: "Paste" }),
+        await PredefinedMenuItem.new({ item: "SelectAll" }),
+      ],
+    });
+    allMenuItems.push(editMenu);
+
+    const viewMenu = await Submenu.new({
+      text: "View",
+      items: [
+        await MenuItem.new({
+          text: "Reload",
+          accelerator: "CmdOrCtrl+R",
+          action: () => window.location.reload(),
+        }),
+        await MenuItem.new({
+          text: "Force Reload",
+          accelerator: "CmdOrCtrl+Shift+R",
+          action: () => window.location.reload(),
+        }),
+        await PredefinedMenuItem.new({ item: "Separator" }),
+        await MenuItem.new({
+          text: "Zoom In",
+          accelerator: "CmdOrCtrl+=",
+          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'in' })),
+        }),
+        await MenuItem.new({
+          text: "Zoom Out",
+          accelerator: "CmdOrCtrl+-",
+          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'out' })),
+        }),
+        await MenuItem.new({
+          text: "Reset Zoom",
+          accelerator: "CmdOrCtrl+0",
+          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'reset' })),
+        }),
+      ],
+    });
+    allMenuItems.push(viewMenu);
+
+    const windowMenu = await Submenu.new({
+      text: "Window",
+      items: [
+        await PredefinedMenuItem.new({ item: "Minimize" }),
+        await PredefinedMenuItem.new({ item: "CloseWindow" }),
+        await PredefinedMenuItem.new({ item: "Separator" }),
+        await PredefinedMenuItem.new({ item: "Maximize" }),
+        await PredefinedMenuItem.new({ item: "Fullscreen" }),
+      ],
+    });
+    allMenuItems.push(windowMenu);
+
+    const menu = await Menu.new({
+      items: allMenuItems,
+    });
+    await menu.setAsAppMenu();
+  }, [recentProjects, openDialog]);
+
+  useEffect(() => {
+    const initializeApp = () => {
+      if (window.__RPO_WIZ_PROJECT_ROOT__) {
+        setRootPath(window.__RPO_WIZ_PROJECT_ROOT__);
+      }
+    };
+    initializeApp();
+  }, [setRootPath]);
+
+  useEffect(() => {
+    setupMenu();
+  }, [setupMenu]);
+
+  useEffect(() => {
+    const showUpdateDialog = async () => {
+      if (status === "ready" && updateInfo) {
+        const isDev = __APP_VERSION__.includes("-");
+        const confirmed = await openDialog({
+          title: isDev ? "Update Available" : "Update Ready",
+          content: (
+            <div>
+              <p>
+                A new version ({updateInfo.version}) is available. You are using{" "}
+                {__APP_VERSION__}.
+              </p>
+              <p className="mt-2 text-sm text-gray-500">Release Notes:</p>
+              <div className="mt-1 max-h-40 overflow-y-auto rounded-md border bg-gray-50 p-2 text-sm">
+                <pre className="whitespace-pre-wrap font-sans">
+                  {updateInfo.body || "No release notes available."}
+                </pre>
+              </div>
+              {!isDev && (
+                <p className="mt-4">
+                  Would you like to restart now to apply the update?
+                </p>
+              )}
+            </div>
+          ),
+          type: isDev ? "alert" : "confirm",
+          status: "info",
+          confirmText: "Relaunch Now",
+        });
+
+        if (confirmed && !isDev) {
+          await install();
+        }
+      }
+    };
+    showUpdateDialog();
+  }, [status, updateInfo, openDialog, install]);
 
   return (
     <div className="h-full w-full flex flex-col bg-gray-50">
       <Header />
       <div className="flex-grow min-h-0">
-        <Layout
-          leftPanel={leftPanel}
-          mainPanel={<MainPanel />}
-          rightPanel={rightPanel}
-        />
+        {isInitialized ? <ProjectView /> : <WelcomeView />}
       </div>
-      
-      {/* Global components that can be displayed as overlays. */}
+
       <ModalDialog />
       <Tooltip />
       <ContextMenu />
+      <CommandRunnerModal />
     </div>
   );
 }

@@ -1,13 +1,37 @@
-import type { EditFormat, MetaPrompt } from "../types";
+import type {
+  ComposerMode,
+  EditFormat,
+  MetaPrompt,
+  FileNode,
+  FileTreeConfig,
+} from "../types";
+import { getGitDiff } from "../services/tauriApi";
 
 interface File {
   path: string;
   content: string;
 }
 
+interface BuildPromptArgs {
+  files: File[];
+  instructions: string;
+  customSystemPrompt: string;
+  editFormat: EditFormat;
+  metaPrompts: MetaPrompt[];
+  composerMode: ComposerMode;
+  fileTree: FileNode | null;
+  rootPath: string | null;
+  options?: { dryRun?: boolean };
+}
+
+interface BuildPromptResult {
+  fullPrompt: string;
+  terminalCommandToRun: string | null;
+}
+
 const udiffFormattingRules = `# File editing rules:
 
-Return edits similar to unified diffs that \`diff -U0\` would produce.
+Return edits in fenced \`\`\`udiff code blocks.
 
 Make sure you include the first 2 lines with the file paths.
 Don't include timestamps with the file paths.
@@ -45,66 +69,33 @@ MOVE path/from/old.ext TO path/to/new.ext
 
 const diffFencedFormattingRules = `# File editing rules:
 
-Return edits in search/replace blocks. Each block must be in a fenced code block, starting with the file path on the first line.
+Return edits in search/replace blocks. Each set of changes for a file must be in a fenced code block, preceded by a \`MODIFY\` command with the file path.
 
-path/to/file.py
+**To modify an existing file with one or more changes:**
+MODIFY path/to/file.py
 \`\`\`
 <<<<<<< SEARCH
-// original code to be replaced
+// original code to be replaced in the first location
 =======
 // new code to replace the original
 >>>>>>> REPLACE
-\`\`\`
-
-When generating SEARCH/REPLACE blocks, the SEARCH block must contain only the exact, original lines of code to be replaced. Do not include +, -, @@, or any diff-like syntax in the SEARCH block; it must be a literal copy of the existing code section.
-
-### Example 1: Single Line Change
-
-**CORRECT:**
-path/to/file.py
-\`\`\`
 <<<<<<< SEARCH
-old_variable = 10
+// original code to be replaced in a second location
 =======
-new_variable = 20
+// new code to replace it
 >>>>>>> REPLACE
 \`\`\`
 
-**INCORRECT:**
-path/to/file.py
-\`\`\`
-<<<<<<< SEARCH
--old_variable = 10
-+new_variable = 20
-=======
-new_variable = 20
->>>>>>> REPLACE
-\`\`\`
-
-### Example 2: Changing Indentation/Structure
-
-**CORRECT:** (The SEARCH block is the literal original, even with 'wrong' indentation)
-path/to/file.py
-\`\`\`
-<<<<<<< SEARCH
-  value = calculate_value()
-if value > 100:
-    process_high_value(value)
-=======
-  value = calculate_value()
-  if value > 100:
-      process_high_value(value) // Indentation fixed
->>>>>>> REPLACE
-\`\`\`
-
-To make a new file, use a search/replace block where the SEARCH block is empty.
-path/to/new_file.ext
+**To create a new file:**
+MODIFY path/to/new_file.ext
 \`\`\`
 <<<<<<< SEARCH
 =======
 // content of the new file
 >>>>>>> REPLACE
 \`\`\`
+
+When using SEARCH/REPLACE, the SEARCH block must contain only the exact, original lines of code.
 
 To delete a file, output a single line:
 DELETE path/to/file.ext
@@ -115,19 +106,18 @@ MOVE path/from/old.ext TO path/to/new.ext
 
 const wholeFileFormattingRules = `# File editing rules:
 
-For each file you need to modify, output the complete, updated content of the file within a fenced code block.
-The file path must be on the line immediately preceding the code block.
+For each file you need to modify, use a command (\`CREATE\` for new files, \`REWRITE\` for existing files) followed by the file path, and then the complete, updated content of the file within a fenced code block.
 
-path/to/file.py
+**To create a new file:**
+CREATE path/to/new_file.py
 \`\`\`python
-// full updated content of file.py
-// ...
+// this file does not exist, it's just an example file to show you the response format
 \`\`\`
 
-To create a new file, follow the same format. Provide the full content for the new file.
-path/to/new_file.ext
-\`\`\`
-// content of the new file
+**To modify an existing file:**
+REWRITE path/to/existing_file.py
+\`\`\`python
+// this file does not exist, it's just an example file to show you the response format
 \`\`\`
 
 To delete a file, output a single line:
@@ -143,15 +133,111 @@ const formattingRulesMap = {
   whole: wholeFileFormattingRules,
 };
 
-export const buildPrompt = (
-  files: File[],
-  instructions: string,
-  customSystemPrompt: string,
-  editFormat: EditFormat,
-  metaPrompts: MetaPrompt[],
-  composerMode: "edit" | "qa"
-): string => {
+const parseIgnorePatterns = (patternsStr: string) => {
+  const patterns = patternsStr.split(",").map((p) => p.trim()).filter(Boolean);
+  const filePatterns: ((name: string) => boolean)[] = [];
+  const dirPatterns: ((name: string) => boolean)[] = [];
+
+  patterns.forEach((pattern) => {
+    if (pattern.endsWith("/")) {
+      const dirName = pattern.slice(0, -1);
+      dirPatterns.push((name) => name === dirName);
+    } else if (pattern.startsWith("*.")) {
+      const extension = pattern.slice(1);
+      filePatterns.push((name) => name.endsWith(extension));
+    } else {
+      const matchFn = (name: string) => name === pattern;
+      filePatterns.push(matchFn);
+      dirPatterns.push(matchFn);
+    }
+  });
+
+  return (node: FileNode) => {
+    const patternsToCheck = node.isDirectory ? dirPatterns : filePatterns;
+    return patternsToCheck.some((p) => p(node.name));
+  };
+};
+
+const formatFileTree = (node: FileNode, config?: FileTreeConfig): string => {
+  let result = `${node.name}\n`;
+  const isIgnoredFn = config?.ignorePatterns
+    ? parseIgnorePatterns(config.ignorePatterns)
+    : () => false;
+
+  const buildTree = (children: FileNode[], prefix: string) => {
+    let childrenToDisplay = children.filter((child) => !isIgnoredFn(child));
+
+    const maxFiles = config?.maxFilesPerDirectory;
+    if (
+      typeof maxFiles === "number" &&
+      maxFiles >= 0 &&
+      childrenToDisplay.length > maxFiles
+    ) {
+      const truncated = childrenToDisplay.slice(0, maxFiles);
+      const ellipsisNode: FileNode = {
+        name: "...",
+        path: "",
+        isDirectory: false,
+        children: [],
+      };
+      childrenToDisplay = [...truncated, ellipsisNode];
+    }
+
+    childrenToDisplay.forEach((child, index) => {
+      const isLast = index === childrenToDisplay.length - 1;
+      result += `${prefix}${isLast ? "└── " : "├── "}${child.name}\n`;
+      if (child.children && child.name !== "...") {
+        buildTree(child.children, `${prefix}${isLast ? "    " : "│   "}`);
+      }
+    });
+  };
+
+  if (node.children) {
+    buildTree(node.children, "");
+  }
+  return result;
+};
+
+const filterFileTreeBySelection = (
+  node: FileNode,
+  selectedPaths: Set<string>,
+  rootPath: string
+): FileNode | null => {
+  const nodeRelativePath = node.path.startsWith(rootPath)
+    ? node.path.substring(rootPath.length + 1).replace(/\\/g, "/")
+    : node.path.replace(/\\/g, "/");
+
+  if (selectedPaths.has(nodeRelativePath)) {
+    return { ...node, children: undefined };
+  }
+
+  if (node.isDirectory && node.children) {
+    const newChildren = node.children
+      .map((child) => filterFileTreeBySelection(child, selectedPaths, rootPath))
+      .filter((c): c is FileNode => c !== null);
+
+    if (newChildren.length > 0) {
+      return { ...node, children: newChildren };
+    }
+  }
+
+  return null;
+};
+
+export const buildPrompt = async ({
+  files,
+  instructions,
+  customSystemPrompt,
+  editFormat,
+  metaPrompts,
+  composerMode,
+  fileTree,
+  rootPath,
+  options: _options,
+}: BuildPromptArgs): Promise<BuildPromptResult> => {
+  const options = { dryRun: false, ..._options };
   let prompt = "";
+  let terminalCommandToRun: string | null = null;
 
   if (customSystemPrompt) {
     prompt += `--- BEGIN SYSTEM PROMPT ---\n`;
@@ -162,12 +248,86 @@ export const buildPrompt = (
   const enabledMetaPrompts = metaPrompts.filter(
     (p) => p.enabled && (p.mode === composerMode || p.mode === "universal")
   );
+
   if (enabledMetaPrompts.length > 0) {
     prompt +=
       "In addition to my instructions, you must also follow the rules in these blocks:\n\n";
+
     for (const metaPrompt of enabledMetaPrompts) {
+      let content = metaPrompt.content;
+
+      if (metaPrompt.promptType === "magic" && rootPath) {
+        if (
+          metaPrompt.magicType === "file-tree" &&
+          metaPrompt.fileTreeConfig
+        ) {
+          let treeToRender = fileTree;
+          if (
+            metaPrompt.fileTreeConfig?.scope === "selected" &&
+            rootPath &&
+            fileTree
+          ) {
+            const selectedRelativePaths = new Set(files.map((f) => f.path));
+            treeToRender = filterFileTreeBySelection(
+              fileTree,
+              selectedRelativePaths,
+              rootPath
+            );
+          }
+          const fileTreeString = treeToRender
+            ? formatFileTree(treeToRender, metaPrompt.fileTreeConfig)
+            : "No project is open or no files selected.";
+          content = content.replace("{FILE_TREE_CONTENT}", fileTreeString);
+        } else if (
+          metaPrompt.magicType === "git-diff" &&
+          metaPrompt.gitDiffConfig
+        ) {
+          if (!options.dryRun) {
+            try {
+              const diff = await getGitDiff(rootPath, metaPrompt.gitDiffConfig);
+              content = content.replace(
+                "{GIT_DIFF_CONTENT}",
+                diff || "No changes found."
+              );
+            } catch (e) {
+              content = content.replace(
+                "{GIT_DIFF_CONTENT}",
+                `Error getting git diff: ${e}`
+              );
+            }
+          } else {
+            content = content.replace(
+              "{GIT_DIFF_CONTENT}",
+              "[Git diff output will be included here during prompt generation]"
+            );
+          }
+        } else if (
+          metaPrompt.magicType === "terminal-command" &&
+          metaPrompt.terminalCommandConfig
+        ) {
+          const commandToRun = metaPrompt.terminalCommandConfig.command;
+          if (commandToRun) {
+             if (options.dryRun) {
+                 content = content.replace(
+                    "{TERMINAL_COMMAND_OUTPUT}",
+                    `[Output of '${commandToRun}' will be captured from an interactive terminal and inserted here.]`
+                  );
+            } else {
+                terminalCommandToRun = commandToRun;
+                // Leave the placeholder in place, it will be filled in by the caller
+                // after the terminal interaction is complete.
+            }
+          } else {
+            content = content.replace(
+              "{TERMINAL_COMMAND_OUTPUT}",
+              "No command specified in meta-prompt configuration."
+            );
+          }
+        }
+      }
+
       prompt += `--- BEGIN META PROMPT: "${metaPrompt.name}" ---\n`;
-      prompt += metaPrompt.content;
+      prompt += content;
       prompt += `\n--- END META PROMPT: "${metaPrompt.name}" ---\n\n`;
     }
   }
@@ -193,5 +353,5 @@ export const buildPrompt = (
     prompt += `\n\n**IMPORTANT** IF MAKING FILE CHANGES, YOU MUST USE THE FILE EDITING FORMATS PROVIDED ABOVE – IT IS THE ONLY WAY FOR YOUR CHANGES TO BE APPLIED.`;
   }
 
-  return prompt;
+  return { fullPrompt: prompt, terminalCommandToRun };
 };
