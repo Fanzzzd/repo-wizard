@@ -1,3 +1,11 @@
+# [1.5.0-next.10](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.9...app-v1.5.0-next.10) (2025-07-14)
+
+
+### Features
+
+* **PromptHistoryPanel:** add detail modal and instruction preview functionality ([3164183](https://github.com/Fanzzzd/repo-wizard/commit/31641833cdbd52eaf0f3ca29251ace5a5a1b65bf))
+* **RecentProjects:** enhance recent projects management with removal functionality ([9c124d9](https://github.com/Fanzzzd/repo-wizard/commit/9c124d9a7a2ca04e03a9d2b08a652126f55a2cf3))
+
 # [1.5.0-next.9](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0-next.8...app-v1.5.0-next.9) (2025-07-11)
 
 
