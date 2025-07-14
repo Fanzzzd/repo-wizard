@@ -5,6 +5,7 @@ mod error;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_process::init())
@@ -37,10 +38,12 @@ pub fn run() {
             commands::get_git_status,
             commands::get_recent_commits,
             commands::get_git_diff,
+            commands::resolve_path,
             commands::start_pty_session,
             commands::resize_pty,
             commands::write_to_pty,
-            commands::kill_pty
+            commands::kill_pty,
+            commands::get_cli_status
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

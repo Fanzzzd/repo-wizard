@@ -43,6 +43,18 @@
       "endpoints": [
         "https://github.com/Fanzzzd/repo-wizard/releases/latest/download/latest.json"
       ]
+    },
+    "cli": {
+      "description": "Repo Wizard CLI.",
+      "longDescription": "Use Repo Wizard from the command line.",
+      "args": [
+        {
+          "name": "path",
+          "index": 1,
+          "takesValue": true,
+          "description": "Path to the project to open. If '.', opens the current directory."
+        }
+      ]
     }
   }
 }

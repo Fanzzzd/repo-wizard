@@ -8,6 +8,7 @@ import {
   PredefinedMenuItem,
 } from "@tauri-apps/api/menu";
 import { platform } from "@tauri-apps/plugin-os";
+import { getMatches } from "@tauri-apps/plugin-cli";
 
 import { Layout } from "./components/Layout";
 import { MainPanel } from "./components/MainPanel";
@@ -248,9 +249,24 @@ function App() {
   }, [recentProjects, openDialog]);
 
   useEffect(() => {
-    const initializeApp = () => {
+    const initializeApp = async () => {
       if (window.__RPO_WIZ_PROJECT_ROOT__) {
         setRootPath(window.__RPO_WIZ_PROJECT_ROOT__);
+        return;
+      }
+
+      try {
+        const matches = await getMatches();
+        const pathArg = matches.args.path?.value;
+
+        if (typeof pathArg === "string" && pathArg) {
+          const absolutePath = await invoke<string>("resolve_path", {
+            path: pathArg,
+          });
+          await setRootPath(absolutePath);
+        }
+      } catch (e) {
+        console.warn("Could not process CLI arguments:", e);
       }
     };
     initializeApp();

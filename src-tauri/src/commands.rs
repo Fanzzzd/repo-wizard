@@ -1,5 +1,5 @@
-use crate::core::{fs_utils, git_utils, parser, patcher, path_utils, pty_utils};
 use crate::core::pty_utils::CommandStreamPayload;
+use crate::core::{cli_utils, fs_utils, git_utils, parser, patcher, path_utils, pty_utils};
 use crate::error::Result;
 use base64::{engine::general_purpose, Engine as _};
 use serde::Deserialize;
@@ -164,10 +164,7 @@ pub async fn get_git_status(repo_path: String) -> Result<git_utils::GitStatus> {
 }
 
 #[tauri::command]
-pub async fn get_recent_commits(
-    repo_path: String,
-    count: u32,
-) -> Result<Vec<git_utils::Commit>> {
+pub async fn get_recent_commits(repo_path: String, count: u32) -> Result<Vec<git_utils::Commit>> {
     Ok(git_utils::get_recent_commits(
         &PathBuf::from(repo_path),
         count,
@@ -175,11 +172,13 @@ pub async fn get_recent_commits(
 }
 
 #[tauri::command]
-pub async fn get_git_diff(
-    repo_path: String,
-    option: git_utils::DiffOption,
-) -> Result<String> {
+pub async fn get_git_diff(repo_path: String, option: git_utils::DiffOption) -> Result<String> {
     Ok(git_utils::get_git_diff(&PathBuf::from(repo_path), option)?)
+}
+
+#[tauri::command]
+pub async fn resolve_path(path: String) -> Result<String> {
+    Ok(path_utils::resolve_path(&path)?)
 }
 
 #[tauri::command]
@@ -208,4 +207,9 @@ pub async fn write_to_pty(text: String) -> Result<()> {
 pub async fn kill_pty() -> Result<()> {
     pty_utils::kill_pty()?;
     Ok(())
+}
+
+#[tauri::command]
+pub async fn get_cli_status() -> Result<cli_utils::CliStatusResult> {
+    Ok(cli_utils::get_cli_status())
 }

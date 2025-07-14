@@ -88,3 +88,10 @@ export type CommandStreamEvent =
   | { type: "stderr"; data: number[] }
   | { type: "error"; data: string }
   | { type: "finish"; data: string };
+
+export interface CliStatusResult {
+  status: "installed" | "not_installed" | "error" | "checking";
+  executablePath: string;
+  executableDir: string;
+  error?: string;
+}

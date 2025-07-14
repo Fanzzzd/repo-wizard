@@ -6,6 +6,7 @@ import type {
   Commit,
   GitDiffConfig,
   CommandStreamEvent,
+  CliStatusResult,
 } from "../types";
 import { AppError } from "../lib/error";
 
@@ -238,5 +239,13 @@ export const killPty = async (): Promise<void> => {
     await invoke("kill_pty");
   } catch (err) {
     console.warn("Failed to kill PTY:", err);
+  }
+};
+
+export const getCliStatus = async (): Promise<CliStatusResult> => {
+  try {
+    return await invoke("get_cli_status");
+  } catch (err) {
+    throw new AppError("Failed to check CLI status", err);
   }
 };

@@ -40,8 +40,7 @@ lazy_static! {
         Regex::new(r"(?s)<<<<<<< SEARCH\r?\n(.*?)\r?\n=======\r?\n(.*?)\r?\n>>>>>>> REPLACE")
             .unwrap();
     static ref UDIFF_HEADER_RE: Regex =
-        Regex::new(r"(?m)^--- (?:a/(.+?)|(/dev/null)|(.+?))\r?\n\+\+\+ (?:b/)?(.+?)\r?\n")
-            .unwrap();
+        Regex::new(r"(?m)^--- (?:a/(.+?)|(/dev/null)|(.+?))\r?\n\+\+\+ (?:b/)?(.+?)\r?\n").unwrap();
 }
 
 fn sanitize_path(path: &str) -> String {
@@ -95,14 +94,14 @@ impl<'a> Parser<'a> {
                 let args = caps.get(2).unwrap().as_str().trim().to_string();
 
                 if command == "DELETE" || command == "MOVE" {
-                     self.process_command_block(&command, &args, "");
+                    self.process_command_block(&command, &args, "");
                 } else {
                     last_command = Some((command, args));
                 }
             }
         }
     }
-     fn process_command_block(&mut self, command: &str, args: &str, content: &str) {
+    fn process_command_block(&mut self, command: &str, args: &str, content: &str) {
         match command {
             "DELETE" => self.operations.push(ChangeOperation::Delete {
                 file_path: sanitize_path(args),
@@ -148,7 +147,6 @@ impl<'a> Parser<'a> {
             _ => {}
         }
     }
-
 
     fn parse_udiff_blocks(&mut self) {
         let re = Regex::new(r"```udiff\s*([\s\S]*?)```").unwrap();
