@@ -30,6 +30,7 @@ interface SettingsState {
   setMetaPrompts: (prompts: MetaPromptDefinition[]) => void;
   setAutoReviewOnPaste: (value: boolean) => void;
   addRecentProject: (path: string) => void;
+  removeRecentProject: (path: string) => void;
 
   // Internal
   _isInitialized: boolean;
@@ -107,6 +108,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
         const newRecentProjects = [path, ...otherProjects].slice(0, 20); // Keep last 20
         return { recentProjects: newRecentProjects };
       }),
+    removeRecentProject: (path) =>
+      set((state) => ({
+        recentProjects: state.recentProjects.filter((p) => p !== path),
+      })),
   };
 });
 

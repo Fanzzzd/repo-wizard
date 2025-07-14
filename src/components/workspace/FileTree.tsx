@@ -191,8 +191,12 @@ export function FileTree() {
     closeProject,
     loadFileTree,
   } = useWorkspaceStore();
-  const { respectGitignore, customIgnorePatterns, recentProjects } =
-    useSettingsStore();
+  const {
+    respectGitignore,
+    customIgnorePatterns,
+    recentProjects,
+    removeRecentProject,
+  } = useSettingsStore();
   const [isRecentProjectsModalOpen, setIsRecentProjectsModalOpen] =
     useState(false);
 
@@ -229,24 +233,36 @@ export function FileTree() {
               <ul className="space-y-1">
                 {recentProjects.map((path) => (
                   <li key={path}>
-                    <button
+                    <div
                       onClick={() => setRootPath(path)}
-                      className="w-full text-left p-2 rounded-md hover:bg-gray-200 text-gray-700 hover:text-gray-900 transition-colors flex items-center gap-2"
+                      className="group w-full text-left p-2 rounded-md hover:bg-gray-200 text-gray-700 hover:text-gray-900 transition-colors flex items-center justify-between gap-2 cursor-pointer"
                       title={path}
                     >
-                      <Folder
-                        size={18}
-                        className="text-yellow-600 flex-shrink-0"
-                      />
-                      <div className="flex-grow overflow-hidden">
-                        <div className="font-semibold text-sm truncate">
-                          {path.split(/[\\/]/).pop()}
-                        </div>
-                        <div className="text-xs text-gray-500 truncate">
-                          {path}
+                      <div className="flex items-center gap-2 flex-grow overflow-hidden">
+                        <Folder
+                          size={18}
+                          className="text-yellow-600 flex-shrink-0"
+                        />
+                        <div className="flex-grow overflow-hidden">
+                          <div className="font-semibold text-sm truncate">
+                            {path.split(/[\\/]/).pop()}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {path}
+                          </div>
                         </div>
                       </div>
-                    </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeRecentProject(path);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 p-1 rounded-full flex-shrink-0"
+                        title="Remove from recent projects"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
