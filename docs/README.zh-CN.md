@@ -2,7 +2,7 @@
 
 <div align="center">
   <img src="assets/banner.png" alt="Repo Wizard Logo">
-  <h1>Repo Wizard (代码巫师)</h1>
+  <h1>Repo Wizard</h1>
 </div>
 
 <div align="center">
@@ -32,11 +32,11 @@
 </div>
 <br>
 
-厌倦了在应用大语言模型（LLM）建议的代码变更时，那种繁琐、枯燥的复制粘贴？Repo Wizard 就是你的**代码重构暂存区**，旨在安全、高效地填补 AI 建议与本地代码库之间的鸿沟。
+在应用AI生成的代码变更时，传统的手动复制粘贴方式往往效率低下且容易出错。Repo Wizard作为专业的AI编程助手，能够安全高效地实现AI建议与本地代码库的无缝对接。
 
-它能助你将大语言模型（如 GPT-4, Claude, Gemini 等）建议的复杂、跨文件的代码变更，以完全可控、可审查的方式应用到项目中。
+它能助你使用任何语言模型，将建议的复杂、跨文件的代码变更，以完全可控、可审查的方式应用到项目中。
 
-## 为什么选择 Repo Wizard？“人在回路”的哲学
+## 为什么选择 Repo Wizard？而不是AI Agent
 
 与那些如同黑盒的全自动 AI 代理不同，Repo Wizard 将控制权牢牢交还给你。Repo Wizard 信奉 Human-in-the-Loop的哲学，掌控权应该交给用户而不是 AI。
 

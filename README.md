@@ -32,11 +32,11 @@ You can download the latest version for macOS, Windows, and Linux from the GitHu
 </div>
 <br>
 
-Tired of the tedious copy-paste dance when applying LLM-suggested code changes? Repo Wizard is your **code refactoring staging area**, designed to bridge the gap between AI suggestions and your local codebase safely and efficiently.
+Tired of the tedious and error-prone copy-paste dance when applying AI-generated code changes? Repo Wizard is your professional AI programming assistant, designed to safely and efficiently bridge the gap between AI suggestions and your local codebase.
 
-It helps you apply complex, multi-file code changes suggested by Large Language Models (like GPT-4, Claude, Gemini, etc.) with full control and reviewability.
+It helps you use any language model to apply complex, multi-file code changes to your project in a fully controllable and reviewable way.
 
-## Why Repo Wizard? The Human-in-the-Loop Philosophy
+## Why Repo Wizard? Beyond Autonomous AI Agents
 
 Unlike fully autonomous AI agents that can feel like a black box, Repo Wizard puts you firmly in the driver's seat. It embraces a **human-in-the-loop** philosophy where control belongs to the user, not the AI.
 
