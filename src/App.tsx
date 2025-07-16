@@ -49,7 +49,6 @@ function App() {
   const [fontSize, setFontSize] = useState(14);
 
   useEffect(() => {
-    // Listen for args from a new instance.
     const unlisten = listen<SingleInstancePayload>("single-instance", (event) => {
       const { args: argv, cwd } = event.payload;
       if (argv.length > 1 && argv[1]) {
@@ -185,17 +184,6 @@ function App() {
       text: "View",
       items: [
         await MenuItem.new({
-          text: "Reload",
-          accelerator: "CmdOrCtrl+R",
-          action: () => window.location.reload(),
-        }),
-        await MenuItem.new({
-          text: "Force Reload",
-          accelerator: "CmdOrCtrl+Shift+R",
-          action: () => window.location.reload(),
-        }),
-        await PredefinedMenuItem.new({ item: "Separator" }),
-        await MenuItem.new({
           text: "Zoom In",
           accelerator: "CmdOrCtrl+=",
           action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'in' })),
@@ -234,13 +222,11 @@ function App() {
 
   useEffect(() => {
     const initializeApp = async () => {
-      // For windows created by `open_project_window`
       if (window.__RPO_WIZ_PROJECT_ROOT__) {
         await setRootPath(window.__RPO_WIZ_PROJECT_ROOT__);
         return;
       }
 
-      // For the first instance launched from CLI
       try {
         const matches = await getMatches();
         const pathArg = matches.args.path?.value;
