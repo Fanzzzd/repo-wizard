@@ -1,7 +1,6 @@
 use crate::commands::IgnoreSettings;
 use anyhow::{anyhow, Result};
-use ignore::overrides::OverrideBuilder;
-use ignore::WalkBuilder;
+use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -34,17 +33,19 @@ pub async fn list_directory_recursive(
 
     if !settings.custom_ignore_patterns.is_empty() {
         let mut override_builder = OverrideBuilder::new(root_path);
-        for line in settings.custom_ignore_patterns.lines() {
-            let trimmed = line.trim();
-            if trimmed.is_empty() || trimmed.starts_with('#') {
-                continue;
+        // Important, the `ignore` crate uses a different logic for custom ignore patterns.
+        // Standard gitignore: `foo` ignores, `!foo` whitelists.
+        // OverrideBuilder: `!foo` ignores, `foo` whitelists.
+        for pattern in settings.custom_ignore_patterns.lines() {
+            let trimmed = pattern.trim();
+            if !trimmed.is_empty() && !trimmed.starts_with('#') {
+                let pattern_to_add = if let Some(unignored_pattern) = trimmed.strip_prefix('!') {
+                    unignored_pattern.to_string()
+                } else {
+                    format!("!{}", trimmed)
+                };
+                override_builder.add(&pattern_to_add)?;
             }
-            let git_pattern = if let Some(unignore_pattern) = trimmed.strip_prefix('!') {
-                unignore_pattern.to_string()
-            } else {
-                format!("!{}", trimmed)
-            };
-            override_builder.add(&git_pattern)?;
         }
         let overrides = override_builder.build()?;
         walk_builder.overrides(overrides);
