@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useMemo } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -285,17 +285,19 @@ function App() {
     showUpdateDialog();
   }, [status, updateInfo, openDialog, install]);
 
-  const workspaceRightPanel = (
-    <TabbedPanel
-      tabs={{
-        "Compose & Review": <PromptComposer />,
-        "Prompt History": <PromptHistoryPanel />,
-      }}
-    />
+  const workspaceRightPanel = useMemo(
+    () => (
+      <TabbedPanel
+        tabs={{
+          "Compose & Review": <PromptComposer />,
+          "Prompt History": <PromptHistoryPanel />,
+        }}
+      />
+    ),
+    []
   );
 
   const leftPanel = isReviewing ? <ChangeList /> : <WorkspaceSidebar />;
-  const rightPanel = isReviewing ? undefined : workspaceRightPanel;
 
   return (
     <div className="h-full w-full flex flex-col bg-gray-50">
@@ -304,7 +306,7 @@ function App() {
         <Layout
           leftPanel={leftPanel}
           mainPanel={<MainPanel />}
-          rightPanel={rightPanel}
+          rightPanel={workspaceRightPanel}
         />
       </div>
 
