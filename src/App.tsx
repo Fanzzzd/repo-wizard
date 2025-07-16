@@ -40,51 +40,9 @@ interface SingleInstancePayload {
   cwd: string;
 }
 
-function ProjectView() {
-  const { isReviewing } = useReviewStore();
-
-  const workspaceRightPanel = (
-    <TabbedPanel
-      tabs={{
-        "Compose & Review": <PromptComposer />,
-        "Prompt History": <PromptHistoryPanel />,
-      }}
-    />
-  );
-
-  const leftPanel = isReviewing ? <ChangeList /> : <WorkspaceSidebar />;
-  const rightPanel = isReviewing ? undefined : workspaceRightPanel;
-
-  return (
-    <Layout
-      leftPanel={leftPanel}
-      mainPanel={<MainPanel />}
-      rightPanel={rightPanel}
-    />
-  );
-}
-
-const WelcomeView = () => {
-  const workspaceRightPanel = (
-    <TabbedPanel
-      tabs={{
-        "Compose & Review": <PromptComposer />,
-        "Prompt History": <PromptHistoryPanel />,
-      }}
-    />
-  );
-
-  return (
-    <Layout
-      leftPanel={<WorkspaceSidebar />}
-      mainPanel={<MainPanel />}
-      rightPanel={workspaceRightPanel}
-    />
-  );
-};
-
 function App() {
-  const { isInitialized, setRootPath } = useWorkspaceStore();
+  const { setRootPath } = useWorkspaceStore();
+  const { isReviewing } = useReviewStore();
   const { open: openDialog } = useDialogStore();
   const { status, updateInfo, install } = useUpdateStore();
   const { recentProjects } = useSettingsStore();
@@ -341,11 +299,27 @@ function App() {
     showUpdateDialog();
   }, [status, updateInfo, openDialog, install]);
 
+  const workspaceRightPanel = (
+    <TabbedPanel
+      tabs={{
+        "Compose & Review": <PromptComposer />,
+        "Prompt History": <PromptHistoryPanel />,
+      }}
+    />
+  );
+
+  const leftPanel = isReviewing ? <ChangeList /> : <WorkspaceSidebar />;
+  const rightPanel = isReviewing ? undefined : workspaceRightPanel;
+
   return (
     <div className="h-full w-full flex flex-col bg-gray-50">
       <Header />
       <div className="flex-grow min-h-0">
-        {isInitialized ? <ProjectView /> : <WelcomeView />}
+        <Layout
+          leftPanel={leftPanel}
+          mainPanel={<MainPanel />}
+          rightPanel={rightPanel}
+        />
       </div>
 
       <ModalDialog />
