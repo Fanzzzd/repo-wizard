@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { PromptHistoryEntry } from "../types";
+import { useSettingsStore } from "./settingsStore";
 
 interface HistoryState {
   promptHistory: PromptHistoryEntry[];
@@ -27,16 +28,31 @@ export const useHistoryStore = create<HistoryState>((set) => ({
   ...initialState,
   addPromptToHistory: (instructions: string) => {
     if (!instructions.trim()) return;
-    set((state) => ({
-      promptHistory: [
-        {
+
+    const { promptHistoryLimit } = useSettingsStore.getState();
+
+    set((state) => {
+      const history = [...state.promptHistory];
+      const existingIndex = history.findIndex(
+        (p) => p.instructions === instructions
+      );
+
+      if (existingIndex > -1) {
+        const [entryToMove] = history.splice(existingIndex, 1);
+        entryToMove.timestamp = Date.now();
+        history.unshift(entryToMove);
+      } else {
+        history.unshift({
           id: window.crypto.randomUUID(),
           timestamp: Date.now(),
           instructions,
-        },
-        ...state.promptHistory,
-      ].slice(0, 50),
-    }));
+        });
+      }
+
+      return {
+        promptHistory: history.slice(0, promptHistoryLimit),
+      };
+    });
   },
   clearPromptHistory: () => set({ promptHistory: [] }),
   updatePromptHistoryEntry: (id, newInstructions) => {

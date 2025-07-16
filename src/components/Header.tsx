@@ -21,6 +21,7 @@ import { Button } from "./common/Button";
 import { getCliStatus, installCliShim } from "../services/tauriApi";
 import type { CliStatusResult } from "../types";
 import { showErrorDialog } from "../lib/errorHandler";
+import { Input } from "./common/Input";
 
 function VersionStatus() {
   const { status, check, error } = useUpdateStore();
@@ -181,10 +182,12 @@ export function Header() {
     customIgnorePatterns,
     autoReviewOnPaste,
     customSystemPrompt,
+    promptHistoryLimit,
     setRespectGitignore,
     setCustomIgnorePatterns,
     setAutoReviewOnPaste,
     setCustomSystemPrompt,
+    setPromptHistoryLimit,
   } = useSettingsStore();
   const settingsPanelRef = useRef<HTMLDivElement>(null);
 
@@ -251,6 +254,28 @@ export function Header() {
                   >
                     Auto-review on paste
                   </Checkbox>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Prompt History Limit
+                    </label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="200"
+                      className="w-24"
+                      value={promptHistoryLimit}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value, 10);
+                        if (!isNaN(value)) {
+                          setPromptHistoryLimit(Math.max(1, value));
+                        }
+                      }}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Max prompts to keep per project (1-200).
+                    </p>
+                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
