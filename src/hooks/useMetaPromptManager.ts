@@ -34,18 +34,13 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
   );
 
   const { universalPrompts, editPrompts, qaPrompts } = useMemo(() => {
-    const idToIndexMap = new Map(promptDefs.map((p, i) => [p.id, i]));
-    const sortedPrompts = [...localPrompts].sort((a, b) => {
-        const aIndex = idToIndexMap.get(a.id) ?? -1;
-        const bIndex = idToIndexMap.get(b.id) ?? -1;
-        return aIndex - bIndex;
-    });
+    // The order of localPrompts is managed by dnd-kit and should be respected.
     return {
-      universalPrompts: sortedPrompts.filter((p) => p.mode === "universal"),
-      editPrompts: sortedPrompts.filter((p) => p.mode === "edit"),
-      qaPrompts: sortedPrompts.filter((p) => p.mode === "qa"),
+      universalPrompts: localPrompts.filter((p) => p.mode === "universal"),
+      editPrompts: localPrompts.filter((p) => p.mode === "edit"),
+      qaPrompts: localPrompts.filter((p) => p.mode === "qa"),
     };
-  }, [localPrompts, promptDefs]);
+  }, [localPrompts]);
 
   useEffect(() => {
     if (isOpen) {

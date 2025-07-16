@@ -1,4 +1,3 @@
-use crate::core::pty_utils::CommandStreamPayload;
 use crate::core::{cli_utils, fs_utils, git_utils, parser, patcher, path_utils, pty_utils};
 use crate::error::Result;
 use base64::{engine::general_purpose, Engine as _};
@@ -185,7 +184,7 @@ pub async fn resolve_path(path: String, cwd: Option<String>) -> Result<String> {
 pub async fn start_pty_session(
     root_path: String,
     command: Option<String>,
-    on_event: Channel<CommandStreamPayload>,
+    on_event: Channel<pty_utils::CommandStreamEvent>,
 ) -> Result<()> {
     pty_utils::start_pty_session(&PathBuf::from(root_path), command, on_event).await?;
     Ok(())
