@@ -8,6 +8,14 @@
   "permissions": [
     "core:default",
     "fs:default",
+    {
+      "identifier": "fs:allow-watch",
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
+    },
     "dialog:default",
     {
       "identifier": "shell:allow-execute",

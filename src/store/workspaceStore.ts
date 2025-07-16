@@ -7,6 +7,8 @@ import { useHistoryStore } from "./historyStore";
 import { useReviewStore } from "./reviewStore";
 import * as projectService from "../services/projectService";
 import { showErrorDialog } from "../lib/errorHandler";
+import { watch } from "@tauri-apps/plugin-fs";
+import { AppError } from "../lib/error";
 
 const getProjectStoreKey = (projectPath: string) => {
   try {
@@ -47,6 +49,8 @@ const initialState: Omit<WorkspaceState, "setRootPath" | "closeProject" | "loadF
 
 let persistenceUnsubscribe: (() => void) | null = null;
 let saveTimeout: NodeJS.Timeout | null = null;
+let fileWatcherUnlisten: (() => void) | null = null;
+let refreshTimeout: NodeJS.Timeout | null = null;
 
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   ...initialState,
@@ -58,6 +62,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       if (lastReview?.sessionBaseBackupId) { projectService.cleanupBackup(lastReview.sessionBaseBackupId); }
       if (sessionBaseBackupId) { projectService.cleanupBackup(sessionBaseBackupId); }
       if (persistenceUnsubscribe) persistenceUnsubscribe();
+      if (fileWatcherUnlisten) {
+        fileWatcherUnlisten();
+        fileWatcherUnlisten = null;
+      }
     }
 
     useComposerStore.getState()._reset();
@@ -99,6 +107,23 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       }, 1000);
     });
 
+    try {
+      fileWatcherUnlisten = await watch(
+        rootPath,
+        () => {
+          if (refreshTimeout) clearTimeout(refreshTimeout);
+          refreshTimeout = setTimeout(() => {
+            get().triggerFileTreeRefresh();
+          }, 300);
+        },
+        { recursive: true }
+      );
+    } catch (e) {
+      showErrorDialog(
+        new AppError(`Failed to set up file watcher for ${rootPath}`, e)
+      );
+    }
+
     get().loadFileTree();
   },
 
@@ -111,6 +136,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       if (persistenceUnsubscribe) {
         persistenceUnsubscribe();
         persistenceUnsubscribe = null;
+      }
+      if (fileWatcherUnlisten) {
+        fileWatcherUnlisten();
+        fileWatcherUnlisten = null;
       }
     }
     useComposerStore.getState()._reset();

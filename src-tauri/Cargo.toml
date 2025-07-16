@@ -16,7 +16,7 @@ tauri-build = { version = "2.0.0-beta.18", features = [] }
 
 [dependencies]
 tauri = { version = "2.0.0-beta.21", features = [] }
-tauri-plugin-fs = "2"
+tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-shell = "2"
 
 serde = { version = "1.0", features = ["derive"] }
