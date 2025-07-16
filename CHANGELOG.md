@@ -1,3 +1,13 @@
+# [1.6.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0...app-v1.6.0-next.1) (2025-07-16)
+
+
+### Features
+
+* **cli:** enhance CLI integration and project handling ([bfe1183](https://github.com/Fanzzzd/repo-wizard/commit/bfe11838857f3b9e9447885863672498d059677d))
+* **cli:** integrate CLI support and enhance command line tool setup ([74b27f9](https://github.com/Fanzzzd/repo-wizard/commit/74b27f9f7a12f628128f855b081251e2de33e342))
+* **history:** prevent duplicate history and add configurable limit ([bc504ac](https://github.com/Fanzzzd/repo-wizard/commit/bc504acc3e2e25c66b33917da9d407b42a45ae01))
+* **workspaceStore:** implement file watching for project directory ([9f26e43](https://github.com/Fanzzzd/repo-wizard/commit/9f26e436a5a0bcfd1119b3980efe532830cd39b0))
+
 # [1.5.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.4.0...app-v1.5.0) (2025-07-14)
 
 
