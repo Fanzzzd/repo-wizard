@@ -2,9 +2,28 @@ mod commands;
 mod core;
 mod error;
 
+use tauri::Emitter;
+use tauri_plugin_log::{Builder as LogBuilder, Target, TargetKind};
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[derive(Clone, serde::Serialize)]
+    struct SingleInstancePayload {
+        args: Vec<String>,
+        cwd: String,
+    }
+
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+            app.emit(
+                "single-instance",
+                SingleInstancePayload {
+                    args: argv,
+                    cwd,
+                },
+            )
+            .unwrap();
+        }))
         .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -14,7 +33,14 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_log::Builder::default().build())
+        .plugin(
+            LogBuilder::default()
+                .target(Target::new(TargetKind::LogDir {
+                    file_name: Some("repo-wizard".to_string()),
+                }))
+                .target(Target::new(TargetKind::Webview))
+                .build(),
+        )
         .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![
             commands::open_project_window,
@@ -43,7 +69,8 @@ pub fn run() {
             commands::resize_pty,
             commands::write_to_pty,
             commands::kill_pty,
-            commands::get_cli_status
+            commands::get_cli_status,
+            commands::install_cli_shim
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

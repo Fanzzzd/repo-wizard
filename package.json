@@ -4,7 +4,7 @@
   "version": "1.5.0",
   "type": "module",
   "scripts": {
-    "dev": "cross-env RUST_BACKTRACE=1 tauri dev",
+    "dev": "cross-env RUST_BACKTRACE=1 tauri dev --config src-tauri/tauri.dev.conf.json",
     "build": "cross-env RUST_BACKTRACE=1 tauri build",
     "tauri": "tauri",
     "web:dev": "vite",

@@ -7,6 +7,7 @@ import type {
   GitDiffConfig,
   CommandStreamEvent,
   CliStatusResult,
+  CliInstallResult,
 } from "../types";
 import { AppError } from "../lib/error";
 
@@ -247,5 +248,13 @@ export const getCliStatus = async (): Promise<CliStatusResult> => {
     return await invoke("get_cli_status");
   } catch (err) {
     throw new AppError("Failed to check CLI status", err);
+  }
+};
+
+export const installCliShim = async (): Promise<CliInstallResult> => {
+  try {
+    return await invoke("install_cli_shim");
+  } catch (err) {
+    throw new AppError("Failed to install CLI shim", err);
   }
 };

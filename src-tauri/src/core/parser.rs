@@ -103,19 +103,19 @@ impl<'a> Parser<'a> {
                     current_block_content.clear();
                 }
             } else if is_fence {
-                    if last_command.is_some() {
-                        fence_nesting += 1;
-                    }
-                } else if let Some(caps) = COMMAND_RE.captures(line) {
-                    let command = caps.get(1).unwrap().as_str().to_uppercase();
-                    let args = caps.get(2).unwrap().as_str().trim().to_string();
-
-                    if command == "DELETE" || command == "MOVE" {
-                        self.process_command_block(&command, &args, "");
-                    } else {
-                        last_command = Some((command, args));
-                    }
+                if last_command.is_some() {
+                    fence_nesting += 1;
                 }
+            } else if let Some(caps) = COMMAND_RE.captures(line) {
+                let command = caps.get(1).unwrap().as_str().to_uppercase();
+                let args = caps.get(2).unwrap().as_str().trim().to_string();
+
+                if command == "DELETE" || command == "MOVE" {
+                    self.process_command_block(&command, &args, "");
+                } else {
+                    last_command = Some((command, args));
+                }
+            }
         }
     }
 

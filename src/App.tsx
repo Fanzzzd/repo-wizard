@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import {
   Menu,
   Submenu,
@@ -32,6 +33,11 @@ declare global {
   interface Window {
     __RPO_WIZ_PROJECT_ROOT__?: string;
   }
+}
+
+interface SingleInstancePayload {
+  args: string[];
+  cwd: string;
 }
 
 function ProjectView() {
@@ -83,6 +89,26 @@ function App() {
   const { status, updateInfo, install } = useUpdateStore();
   const { recentProjects } = useSettingsStore();
   const [fontSize, setFontSize] = useState(14);
+
+  useEffect(() => {
+    // Listen for args from a new instance.
+    const unlisten = listen<SingleInstancePayload>("single-instance", (event) => {
+      const { args: argv, cwd } = event.payload;
+      if (argv.length > 1 && argv[1]) {
+        invoke<string>("resolve_path", { path: argv[1], cwd })
+          .then((absolutePath) => {
+            invoke("open_project_window", { rootPath: absolutePath });
+          })
+          .catch((e) => {
+            console.warn("Could not process single-instance CLI argument:", e);
+          });
+      }
+    });
+
+    return () => {
+      unlisten.then((f) => f());
+    };
+  }, []);
 
   useEffect(() => {
     const handleZoom = (e: CustomEvent) => {
@@ -250,16 +276,17 @@ function App() {
 
   useEffect(() => {
     const initializeApp = async () => {
+      // For windows created by `open_project_window`
       if (window.__RPO_WIZ_PROJECT_ROOT__) {
-        setRootPath(window.__RPO_WIZ_PROJECT_ROOT__);
+        await setRootPath(window.__RPO_WIZ_PROJECT_ROOT__);
         return;
       }
 
+      // For the first instance launched from CLI
       try {
         const matches = await getMatches();
         const pathArg = matches.args.path?.value;
-
-        if (typeof pathArg === "string" && pathArg) {
+        if (pathArg && typeof pathArg === "string") {
           const absolutePath = await invoke<string>("resolve_path", {
             path: pathArg,
           });

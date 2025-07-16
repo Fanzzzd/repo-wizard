@@ -177,8 +177,8 @@ pub async fn get_git_diff(repo_path: String, option: git_utils::DiffOption) -> R
 }
 
 #[tauri::command]
-pub async fn resolve_path(path: String) -> Result<String> {
-    Ok(path_utils::resolve_path(&path)?)
+pub async fn resolve_path(path: String, cwd: Option<String>) -> Result<String> {
+    Ok(path_utils::resolve_path(&path, cwd)?)
 }
 
 #[tauri::command]
@@ -212,4 +212,9 @@ pub async fn kill_pty() -> Result<()> {
 #[tauri::command]
 pub async fn get_cli_status() -> Result<cli_utils::CliStatusResult> {
     Ok(cli_utils::get_cli_status())
+}
+
+#[tauri::command]
+pub async fn install_cli_shim() -> Result<cli_utils::CliInstallResult> {
+    Ok(cli_utils::install_cli_shim().await?)
 }

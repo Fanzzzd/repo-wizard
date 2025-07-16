@@ -91,7 +91,9 @@ export type CommandStreamEvent =
 
 export interface CliStatusResult {
   status: "installed" | "not_installed" | "error" | "checking";
-  executablePath: string;
-  executableDir: string;
   error?: string;
+}
+
+export interface CliInstallResult {
+  message: string;
 }
