@@ -60,6 +60,31 @@ export function CommandRunnerModal() {
     }
   }, []);
 
+  const onPtyEvent = useCallback(
+    (event: CommandStreamEvent) => {
+      const term = termRef.current;
+      if (!term) return;
+
+      switch (event.type) {
+        case "stdout":
+          term.write(new Uint8Array(event.data));
+          break;
+        case "stderr":
+          term.write(new Uint8Array(event.data));
+          break;
+        case "finish":
+          term.writeln(`\r\n\x1b[32m${event.data}\x1b[0m`);
+          setFinished();
+          break;
+        case "error":
+          term.writeln(`\r\n\x1b[31mError: ${event.data}\x1b[0m`);
+          setFinished();
+          break;
+      }
+    },
+    [setFinished]
+  );
+
   useEffect(() => {
     if (isVisible && termContainerRef.current && rootPath) {
       if (!termRef.current) {
@@ -92,52 +117,17 @@ export function CommandRunnerModal() {
         term.onData((data) => {
           writeToPty(data);
         });
-
-        const onEvent = new Channel<CommandStreamEvent>();
-        onEvent.onmessage = (event) => {
-          switch (event.type) {
-            case "stdout":
-              term.write(new Uint8Array(event.data));
-              break;
-            case "stderr":
-              term.write(new Uint8Array(event.data));
-              break;
-            case "finish":
-              term.writeln(`\r\n\x1b[32m${event.data}\x1b[0m`);
-              setFinished();
-              break;
-            case "error":
-              term.writeln(`\r\n\x1b[31mError: ${event.data}\x1b[0m`);
-              setFinished();
-              break;
-          }
-        };
-
-        startPtySession(rootPath, initialCommand, onEvent);
       } else {
         termRef.current.reset();
-        const onEvent = new Channel<CommandStreamEvent>(); // Re-create channel
-        onEvent.onmessage = (event) => {
-            const term = termRef.current;
-            if (!term) return;
-             switch (event.type) {
-                case "stdout": term.write(new Uint8Array(event.data)); break;
-                case "stderr": term.write(new Uint8Array(event.data)); break;
-                case "finish":
-                    term.writeln(`\r\n\x1b[32m${event.data}\x1b[0m`);
-                    setFinished();
-                    break;
-                case "error":
-                    term.writeln(`\r\n\x1b[31mError: ${event.data}\x1b[0m`);
-                    setFinished();
-                    break;
-            }
-        }
-        startPtySession(rootPath, initialCommand, onEvent);
       }
+
+      const onEvent = new Channel<CommandStreamEvent>();
+      onEvent.onmessage = onPtyEvent;
+
+      startPtySession(rootPath, initialCommand, onEvent);
       setTimeout(fitAndResizePty, 50);
     }
-  }, [isVisible, rootPath, initialCommand, setFinished, fitAndResizePty]);
+  }, [isVisible, rootPath, initialCommand, onPtyEvent, fitAndResizePty]);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -177,7 +167,7 @@ export function CommandRunnerModal() {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                 <Button
+                <Button
                   onClick={handleCapture}
                   variant="primary"
                   size="sm"
