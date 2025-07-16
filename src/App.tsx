@@ -274,7 +274,7 @@ function App() {
                 {__APP_VERSION__}.
               </p>
               <p className="mt-2 text-sm text-gray-500">Release Notes:</p>
-              <div className="mt-1 max-h-40 overflow-y-auto rounded-md border bg-gray-50 p-2 text-sm">
+              <div className="mt-1 max-h-40 overflow-y-auto rounded-md border bg-gray-50 p-2 text-sm thin-scrollbar">
                 <pre className="whitespace-pre-wrap font-sans">
                   {updateInfo.body || "No release notes available."}
                 </pre>
