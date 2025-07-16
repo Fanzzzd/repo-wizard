@@ -102,8 +102,7 @@ impl<'a> Parser<'a> {
                     }
                     current_block_content.clear();
                 }
-            } else {
-                if is_fence {
+            } else if is_fence {
                     if last_command.is_some() {
                         fence_nesting += 1;
                     }
@@ -117,7 +116,6 @@ impl<'a> Parser<'a> {
                         last_command = Some((command, args));
                     }
                 }
-            }
         }
     }
 
