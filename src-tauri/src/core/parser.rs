@@ -72,35 +72,46 @@ impl<'a> Parser<'a> {
     fn parse_command_blocks(&mut self) {
         let mut last_command: Option<(String, String)> = None;
         let mut current_block_content = String::new();
-        let mut in_block = false;
+        let mut fence_nesting = 0;
 
         for line in self.markdown.lines() {
-            if line.trim().starts_with("```") {
-                if in_block {
+            let is_fence = line.trim().starts_with("```");
+
+            if fence_nesting > 0 {
+                // We are inside a block.
+                if is_fence {
+                    fence_nesting -= 1;
+                }
+                if fence_nesting > 0 {
+                    current_block_content.push_str(line);
+                    current_block_content.push('\n');
+                } else {
+                    // We just closed the outer block.
                     if let Some((command, args)) = last_command.take() {
-                        self.process_command_block(&command, &args, &current_block_content);
+                        self.process_command_block(&command, &args, current_block_content.trim_end());
                     }
                     current_block_content.clear();
                 }
-                in_block = !in_block;
-                continue;
-            }
+            } else {
+                // We are outside a block.
+                if is_fence {
+                    if last_command.is_some() {
+                        fence_nesting += 1;
+                    }
+                } else if let Some(caps) = COMMAND_RE.captures(line) {
+                    let command = caps.get(1).unwrap().as_str().to_uppercase();
+                    let args = caps.get(2).unwrap().as_str().trim().to_string();
 
-            if in_block {
-                current_block_content.push_str(line);
-                current_block_content.push('\n');
-            } else if let Some(caps) = COMMAND_RE.captures(line) {
-                let command = caps.get(1).unwrap().as_str().to_uppercase();
-                let args = caps.get(2).unwrap().as_str().trim().to_string();
-
-                if command == "DELETE" || command == "MOVE" {
-                    self.process_command_block(&command, &args, "");
-                } else {
-                    last_command = Some((command, args));
+                    if command == "DELETE" || command == "MOVE" {
+                        self.process_command_block(&command, &args, "");
+                    } else {
+                        last_command = Some((command, args));
+                    }
                 }
             }
         }
     }
+
     fn process_command_block(&mut self, command: &str, args: &str, content: &str) {
         match command {
             "DELETE" => self.operations.push(ChangeOperation::Delete {
@@ -120,7 +131,7 @@ impl<'a> Parser<'a> {
             "CREATE" | "REWRITE" => {
                 self.operations.push(ChangeOperation::Rewrite {
                     file_path: sanitize_path(args),
-                    content: content.trim_end().to_string(),
+                    content: content.to_string(),
                     is_new_file: command == "CREATE",
                 });
             }
