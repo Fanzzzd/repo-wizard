@@ -75,25 +75,34 @@ impl<'a> Parser<'a> {
         let mut fence_nesting = 0;
 
         for line in self.markdown.lines() {
-            let is_fence = line.trim().starts_with("```");
+            let trimmed_line = line.trim();
+            let is_fence = trimmed_line.starts_with("```");
 
             if fence_nesting > 0 {
-                // We are inside a block.
+                current_block_content.push_str(line);
+                current_block_content.push('\n');
+
                 if is_fence {
-                    fence_nesting -= 1;
+                    let lang = trimmed_line.strip_prefix("```").unwrap_or("").trim();
+                    if lang.is_empty() {
+                        fence_nesting -= 1;
+                    } else {
+                        fence_nesting += 1;
+                    }
                 }
-                if fence_nesting > 0 {
-                    current_block_content.push_str(line);
-                    current_block_content.push('\n');
-                } else {
-                    // We just closed the outer block.
+
+                if fence_nesting == 0 {
                     if let Some((command, args)) = last_command.take() {
-                        self.process_command_block(&command, &args, current_block_content.trim_end());
+                        let content_without_last_fence = current_block_content
+                            .lines()
+                            .take(current_block_content.lines().count() - 1)
+                            .collect::<Vec<_>>()
+                            .join("\n");
+                        self.process_command_block(&command, &args, &content_without_last_fence);
                     }
                     current_block_content.clear();
                 }
             } else {
-                // We are outside a block.
                 if is_fence {
                     if last_command.is_some() {
                         fence_nesting += 1;
