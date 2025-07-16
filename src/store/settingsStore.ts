@@ -51,7 +51,7 @@ const getTauriStore = async (): Promise<TauriStore> => {
 export const useSettingsStore = create<SettingsState>((set, get) => {
   const initialState = {
     respectGitignore: true,
-    customIgnorePatterns: "",
+    customIgnorePatterns: ".git",
     customSystemPrompt: defaultSystemPrompt,
     editFormat: "whole" as EditFormat,
     metaPrompts: [] as MetaPromptDefinition[],
