@@ -47,20 +47,48 @@ function App() {
   const { status, updateInfo, install } = useUpdateStore();
   const { recentProjects } = useSettingsStore();
   const [fontSize, setFontSize] = useState(14);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   useEffect(() => {
-    const unlisten = listen<SingleInstancePayload>("single-instance", (event) => {
-      const { args: argv, cwd } = event.payload;
-      if (argv.length > 1 && argv[1]) {
-        invoke<string>("resolve_path", { path: argv[1], cwd })
-          .then((absolutePath) => {
-            invoke("open_project_window", { rootPath: absolutePath });
-          })
-          .catch((e) => {
-            console.warn("Could not process single-instance CLI argument:", e);
-          });
+    const handleFocusChange = () => {
+      const el = document.activeElement;
+      let isFocused = false;
+      if (el) {
+        const isEditor = el.closest(".monaco-editor");
+        const elTag = el.tagName.toUpperCase();
+        if (elTag === "INPUT" || elTag === "TEXTAREA" || isEditor) {
+          isFocused = true;
+        }
       }
-    });
+      setIsInputFocused(isFocused);
+    };
+
+    document.addEventListener("focusin", handleFocusChange, true);
+    document.addEventListener("focusout", handleFocusChange, true);
+    handleFocusChange();
+
+    return () => {
+      document.removeEventListener("focusin", handleFocusChange, true);
+      document.removeEventListener("focusout", handleFocusChange, true);
+    };
+  }, []);
+
+  useEffect(() => {
+    const unlisten = listen<SingleInstancePayload>(
+      "single-instance",
+      (event) => {
+        const { args: argv, cwd } = event.payload;
+        if (argv.length > 1 && argv[1]) {
+          invoke<string>("resolve_path", { path: argv[1], cwd })
+            .then((absolutePath) => {
+              invoke("open_project_window", { rootPath: absolutePath });
+            })
+            .catch((e) => {
+              console.warn("Could not process single-instance CLI argument:", e);
+            });
+        }
+      }
+    );
 
     return () => {
       unlisten.then((f) => f());
@@ -100,7 +128,8 @@ function App() {
                 recentProjects.map((path) =>
                   MenuItem.new({
                     text: path,
-                    action: () => invoke("open_project_window", { rootPath: path }),
+                    action: () =>
+                      invoke("open_project_window", { rootPath: path }),
                   })
                 )
               ),
@@ -119,20 +148,27 @@ function App() {
             action: () => {
               openDialog({
                 title: `About Repo Wizard v${__APP_VERSION__}`,
-                content: "A code refactoring staging area to safely and efficiently apply LLM-suggested code changes.",
-                status: 'info',
-                type: 'alert'
-              })
+                content:
+                  "A code refactoring staging area to safely and efficiently apply LLM-suggested code changes.",
+                status: "info",
+                type: "alert",
+              });
             },
           }),
           await PredefinedMenuItem.new({ item: "Separator" }),
           await PredefinedMenuItem.new({ item: "Services" }),
           await PredefinedMenuItem.new({ item: "Separator" }),
-          await PredefinedMenuItem.new({ item: "Hide", text: "Hide Repo Wizard" }),
+          await PredefinedMenuItem.new({
+            item: "Hide",
+            text: "Hide Repo Wizard",
+          }),
           await PredefinedMenuItem.new({ item: "HideOthers" }),
           await PredefinedMenuItem.new({ item: "ShowAll" }),
           await PredefinedMenuItem.new({ item: "Separator" }),
-          await PredefinedMenuItem.new({ item: "Quit", text: "Quit Repo Wizard" }),
+          await PredefinedMenuItem.new({
+            item: "Quit",
+            text: "Quit Repo Wizard",
+          }),
         ],
       });
       allMenuItems.push(appMenu);
@@ -166,17 +202,30 @@ function App() {
     });
     allMenuItems.push(fileMenu);
 
+    const editMenuItems: (MenuItem | PredefinedMenuItem)[] = [
+      await PredefinedMenuItem.new({ item: "Undo" }),
+      await PredefinedMenuItem.new({ item: "Redo" }),
+      await PredefinedMenuItem.new({ item: "Separator" }),
+      await PredefinedMenuItem.new({ item: "Cut" }),
+      await PredefinedMenuItem.new({ item: "Copy" }),
+      await PredefinedMenuItem.new({ item: "Paste" }),
+    ];
+
+    if (isInputFocused) {
+      editMenuItems.push(await PredefinedMenuItem.new({ item: "SelectAll" }));
+    } else {
+      editMenuItems.push(
+        await MenuItem.new({
+          text: "Select All",
+          accelerator: "CmdOrCtrl+A",
+          enabled: false,
+        })
+      );
+    }
+
     const editMenu = await Submenu.new({
       text: "Edit",
-      items: [
-        await PredefinedMenuItem.new({ item: "Undo" }),
-        await PredefinedMenuItem.new({ item: "Redo" }),
-        await PredefinedMenuItem.new({ item: "Separator" }),
-        await PredefinedMenuItem.new({ item: "Cut" }),
-        await PredefinedMenuItem.new({ item: "Copy" }),
-        await PredefinedMenuItem.new({ item: "Paste" }),
-        await PredefinedMenuItem.new({ item: "SelectAll" }),
-      ],
+      items: editMenuItems,
     });
     allMenuItems.push(editMenu);
 
@@ -186,17 +235,20 @@ function App() {
         await MenuItem.new({
           text: "Zoom In",
           accelerator: "CmdOrCtrl+=",
-          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'in' })),
+          action: () =>
+            window.dispatchEvent(new CustomEvent("zoom", { detail: "in" })),
         }),
         await MenuItem.new({
           text: "Zoom Out",
           accelerator: "CmdOrCtrl+-",
-          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'out' })),
+          action: () =>
+            window.dispatchEvent(new CustomEvent("zoom", { detail: "out" })),
         }),
         await MenuItem.new({
           text: "Reset Zoom",
           accelerator: "CmdOrCtrl+0",
-          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'reset' })),
+          action: () =>
+            window.dispatchEvent(new CustomEvent("zoom", { detail: "reset" })),
         }),
       ],
     });
@@ -218,7 +270,7 @@ function App() {
       items: allMenuItems,
     });
     await menu.setAsAppMenu();
-  }, [recentProjects, openDialog]);
+  }, [recentProjects, openDialog, isInputFocused]);
 
   useEffect(() => {
     const initializeApp = async () => {
