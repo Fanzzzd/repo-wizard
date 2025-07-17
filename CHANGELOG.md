@@ -1,3 +1,18 @@
+# [1.6.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.1...app-v1.6.0-next.2) (2025-07-17)
+
+
+### Bug Fixes
+
+* **settingsStore:** update default custom ignore patterns to include .git ([6fd44a9](https://github.com/Fanzzzd/repo-wizard/commit/6fd44a9c9955fbb61a54e0d05a01843898349f40))
+
+
+### Features
+
+* **App:** enhance input focus handling and update edit menu items ([987c13e](https://github.com/Fanzzzd/repo-wizard/commit/987c13e08fca56febc6c5b5276b339341c14bfec))
+* **Textarea, PromptComposer:** add undo/redo functionality to Textarea component ([460d819](https://github.com/Fanzzzd/repo-wizard/commit/460d81978a8484e9ea90dd7c83c819474448d29b))
+* **watcher_service, tauriApi, workspaceStore:** enhance file watching functionality with custom ignore settings ([470d0d2](https://github.com/Fanzzzd/repo-wizard/commit/470d0d2e6589e8dbfb6eb792e94b7243613aea2e))
+* **workspaceStore, tauriApi:** implement file watching commands and enhance workspace functionality ([e77dd4f](https://github.com/Fanzzzd/repo-wizard/commit/e77dd4f4b34e0f0596ea2b1b0802a495e4a1bebd))
+
 # [1.6.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0...app-v1.6.0-next.1) (2025-07-16)
 
 
