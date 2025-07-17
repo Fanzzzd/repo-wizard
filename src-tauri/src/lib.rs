@@ -71,7 +71,9 @@ pub fn run() {
             commands::write_to_pty,
             commands::kill_pty,
             commands::get_cli_status,
-            commands::install_cli_shim
+            commands::install_cli_shim,
+            commands::start_watching,
+            commands::stop_watching
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -7,7 +7,8 @@ import { useHistoryStore } from "./historyStore";
 import { useReviewStore } from "./reviewStore";
 import * as projectService from "../services/projectService";
 import { showErrorDialog } from "../lib/errorHandler";
-import { watch } from "@tauri-apps/plugin-fs";
+import { listen } from "@tauri-apps/api/event";
+import { startWatching, stopWatching } from "../services/tauriApi";
 import { AppError } from "../lib/error";
 
 const getProjectStoreKey = (projectPath: string) => {
@@ -28,7 +29,7 @@ interface WorkspaceState {
 
   // Actions
   setRootPath: (rootPath: string) => Promise<void>;
-  closeProject: () => void;
+  closeProject: () => Promise<void>;
   loadFileTree: () => Promise<void>;
   setFileTree: (fileTree: FileNode | null) => void;
   setActiveFilePath: (path: string | null) => void;
@@ -49,8 +50,7 @@ const initialState: Omit<WorkspaceState, "setRootPath" | "closeProject" | "loadF
 
 let persistenceUnsubscribe: (() => void) | null = null;
 let saveTimeout: NodeJS.Timeout | null = null;
-let fileWatcherUnlisten: (() => void) | null = null;
-let refreshTimeout: NodeJS.Timeout | null = null;
+let tauriFileWatcherUnlisten: (() => void) | null = null;
 
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   ...initialState,
@@ -62,9 +62,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       if (lastReview?.sessionBaseBackupId) { projectService.cleanupBackup(lastReview.sessionBaseBackupId); }
       if (sessionBaseBackupId) { projectService.cleanupBackup(sessionBaseBackupId); }
       if (persistenceUnsubscribe) persistenceUnsubscribe();
-      if (fileWatcherUnlisten) {
-        fileWatcherUnlisten();
-        fileWatcherUnlisten = null;
+      
+      if (tauriFileWatcherUnlisten) {
+        tauriFileWatcherUnlisten();
+        tauriFileWatcherUnlisten = null;
+      }
+      if (oldState.rootPath) {
+        await stopWatching(oldState.rootPath);
       }
     }
 
@@ -108,15 +112,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     });
 
     try {
-      fileWatcherUnlisten = await watch(
-        rootPath,
-        () => {
-          if (refreshTimeout) clearTimeout(refreshTimeout);
-          refreshTimeout = setTimeout(() => {
+      await startWatching(rootPath);
+      tauriFileWatcherUnlisten = await listen<string>(
+        "file-change-event",
+        (event) => {
+          if (event.payload === get().rootPath) {
             get().triggerFileTreeRefresh();
-          }, 300);
-        },
-        { recursive: true }
+          }
+        }
       );
     } catch (e) {
       showErrorDialog(
@@ -127,7 +130,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     get().loadFileTree();
   },
 
-  closeProject: () => {
+  closeProject: async () => {
     const oldState = get();
     if (oldState.isInitialized) {
       const { lastReview, sessionBaseBackupId } = useReviewStore.getState();
@@ -137,9 +140,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         persistenceUnsubscribe();
         persistenceUnsubscribe = null;
       }
-      if (fileWatcherUnlisten) {
-        fileWatcherUnlisten();
-        fileWatcherUnlisten = null;
+      if (tauriFileWatcherUnlisten) {
+        tauriFileWatcherUnlisten();
+        tauriFileWatcherUnlisten = null;
+      }
+      if (oldState.rootPath) {
+        await stopWatching(oldState.rootPath);
       }
     }
     useComposerStore.getState()._reset();

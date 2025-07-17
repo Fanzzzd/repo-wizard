@@ -1,6 +1,8 @@
 use crate::core::path_utils;
 use crate::error::Result;
-use crate::services::{cli_service, git_service, project_service, pty_service, review_service};
+use crate::services::{
+    cli_service, git_service, project_service, pty_service, review_service, watcher_service,
+};
 use crate::types::{
     ChangeOperation, CliInstallResult, CliStatusResult, Commit, CommandStreamEvent, DiffOption,
     FileNode, GitStatus, IgnoreSettings,
@@ -209,4 +211,16 @@ pub async fn get_cli_status() -> Result<CliStatusResult> {
 #[tauri::command]
 pub async fn install_cli_shim() -> Result<CliInstallResult> {
     Ok(cli_service::install_cli_shim().await?)
+}
+
+#[tauri::command]
+pub async fn start_watching(app_handle: tauri::AppHandle, root_path: String) -> Result<()> {
+    watcher_service::start_watching(app_handle, &PathBuf::from(root_path))?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn stop_watching(root_path: String) -> Result<()> {
+    watcher_service::stop_watching(&PathBuf::from(root_path));
+    Ok(())
 }

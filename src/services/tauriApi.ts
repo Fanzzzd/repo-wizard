@@ -248,3 +248,19 @@ export const installCliShim = async (): Promise<CliInstallResult> => {
     throw new AppError("Failed to install CLI shim", err);
   }
 };
+
+export const startWatching = async (rootPath: string): Promise<void> => {
+  try {
+    await invoke("start_watching", { rootPath });
+  } catch (err) {
+    throw new AppError(`Failed to start watching: ${rootPath}`, err);
+  }
+};
+
+export const stopWatching = async (rootPath: string): Promise<void> => {
+  try {
+    await invoke("stop_watching", { rootPath });
+  } catch (err) {
+    console.warn(new AppError(`Failed to stop watching: ${rootPath}`, err));
+  }
+};

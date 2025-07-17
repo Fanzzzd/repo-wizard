@@ -3866,6 +3866,8 @@ dependencies = [
  "ignore",
  "log",
  "nom 8.0.0",
+ "notify",
+ "notify-debouncer-full",
  "once_cell",
  "portable-pty",
  "serde",
@@ -3884,7 +3886,7 @@ dependencies = [
  "tauri-plugin-single-instance",
  "tauri-plugin-store",
  "tauri-plugin-updater",
- "thiserror 1.0.69",
+ "thiserror 2.0.12",
  "tokio",
  "uuid",
 ]
