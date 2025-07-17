@@ -1,5 +1,6 @@
-use crate::core::{cli_utils, fs_utils, git_utils, parser, patcher, path_utils, pty_utils};
+use crate::core::{cli_utils, fs_utils, git_utils, parser, path_utils, pty_utils};
 use crate::error::Result;
+use anyhow::anyhow;
 use base64::{engine::general_purpose, Engine as _};
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -179,9 +180,33 @@ pub async fn parse_changes_from_markdown(
         for op in ops {
             match op {
                 parser::IntermediateOperation::Modify {
-                    diff, is_new_file, ..
+                    search_replace_blocks,
+                    is_new_file,
+                    ..
                 } => {
-                    current_content = patcher::apply_patch_to_content(&current_content, &diff)?;
+                    let mut content_str = String::from_utf8_lossy(&current_content).to_string();
+
+                    for (search_block, replace_block) in search_replace_blocks {
+                        // Normalize line endings for comparison
+                        let normalized_search_block = search_block.replace("\r\n", "\n");
+                        let normalized_content_str = content_str.replace("\r\n", "\n");
+
+                        if normalized_content_str.contains(&normalized_search_block)
+                        {
+                            content_str = normalized_content_str.replacen(
+                                &normalized_search_block,
+                                &replace_block,
+                                1,
+                            );
+                        } else {
+                            return Err(anyhow!(
+                                "Could not apply modification to '{}': search block not found.",
+                                file_path
+                            )
+                            .into());
+                        }
+                    }
+                    current_content = content_str.into_bytes();
                     if is_new_file {
                         is_new_file_flag = true;
                     }

@@ -1,8 +1,14 @@
 use anyhow::Result;
-use lazy_static::lazy_static;
-use regex::Regex;
+use nom::{
+    branch::alt,
+    bytes::complete::{tag, tag_no_case, take_until},
+    character::complete::{line_ending, space1},
+    combinator::rest,
+    multi::many0,
+    sequence::{preceded, terminated},
+    IResult, Parser,
+};
 use serde::{Deserialize, Serialize};
-use similar;
 use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -38,7 +44,7 @@ pub enum ChangeOperation {
 pub enum IntermediateOperation {
     Modify {
         file_path: String,
-        diff: String,
+        search_replace_blocks: Vec<(String, String)>,
         is_new_file: bool,
     },
     Rewrite {
@@ -55,12 +61,49 @@ pub enum IntermediateOperation {
     },
 }
 
-lazy_static! {
-    static ref COMMAND_RE: Regex =
-        Regex::new(r"^(?i)(CREATE|REWRITE|MODIFY|DELETE|MOVE)\s+(.*)").unwrap();
-    static ref SEARCH_REPLACE_RE: Regex =
-        Regex::new(r"(?s)<<<<<<< SEARCH\r?\n(.*?)\r?\n=======\r?\n(.*?)\r?\n>>>>>>> REPLACE")
-            .unwrap();
+fn parse_command_word(input: &str) -> IResult<&str, &str> {
+    alt((
+        tag_no_case("CREATE"),
+        tag_no_case("REWRITE"),
+        tag_no_case("MODIFY"),
+        tag_no_case("DELETE"),
+        tag_no_case("MOVE"),
+    ))
+    .parse(input)
+}
+
+fn parse_command_line(input: &str) -> IResult<&str, (&str, &str)> {
+    let (input, command) = parse_command_word(input)?;
+    let (input, _) = space1(input)?;
+    let (input, args) = rest(input)?;
+    Ok((input, (command, args)))
+}
+
+fn parse_search_replace_block(i: &str) -> IResult<&str, (&str, &str)> {
+    let (i, _) = terminated(tag("<<<<<<< SEARCH"), line_ending).parse(i)?;
+
+    let (i, search) = take_until("=======")(i)?;
+    let (i, _) = tag("=======")(i)?;
+    let (i, _) = line_ending(i)?;
+
+    let (i, replace) = take_until(">>>>>>> REPLACE")(i)?;
+    let (i, _) = tag(">>>>>>> REPLACE")(i)?;
+
+    let search = search.strip_suffix('\n').unwrap_or(search);
+    let search = search.strip_suffix('\r').unwrap_or(search);
+
+    let replace = replace.strip_suffix('\n').unwrap_or(replace);
+    let replace = replace.strip_suffix('\r').unwrap_or(replace);
+
+    Ok((i, (search, replace)))
+}
+
+fn parse_all_search_replace_blocks(content: &str) -> IResult<&str, Vec<(&str, &str)>> {
+    many0(preceded(
+        take_until("<<<<<<< SEARCH"),
+        parse_search_replace_block,
+    ))
+    .parse(content)
 }
 
 fn sanitize_path(path: &str) -> String {
@@ -69,12 +112,12 @@ fn sanitize_path(path: &str) -> String {
         .to_string()
 }
 
-struct Parser<'a> {
+struct MarkdownParser<'a> {
     markdown: &'a str,
     operations: Vec<IntermediateOperation>,
 }
 
-impl<'a> Parser<'a> {
+impl<'a> MarkdownParser<'a> {
     fn new(markdown: &'a str) -> Self {
         Self {
             markdown,
@@ -100,9 +143,9 @@ impl<'a> Parser<'a> {
             .markdown
             .lines()
             .filter_map(|line| {
-                if let Some(caps) = COMMAND_RE.captures(line) {
-                    let args = caps.get(2).unwrap().as_str().trim();
-                    let key = if caps.get(1).unwrap().as_str().to_uppercase() == "MOVE" {
+                if let Ok((_, (command, args))) = parse_command_line(line) {
+                    let args = args.trim();
+                    let key = if command.to_uppercase() == "MOVE" {
                         if let Some(to_index) = args.to_lowercase().rfind(" to ") {
                             sanitize_path(&args[..to_index])
                         } else {
@@ -161,9 +204,9 @@ impl<'a> Parser<'a> {
                 if last_command.is_some() {
                     fence_nesting += 1;
                 }
-            } else if let Some(caps) = COMMAND_RE.captures(line) {
-                let command = caps.get(1).unwrap().as_str().to_uppercase();
-                let args = caps.get(2).unwrap().as_str().trim().to_string();
+            } else if let Ok((_, (command, args))) = parse_command_line(line) {
+                let command = command.to_uppercase();
+                let args = args.trim().to_string();
 
                 if command == "DELETE" || command == "MOVE" {
                     if let Some(op) = self.process_command_block(&command, &args, "") {
@@ -205,30 +248,26 @@ impl<'a> Parser<'a> {
             }),
             "MODIFY" => {
                 let mut is_new_file = false;
-                let mut diffs = String::new();
+                let mut search_replace_blocks = Vec::new();
 
-                for (i, cap) in SEARCH_REPLACE_RE.captures_iter(content).enumerate() {
-                    let search_block = cap.get(1).unwrap().as_str();
-                    let replace_block = cap.get(2).unwrap().as_str();
-
-                    if i == 0 {
-                        is_new_file = search_block.trim().is_empty();
+                if let Ok((_, captures)) = parse_all_search_replace_blocks(content) {
+                    if captures.is_empty() {
+                        return None;
                     }
-
-                    let from_header = if i == 0 && is_new_file { "/dev/null" } else { args };
-                    let diff = similar::TextDiff::from_lines(search_block, replace_block)
-                        .unified_diff()
-                        .context_radius(usize::MAX)
-                        .header(from_header, args)
-                        .to_string();
-
-                    diffs.push_str(&diff);
+                    for (i, &(search_block, replace_block)) in captures.iter().enumerate() {
+                        if i == 0 {
+                            is_new_file = search_block.trim().is_empty();
+                        }
+                        search_replace_blocks.push((search_block.to_string(), replace_block.to_string()));
+                    }
+                } else {
+                    return None;
                 }
 
-                if !diffs.is_empty() {
+                if !search_replace_blocks.is_empty() {
                     return Some(IntermediateOperation::Modify {
                         file_path: sanitize_path(args),
-                        diff: diffs,
+                        search_replace_blocks,
                         is_new_file,
                     });
                 }
@@ -240,5 +279,5 @@ impl<'a> Parser<'a> {
 }
 
 pub(crate) fn parse(markdown: &str) -> Result<Vec<IntermediateOperation>> {
-    Parser::new(markdown).run()
+    MarkdownParser::new(markdown).run()
 }
