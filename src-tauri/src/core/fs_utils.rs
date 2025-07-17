@@ -30,6 +30,10 @@ pub async fn list_directory_recursive(
                 } else {
                     format!("!{}", trimmed)
                 };
+                // https://docs.rs/ignore/0.4.23/ignore/overrides/struct.OverrideBuilder.html
+                //Globs provided here have precisely the same semantics as a single line in a gitignore file, 
+                //where the meaning of ! is inverted: namely, ! at the beginning of a glob will ignore a file. 
+                //Without !, all matches of the glob provided are treated as whitelist matches.
                 override_builder.add(&pattern_to_add)?;
             }
         }
