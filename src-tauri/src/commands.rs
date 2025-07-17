@@ -214,8 +214,12 @@ pub async fn install_cli_shim() -> Result<CliInstallResult> {
 }
 
 #[tauri::command]
-pub async fn start_watching(app_handle: tauri::AppHandle, root_path: String) -> Result<()> {
-    watcher_service::start_watching(app_handle, &PathBuf::from(root_path))?;
+pub async fn start_watching(
+    app_handle: tauri::AppHandle,
+    root_path: String,
+    settings: IgnoreSettings,
+) -> Result<()> {
+    watcher_service::start_watching(app_handle, &PathBuf::from(root_path), settings)?;
     Ok(())
 }
 

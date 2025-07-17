@@ -249,9 +249,12 @@ export const installCliShim = async (): Promise<CliInstallResult> => {
   }
 };
 
-export const startWatching = async (rootPath: string): Promise<void> => {
+export const startWatching = async (
+  rootPath: string,
+  settings: IgnoreSettings
+): Promise<void> => {
   try {
-    await invoke("start_watching", { rootPath });
+    await invoke("start_watching", { rootPath, settings });
   } catch (err) {
     throw new AppError(`Failed to start watching: ${rootPath}`, err);
   }

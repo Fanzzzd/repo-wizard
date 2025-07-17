@@ -112,7 +112,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     });
 
     try {
-      await startWatching(rootPath);
+      const { respectGitignore, customIgnorePatterns } = useSettingsStore.getState();
+      const settings = { respectGitignore, customIgnorePatterns };
+      await startWatching(rootPath, settings);
       tauriFileWatcherUnlisten = await listen<string>(
         "file-change-event",
         (event) => {
