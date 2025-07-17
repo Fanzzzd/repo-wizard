@@ -64,17 +64,6 @@ export const writeFileContent = async (
   }
 };
 
-export const applyPatch = async (
-  filePath: string,
-  patchStr: string
-): Promise<void> => {
-  try {
-    return await invoke("apply_patch", { filePath, patchStr });
-  } catch (err) {
-    throw new AppError(`Failed to apply patch to file: ${filePath}`, err);
-  }
-};
-
 export const deleteFile = async (filePath: string): Promise<void> => {
   try {
     return await invoke("delete_file", { filePath });
@@ -149,10 +138,11 @@ export const getRelativePath = async (
 };
 
 export const parseChangesFromMarkdown = async (
-  markdown: string
+  markdown: string,
+  rootPath: string,
 ): Promise<ChangeOperation[]> => {
   try {
-    return await invoke("parse_changes_from_markdown", { markdown });
+    return await invoke("parse_changes_from_markdown", { markdown, rootPath });
   } catch (err) {
     throw new AppError("Failed to parse changes from markdown", err);
   }

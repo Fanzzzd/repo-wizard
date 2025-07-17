@@ -52,7 +52,6 @@ pub fn run() {
             commands::read_file_as_base64,
             commands::is_binary_file,
             commands::write_file_content,
-            commands::apply_patch,
             commands::delete_file,
             commands::move_file,
             commands::backup_files,

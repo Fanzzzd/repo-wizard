@@ -1,19 +1,13 @@
-use super::fs_utils;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use diffy;
-use std::path::PathBuf;
 
-pub async fn apply_patch(file_path: &PathBuf, patch_str: &str) -> Result<()> {
-    let original_content = if file_path.exists() {
-        fs_utils::read_file_content(file_path).await?
-    } else {
-        String::new()
-    };
+pub fn apply_patch_to_content(content: &[u8], patch_str: &str) -> Result<Vec<u8>> {
+    let content_str = std::str::from_utf8(content)?;
 
-    let patch = diffy::Patch::from_str(patch_str)?;
-    let patched_content = diffy::apply(&original_content, &patch)?;
+    let patch = diffy::Patch::from_str(patch_str)
+        .map_err(|e| anyhow!("Failed to parse patch: {}", e))?;
 
-    fs_utils::write_file_content(file_path, &patched_content).await?;
+    let patched_string = diffy::apply(content_str, &patch)?;
 
-    Ok(())
+    Ok(patched_string.into_bytes())
 }

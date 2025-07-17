@@ -1,10 +1,9 @@
 import * as tauriApi from "./tauriApi";
 import type { ReviewChange } from "../types";
 import { createReviewChange } from "../types";
-import { applyPatch as applyJsPatch } from "diff";
 
 export async function processAndStartReview(markdown: string, rootPath: string) {
-  const parsedOperations = await tauriApi.parseChangesFromMarkdown(markdown);
+  const parsedOperations = await tauriApi.parseChangesFromMarkdown(markdown, rootPath);
   if (parsedOperations.length === 0) {
     return { changes: [], backupId: null };
   }
@@ -36,17 +35,8 @@ export async function processAndStartReview(markdown: string, rootPath: string) 
         const updatedOperation = { ...operation, isNewFile };
         let updatedChange = { ...change, operation: updatedOperation };
 
-        if (!isNewFile) {
-          if (updatedOperation.type === "modify") {
-            try {
-              const modifiedContent = applyJsPatch(originalContent!, updatedOperation.diff);
-              if (modifiedContent !== false && originalContent === modifiedContent) {
-                updatedChange = { ...updatedChange, status: "identical" };
-              }
-            } catch (e) { /* ignore */ }
-          } else if (updatedOperation.type === "rewrite" && originalContent === updatedOperation.content) {
+        if (!isNewFile && originalContent === updatedOperation.content) {
             updatedChange = { ...updatedChange, status: "identical" };
-          }
         }
         return updatedChange;
       }
@@ -62,8 +52,6 @@ export async function applyChange(change: ReviewChange, rootPath: string) {
   const { operation } = change;
   switch (operation.type) {
     case "modify":
-      await tauriApi.applyPatch(getAbsPath(operation.filePath), operation.diff);
-      break;
     case "rewrite":
       await tauriApi.writeFileContent(getAbsPath(operation.filePath), operation.content);
       break;

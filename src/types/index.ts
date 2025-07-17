@@ -13,7 +13,7 @@ export type EditFormat = "udiff" | "diff-fenced" | "whole";
 export type ReviewStatus = "pending" | "applied" | "error" | "identical";
 
 export type ChangeOperation =
-  | { type: "modify"; filePath: string; diff: string; isNewFile: boolean }
+  | { type: "modify"; filePath: string; content: string; isNewFile: boolean }
   | { type: "rewrite"; filePath: string; content: string; isNewFile: boolean }
   | { type: "delete"; filePath: string }
   | { type: "move"; fromPath: string; toPath: string };

@@ -2,6 +2,7 @@ use crate::core::{cli_utils, fs_utils, git_utils, parser, patcher, path_utils, p
 use crate::error::Result;
 use base64::{engine::general_purpose, Engine as _};
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use tauri::ipc::Channel;
 use tauri::Manager;
@@ -97,12 +98,6 @@ pub async fn write_file_content(path: String, content: String) -> Result<()> {
 }
 
 #[tauri::command]
-pub async fn apply_patch(file_path: String, patch_str: String) -> Result<()> {
-    patcher::apply_patch(&PathBuf::from(file_path), &patch_str).await?;
-    Ok(())
-}
-
-#[tauri::command]
 pub async fn delete_file(file_path: String) -> Result<()> {
     fs_utils::delete_file(&PathBuf::from(file_path)).await?;
     Ok(())
@@ -148,8 +143,95 @@ pub async fn delete_backup(backup_id: String) -> Result<()> {
 }
 
 #[tauri::command]
-pub async fn parse_changes_from_markdown(markdown: String) -> Result<Vec<parser::ChangeOperation>> {
-    Ok(parser::parse_changes_from_markdown(&markdown)?)
+pub async fn parse_changes_from_markdown(
+    markdown: String,
+    root_path: String,
+) -> Result<Vec<parser::ChangeOperation>> {
+    let intermediate_ops = parser::parse(&markdown)?;
+    let root_path_buf = PathBuf::from(root_path);
+
+    let mut file_ops: HashMap<String, Vec<parser::IntermediateOperation>> = HashMap::new();
+    let mut other_ops: Vec<parser::IntermediateOperation> = Vec::new();
+
+    for op in intermediate_ops {
+        match &op {
+            parser::IntermediateOperation::Modify { file_path, .. }
+            | parser::IntermediateOperation::Rewrite { file_path, .. } => {
+                file_ops.entry(file_path.clone()).or_default().push(op);
+            }
+            _ => other_ops.push(op),
+        }
+    }
+
+    let mut processed_ops: Vec<parser::ChangeOperation> = Vec::new();
+
+    for (file_path, ops) in file_ops {
+        let path_buf = root_path_buf.join(&file_path);
+        let mut current_content = if path_buf.exists() {
+            fs_utils::read_file_bytes(&path_buf).await?
+        } else {
+            Vec::new()
+        };
+
+        let mut is_new_file_flag = !path_buf.exists();
+        let mut last_op_type_is_modify = false;
+
+        for op in ops {
+            match op {
+                parser::IntermediateOperation::Modify {
+                    diff, is_new_file, ..
+                } => {
+                    current_content = patcher::apply_patch_to_content(&current_content, &diff)?;
+                    if is_new_file {
+                        is_new_file_flag = true;
+                    }
+                    last_op_type_is_modify = true;
+                }
+                parser::IntermediateOperation::Rewrite {
+                    content,
+                    is_new_file,
+                    ..
+                } => {
+                    current_content = content.into_bytes();
+                    if is_new_file {
+                        is_new_file_flag = true;
+                    }
+                    last_op_type_is_modify = false;
+                }
+                _ => {}
+            }
+        }
+
+        let final_content = String::from_utf8(current_content)?;
+
+        if last_op_type_is_modify {
+            processed_ops.push(parser::ChangeOperation::Modify {
+                file_path,
+                content: final_content,
+                is_new_file: is_new_file_flag,
+            });
+        } else {
+            processed_ops.push(parser::ChangeOperation::Rewrite {
+                file_path,
+                content: final_content,
+                is_new_file: is_new_file_flag,
+            });
+        }
+    }
+
+    for op in other_ops {
+        match op {
+            parser::IntermediateOperation::Delete { file_path } => {
+                processed_ops.push(parser::ChangeOperation::Delete { file_path });
+            }
+            parser::IntermediateOperation::Move { from_path, to_path } => {
+                processed_ops.push(parser::ChangeOperation::Move { from_path, to_path });
+            }
+            _ => {}
+        }
+    }
+
+    Ok(processed_ops)
 }
 
 #[tauri::command]

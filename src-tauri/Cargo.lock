@@ -3871,10 +3871,8 @@ name = "repo-wizard"
 version = "1.6.0"
 dependencies = [
  "anyhow",
- "async-recursion",
  "base64 0.22.1",
  "diffy",
- "dunce",
  "ignore",
  "lazy_static",
  "log",
@@ -3901,7 +3899,6 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "uuid",
- "walkdir",
 ]
 
 [[package]]
