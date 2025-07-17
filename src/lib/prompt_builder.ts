@@ -29,45 +29,7 @@ interface BuildPromptResult {
   terminalCommandToRun: string | null;
 }
 
-const udiffFormattingRules = `# File editing rules:
-
-Return edits in fenced \`\`\`udiff code blocks.
-
-Make sure you include the first 2 lines with the file paths.
-Don't include timestamps with the file paths.
-
---- path/to/old/file.py
-+++ path/to/new/file.py
-
-Start each hunk of changes with a \`@@ ... @@\` line.
-Don't include line numbers like \`diff -U0\` does. The patch tool doesn't need them.
-
-The patch tool needs CORRECT patches that apply cleanly against the current contents of the file!
-Think carefully and make sure you include and mark all lines that need to be removed or changed as \`-\` lines.
-Make sure you mark all new or modified lines with \`+\`.
-Don't leave out any lines or the diff patch won't apply correctly.
-
-Indentation matters in the diffs!
-
-Start a new hunk for each section of the file that needs changes.
-
-Only output hunks that specify changes with \`+\` or \`-\` lines.
-Skip any hunks that are entirely unchanging \` \` lines.
-
-When editing a function, method, loop, etc use a hunk to replace the *entire* code block.
-Delete the entire existing version with \`-\` lines and then add a new, updated version with \`+\` lines.
-This will help you generate correct code and correct diffs.
-
-To make a new file, show a diff from \`--- /dev/null\` to \`+++ path/to/new/file.ext\`.
-
-To delete a file, output a single line:
-DELETE path/to/file.ext
-
-To move or rename a file, output a single line:
-MOVE path/from/old.ext TO path/to/new.ext
-`;
-
-const diffFencedFormattingRules = `# File editing rules:
+const diffFormattingRules = `# File editing rules:
 
 Return edits in search/replace blocks. Each set of changes for a file must be in a fenced code block, preceded by a \`MODIFY\` command with the file path.
 
@@ -128,8 +90,7 @@ MOVE path/from/old.ext TO path/to/new.ext
 `;
 
 const formattingRulesMap = {
-  udiff: udiffFormattingRules,
-  "diff-fenced": diffFencedFormattingRules,
+  diff: diffFormattingRules,
   whole: wholeFileFormattingRules,
 };
 

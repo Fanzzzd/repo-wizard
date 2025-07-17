@@ -9,7 +9,7 @@ export interface FileNode {
 
 export type ComposerMode = "edit" | "qa";
 export type PromptMode = "universal" | "edit" | "qa";
-export type EditFormat = "udiff" | "diff-fenced" | "whole";
+export type EditFormat = "diff" | "whole";
 export type ReviewStatus = "pending" | "applied" | "error" | "identical";
 
 export type ChangeOperation =

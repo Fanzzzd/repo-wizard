@@ -16,8 +16,7 @@ import { SegmentedControl } from "../common/SegmentedControl";
 
 const editFormatOptions: { value: EditFormat; label: string }[] = [
   { value: "whole", label: "Whole File" },
-  { value: "udiff", label: "Unified Diff" },
-  { value: "diff-fenced", label: "Fenced Diff" },
+  { value: "diff", label: "Diff" },
 ];
 
 const composerModeOptions: { value: ComposerMode; label: string }[] = [
@@ -81,8 +80,7 @@ export function PromptComposer() {
             <SegmentedControl options={editFormatOptions} value={editFormat} onChange={setEditFormat} layoutId="edit-format-slider" />
             <div className="text-xs text-gray-500 mt-1">
                 {editFormat === "whole" && <><span className="font-semibold text-green-700">Recommended:</span> Universal and reliable.</>}
-                {editFormat === "udiff" && <><span className="font-semibold text-yellow-700">Experimental:</span> Best for GPT models.</>}
-                {editFormat === "diff-fenced" && <><span className="font-semibold text-yellow-700">Experimental:</span> Best for Gemini models.</>}
+                {editFormat === "diff" && <><span className="font-semibold text-yellow-700">Experimental:</span> Best for models supporting search/replace blocks.</>}
             </div>
           </div>
         )}
