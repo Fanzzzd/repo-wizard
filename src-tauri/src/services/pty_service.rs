@@ -1,3 +1,4 @@
+use crate::types::CommandStreamEvent;
 use anyhow::{anyhow, Result};
 use once_cell::sync::Lazy;
 use portable_pty::{CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
@@ -15,15 +16,6 @@ struct PtySession {
 type PtySessionArc = Arc<Mutex<Option<PtySession>>>;
 
 static PTY_SESSION: Lazy<PtySessionArc> = Lazy::new(|| Arc::new(Mutex::new(None)));
-
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", tag = "type", content = "data")]
-pub enum CommandStreamEvent {
-    Stdout(Vec<u8>),
-    Stderr(Vec<u8>),
-    Error(String),
-    Finish(String),
-}
 
 pub async fn write_to_pty(text: String) -> Result<()> {
     if let Some(session) = &mut *PTY_SESSION.lock().unwrap() {
@@ -92,9 +84,7 @@ pub async fn start_pty_session(
     let session = PtySession { master, writer };
     *PTY_SESSION.lock().unwrap() = Some(session);
 
-    // Write the command if provided, after storing the session
     if let Some(command_to_run) = command {
-        // Give shell a moment to initialize before writing the command
         sleep(Duration::from_millis(100)).await;
         if let Some(session) = &mut *PTY_SESSION.lock().unwrap() {
             writeln!(session.writer, "{}", command_to_run)?;

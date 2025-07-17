@@ -1,6 +1,8 @@
 mod commands;
 mod core;
 mod error;
+mod services;
+mod types;
 
 use tauri::Emitter;
 use tauri_plugin_log::{Builder as LogBuilder, Target, TargetKind};

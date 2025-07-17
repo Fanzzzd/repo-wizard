@@ -1,22 +1,11 @@
-use crate::commands::IgnoreSettings;
+use crate::types::{FileNode, IgnoreSettings};
 use anyhow::{anyhow, Result};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
-use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tokio::fs;
 use tokio::io::AsyncReadExt;
 use uuid::Uuid;
-
-#[derive(Debug, Serialize)]
-pub struct FileNode {
-    pub path: String,
-    pub name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub children: Option<Vec<FileNode>>,
-    #[serde(rename = "isDirectory")]
-    pub is_directory: bool,
-}
 
 fn normalize_path_str(p: &Path) -> String {
     p.to_string_lossy().replace('\\', "/")
@@ -33,9 +22,6 @@ pub async fn list_directory_recursive(
 
     if !settings.custom_ignore_patterns.is_empty() {
         let mut override_builder = OverrideBuilder::new(root_path);
-        // Important, the `ignore` crate uses a different logic for custom ignore patterns.
-        // Standard gitignore: `foo` ignores, `!foo` whitelists.
-        // OverrideBuilder: `!foo` ignores, `foo` whitelists.
         for pattern in settings.custom_ignore_patterns.lines() {
             let trimmed = pattern.trim();
             if !trimmed.is_empty() && !trimmed.starts_with('#') {
@@ -161,18 +147,14 @@ pub async fn move_file(from: &PathBuf, to: &PathBuf) -> Result<()> {
     fs::rename(from, to).await.map_err(anyhow::Error::from)
 }
 
-/// Checks if a file is likely binary by reading its first few bytes and looking for a null byte.
 pub async fn is_binary(path: &Path) -> Result<bool> {
     let mut file = match fs::File::open(path).await {
         Ok(f) => f,
-        // If we can't open it, it might be a broken symlink or permissions issue. Treat as non-text.
         Err(_) => return Ok(true),
     };
-    // Read up to the first 8000 bytes, a common heuristic for binary detection.
     let mut buffer = [0; 8000];
     let n = file.read(&mut buffer).await?;
 
-    // The presence of a null byte is a strong indicator of a binary file.
     Ok(buffer[..n].contains(&0))
 }
 

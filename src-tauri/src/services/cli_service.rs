@@ -1,5 +1,5 @@
+use crate::types::{CliInstallResult, CliStatusResult};
 use anyhow::{anyhow, Result};
-use serde::Serialize;
 use std::env;
 use std::path::{Path, PathBuf};
 use tokio::fs;
@@ -8,20 +8,6 @@ use tokio::io::AsyncWriteExt;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 
-#[derive(Debug, Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct CliStatusResult {
-    status: String, // "installed", "not_installed", "error"
-    error: Option<String>,
-}
-
-#[derive(Debug, Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct CliInstallResult {
-    message: String,
-}
-
-/// Returns the dedicated directory for the repo-wizard shim.
 fn get_shim_dir() -> Result<PathBuf> {
     let home_dir =
         env::var("HOME").or_else(|_| env::var("USERPROFILE")).map(PathBuf::from)
@@ -39,7 +25,6 @@ fn get_shim_path(shim_dir: &Path) -> PathBuf {
     shim_dir.join("repowizard")
 }
 
-/// Checks if a directory is present in the PATH environment variable.
 fn is_dir_in_path(dir: &Path) -> bool {
     if let Ok(path_var) = env::var("PATH") {
         env::split_paths(&path_var).any(|p| p == dir)
@@ -48,7 +33,6 @@ fn is_dir_in_path(dir: &Path) -> bool {
     }
 }
 
-/// Attempts to add the shim directory to the user's PATH.
 #[cfg(unix)]
 async fn add_shim_dir_to_path(shim_dir: &Path) -> Result<()> {
     if is_dir_in_path(shim_dir) {
@@ -128,7 +112,6 @@ async fn add_shim_dir_to_path(shim_dir: &Path) -> Result<()> {
     }
 }
 
-/// Checks if the `repowizard` CLI command is available in the system's PATH.
 pub fn get_cli_status() -> CliStatusResult {
     if let Ok(path_var) = env::var("PATH") {
         for p in env::split_paths(&path_var) {
@@ -147,7 +130,6 @@ pub fn get_cli_status() -> CliStatusResult {
     }
 }
 
-/// Creates a shim file and attempts to add its directory to the system PATH.
 pub async fn install_cli_shim() -> Result<CliInstallResult> {
     let exe_path = env::current_exe()?;
     let exe_path_str = exe_path.to_string_lossy();

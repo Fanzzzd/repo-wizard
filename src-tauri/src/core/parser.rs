@@ -8,37 +8,7 @@ use nom::{
     sequence::{preceded, terminated},
     IResult, Parser,
 };
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-#[serde(tag = "type", rename_all = "lowercase")]
-pub enum ChangeOperation {
-    Modify {
-        #[serde(rename = "filePath")]
-        file_path: String,
-        content: String,
-        #[serde(rename = "isNewFile")]
-        is_new_file: bool,
-    },
-    Rewrite {
-        #[serde(rename = "filePath")]
-        file_path: String,
-        content: String,
-        #[serde(rename = "isNewFile")]
-        is_new_file: bool,
-    },
-    Delete {
-        #[serde(rename = "filePath")]
-        file_path: String,
-    },
-    Move {
-        #[serde(rename = "fromPath")]
-        from_path: String,
-        #[serde(rename = "toPath")]
-        to_path: String,
-    },
-}
 
 #[derive(Debug, PartialEq)]
 pub enum IntermediateOperation {
