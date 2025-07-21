@@ -1,3 +1,10 @@
+## [1.6.1-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.1-next.1...app-v1.6.1-next.2) (2025-07-21)
+
+
+### Bug Fixes
+
+* **dependencies:** update xvc-logging and xvc-walker source to latest commit for improved functionality ([5c6442f](https://github.com/Fanzzzd/repo-wizard/commit/5c6442f9273c69577c1a329907d389e5777fa486))
+
 ## [1.6.1-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0...app-v1.6.1-next.1) (2025-07-21)
 
 
