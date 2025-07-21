@@ -3,8 +3,10 @@ use anyhow::Result;
 use notify_debouncer_full::{
     new_debouncer_opt,
     notify::{Config, RecursiveMode, RecommendedWatcher},
-    DebounceEventResult, NoCache,
+    DebounceEventResult,
 };
+#[cfg(not(target_os = "linux"))]
+use notify_debouncer_full::NoCache;
 #[cfg(target_os = "linux")]
 use notify_debouncer_full::FileIdMap;
 use once_cell::sync::Lazy;
