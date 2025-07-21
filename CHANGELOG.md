@@ -1,3 +1,10 @@
+# [1.6.0-next.7](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.6...app-v1.6.0-next.7) (2025-07-21)
+
+
+### Bug Fixes
+
+* **dependencies:** update @tauri-apps/api and related packages to version 2.7.0 to fix action error ([b3f60c3](https://github.com/Fanzzzd/repo-wizard/commit/b3f60c3d75c4d8e8e634235ef7b1b995d74a4c75))
+
 # [1.6.0-next.6](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.5...app-v1.6.0-next.6) (2025-07-21)
 
 
