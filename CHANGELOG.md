@@ -1,3 +1,10 @@
+# [1.6.0-next.4](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.3...app-v1.6.0-next.4) (2025-07-21)
+
+
+### Bug Fixes
+
+* **tauri:** resolve cross-platform build error in watcher_service ([fedc827](https://github.com/Fanzzzd/repo-wizard/commit/fedc82707468a9ad6aa193adf4788e1ae8305fbc))
+
 # [1.6.0-next.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.2...app-v1.6.0-next.3) (2025-07-21)
 
 
