@@ -1,3 +1,10 @@
+# [1.6.0-next.5](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.4...app-v1.6.0-next.5) (2025-07-21)
+
+
+### Bug Fixes
+
+* **watcher_service:** add conditional compilation for NoCache on non-Linux platforms ([1d48832](https://github.com/Fanzzzd/repo-wizard/commit/1d488323bf71d853e3b44f1c8029496ad22baf48))
+
 # [1.6.0-next.4](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.3...app-v1.6.0-next.4) (2025-07-21)
 
 
