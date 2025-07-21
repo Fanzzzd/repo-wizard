@@ -1,3 +1,10 @@
+# [1.6.0-next.6](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.5...app-v1.6.0-next.6) (2025-07-21)
+
+
+### Bug Fixes
+
+* **dependencies:** update multiple crates and versions in Cargo.lock ([512cf2e](https://github.com/Fanzzzd/repo-wizard/commit/512cf2e9bef4f9b69824951025ec2005cce6d5c5))
+
 # [1.6.0-next.5](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.4...app-v1.6.0-next.5) (2025-07-21)
 
 
