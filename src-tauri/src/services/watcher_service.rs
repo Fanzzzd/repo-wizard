@@ -1,16 +1,20 @@
 use crate::types::IgnoreSettings;
 use anyhow::Result;
 use notify_debouncer_full::{
-    new_debouncer,
-    notify::RecursiveMode,
-    DebounceEventResult, Debouncer, FileIdMap,
+    new_debouncer_opt,
+    notify::{Config, RecursiveMode, RecommendedWatcher},
+    DebounceEventResult, NoCache,
 };
+#[cfg(target_os = "linux")]
+use notify_debouncer_full::FileIdMap;
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, path::Path, sync::Mutex, time::Duration};
 use tauri::Emitter;
 use xvc_walker::{build_ignore_patterns, IgnoreRules, MatchResult};
 
-type WatcherMap = Mutex<HashMap<String, Debouncer<notify::RecommendedWatcher, FileIdMap>>>;
+// Use Box<dyn> to avoid specific type constraints that differ across platforms
+type WatcherType = Box<dyn std::any::Any + Send + Sync>;
+type WatcherMap = Mutex<HashMap<String, WatcherType>>;
 static WATCHERS: Lazy<WatcherMap> = Lazy::new(Default::default);
 
 pub fn start_watching(
@@ -63,9 +67,24 @@ pub fn start_watching(
     };
 
     let path_to_watch = root_path.to_path_buf();
-    let mut debouncer = new_debouncer(Duration::from_millis(300), None, event_handler)?;
+    
+    #[cfg(target_os = "linux")]
+    let cache = FileIdMap::new();
+    #[cfg(not(target_os = "linux"))]
+    let cache = NoCache;
+
+    let mut debouncer = new_debouncer_opt::<_, RecommendedWatcher, _>(
+        Duration::from_millis(300),
+        None,
+        event_handler,
+        cache,
+        Config::default(),
+    )?;
+
     debouncer.watch(&path_to_watch, RecursiveMode::Recursive)?;
-    watchers.insert(path_str, debouncer);
+    
+    // Box the debouncer to store it as Any
+    watchers.insert(path_str, Box::new(debouncer));
 
     Ok(())
 }
