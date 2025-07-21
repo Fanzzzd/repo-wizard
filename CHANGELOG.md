@@ -1,3 +1,10 @@
+# [1.6.0-next.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.2...app-v1.6.0-next.3) (2025-07-21)
+
+
+### Features
+
+* **fs_utils, watcher_service:** integrate xvc-walker for enhanced file handling ([ecc80c5](https://github.com/Fanzzzd/repo-wizard/commit/ecc80c56d217f61f54004744bded459d628e9867))
+
 # [1.6.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.1...app-v1.6.0-next.2) (2025-07-17)
 
 
