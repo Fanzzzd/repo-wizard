@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0...app-v1.6.1) (2025-07-21)
+
+
+### Bug Fixes
+
+* **dependencies:** Fix ignore bug by using custom patch add crossbeam-channel and update xvc-walker source to speedup walk ([d67728c](https://github.com/Fanzzzd/repo-wizard/commit/d67728c7a921121b24b9a8d7ddb6bf1ebdde7a77))
+
 ## [1.6.1-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0...app-v1.6.1-next.1) (2025-07-21)
 
 
