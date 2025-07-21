@@ -6913,7 +6913,7 @@ dependencies = [
 [[package]]
 name = "xvc-logging"
 version = "0.6.17"
-source = "git+https://github.com/Fanzzzd/xvc.git#7995b871995bc1ca47d15aa57bbda6c08d33d073"
+source = "git+https://github.com/Fanzzzd/xvc.git#bb7ebe15a75e98626e3361d3117b3b9e727b704a"
 dependencies = [
  "crossbeam-channel",
  "fern",
@@ -6924,7 +6924,7 @@ dependencies = [
 [[package]]
 name = "xvc-walker"
 version = "0.6.17"
-source = "git+https://github.com/Fanzzzd/xvc.git#7995b871995bc1ca47d15aa57bbda6c08d33d073"
+source = "git+https://github.com/Fanzzzd/xvc.git#bb7ebe15a75e98626e3361d3117b3b9e727b704a"
 dependencies = [
  "anyhow",
  "crossbeam",
