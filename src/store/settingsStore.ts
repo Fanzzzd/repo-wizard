@@ -21,6 +21,7 @@ interface SettingsState {
   metaPrompts: MetaPromptDefinition[];
   autoReviewOnPaste: boolean;
   recentProjects: string[];
+  promptHistoryLimit: number;
 
   // Actions
   setRespectGitignore: (value: boolean) => void;
@@ -31,6 +32,7 @@ interface SettingsState {
   setAutoReviewOnPaste: (value: boolean) => void;
   addRecentProject: (path: string) => void;
   removeRecentProject: (path: string) => void;
+  setPromptHistoryLimit: (limit: number) => void;
 
   // Internal
   _isInitialized: boolean;
@@ -49,12 +51,13 @@ const getTauriStore = async (): Promise<TauriStore> => {
 export const useSettingsStore = create<SettingsState>((set, get) => {
   const initialState = {
     respectGitignore: true,
-    customIgnorePatterns: "",
+    customIgnorePatterns: ".git",
     customSystemPrompt: defaultSystemPrompt,
     editFormat: "whole" as EditFormat,
     metaPrompts: [] as MetaPromptDefinition[],
     autoReviewOnPaste: true,
     recentProjects: [] as string[],
+    promptHistoryLimit: 50,
   };
 
   let saveTimeout: NodeJS.Timeout | null = null;
@@ -102,6 +105,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setEditFormat: (format) => set({ editFormat: format }),
     setMetaPrompts: (prompts) => set({ metaPrompts: prompts }),
     setAutoReviewOnPaste: (value) => set({ autoReviewOnPaste: value }),
+    setPromptHistoryLimit: (limit) => set({ promptHistoryLimit: limit }),
     addRecentProject: (path) =>
       set((state) => {
         const otherProjects = state.recentProjects.filter((p) => p !== path);

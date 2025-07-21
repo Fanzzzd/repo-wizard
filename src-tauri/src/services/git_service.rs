@@ -1,30 +1,7 @@
+use crate::types::{Commit, DiffOption, GitStatus};
 use anyhow::{anyhow, Result};
-use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::process::{Command, Stdio};
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct GitStatus {
-    pub has_staged_changes: bool,
-    pub has_unstaged_changes: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Commit {
-    pub hash: String,
-    pub message: String,
-    pub author: String,
-    pub date: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
-pub enum DiffOption {
-    Staged,
-    Unstaged,
-    Commit { hash: String },
-}
 
 fn run_git_command(cwd: &Path, args: &[&str]) -> Result<String> {
     let output = Command::new("git")

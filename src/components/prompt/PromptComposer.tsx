@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useComposerStore } from "../../store/composerStore";
 import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useReviewStore } from "../../store/reviewStore";
 import { usePromptGenerator } from "../../hooks/usePromptGenerator";
 import { useReviewSession } from "../../hooks/useReviewSession";
+import { useUndo } from "../../hooks/useUndo";
 import { Clipboard, Check, SlidersHorizontal, History, FileSearch2, RefreshCw } from "lucide-react";
 import type { ComposerMode, EditFormat } from "../../types";
 import { MetaPromptsManagerModal } from "./MetaPromptsManagerModal";
@@ -16,8 +17,7 @@ import { SegmentedControl } from "../common/SegmentedControl";
 
 const editFormatOptions: { value: EditFormat; label: string }[] = [
   { value: "whole", label: "Whole File" },
-  { value: "udiff", label: "Unified Diff" },
-  { value: "diff-fenced", label: "Fenced Diff" },
+  { value: "diff", label: "Diff" },
 ];
 
 const composerModeOptions: { value: ComposerMode; label: string }[] = [
@@ -26,7 +26,14 @@ const composerModeOptions: { value: ComposerMode; label: string }[] = [
 ];
 
 export function PromptComposer() {
-  const { instructions, setInstructions, markdownResponse, setMarkdownResponse, composerMode, setComposerMode } = useComposerStore();
+  const { 
+    instructions: storeInstructions, 
+    setInstructions: setStoreInstructions, 
+    markdownResponse: storeMarkdownResponse, 
+    setMarkdownResponse: setStoreMarkdownResponse, 
+    composerMode, 
+    setComposerMode 
+  } = useComposerStore();
   const { selectedFilePaths } = useWorkspaceStore();
   const { clearReviewSession } = useReviewStore();
   
@@ -36,6 +43,47 @@ export function PromptComposer() {
 
   const { estimatedTokens, generateAndCopyPrompt, isCopied, isGenerating } = usePromptGenerator();
   const { startReview, reenterReview, hasUnprocessedResponse, canReenterReview } = useReviewSession();
+
+  const [
+    instructions,
+    { set: setInstructions, undo: undoInstructions, redo: redoInstructions, reset: resetInstructions },
+  ] = useUndo(storeInstructions);
+
+  const [
+    markdownResponse,
+    { set: setMarkdownResponse, undo: undoMarkdownResponse, redo: redoMarkdownResponse, reset: resetMarkdownResponse },
+  ] = useUndo(storeMarkdownResponse);
+
+  // Sync local -> global
+  useEffect(() => {
+    if (storeInstructions !== instructions) {
+      setStoreInstructions(instructions);
+    }
+  }, [instructions, storeInstructions, setStoreInstructions]);
+
+  // Sync global -> local
+  useEffect(() => {
+    if (storeInstructions !== instructions) {
+      resetInstructions(storeInstructions);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeInstructions]);
+
+  // Sync local -> global
+  useEffect(() => {
+    if (storeMarkdownResponse !== markdownResponse) {
+      setStoreMarkdownResponse(markdownResponse);
+    }
+  }, [markdownResponse, storeMarkdownResponse, setStoreMarkdownResponse]);
+  
+  // Sync global -> local
+  useEffect(() => {
+    if (storeMarkdownResponse !== markdownResponse) {
+      resetMarkdownResponse(storeMarkdownResponse);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeMarkdownResponse]);
+
 
   const responsePlaceholder = composerMode === "edit" && autoReviewOnPaste ? "Paste response to auto-start review..." : "Paste response and click 'Review'.";
 
@@ -81,8 +129,7 @@ export function PromptComposer() {
             <SegmentedControl options={editFormatOptions} value={editFormat} onChange={setEditFormat} layoutId="edit-format-slider" />
             <div className="text-xs text-gray-500 mt-1">
                 {editFormat === "whole" && <><span className="font-semibold text-green-700">Recommended:</span> Universal and reliable.</>}
-                {editFormat === "udiff" && <><span className="font-semibold text-yellow-700">Experimental:</span> Best for GPT models.</>}
-                {editFormat === "diff-fenced" && <><span className="font-semibold text-yellow-700">Experimental:</span> Best for Gemini models.</>}
+                {editFormat === "diff" && <><span className="font-semibold text-yellow-700">Experimental:</span> Best for models supporting search/replace blocks.</>}
             </div>
           </div>
         )}
@@ -95,7 +142,14 @@ export function PromptComposer() {
           <MetaPromptSelector key={composerMode} composerMode={composerMode} onManageRequest={() => setIsMetaPromptsManagerOpen(true)} />
         </div>
 
-        <Textarea className="flex-grow mb-2" placeholder="Enter your refactoring instructions here..." value={instructions} onChange={(e) => setInstructions(e.target.value)} />
+        <Textarea 
+          className="flex-grow mb-2" 
+          placeholder="Enter your refactoring instructions here..." 
+          value={instructions} 
+          onChange={(e) => setInstructions(e.target.value)}
+          onUndo={undoInstructions}
+          onRedo={redoInstructions}
+        />
         <div className="text-right text-xs text-gray-500 mb-2">Estimated Tokens: ~{formatTokenCount(estimatedTokens)}</div>
         <Button onClick={() => generateAndCopyPrompt()} variant="primary" size="md" className="bg-indigo-600 hover:bg-indigo-500" disabled={selectedFilePaths.length === 0 || !instructions || isGenerating} leftIcon={generateIcon}>
           {generateText}
@@ -108,7 +162,14 @@ export function PromptComposer() {
             <h2 className="font-bold">Paste Response & Review</h2>
             {renderReviewButton()}
           </div>
-          <Textarea className="h-24 mb-2" placeholder={responsePlaceholder} value={markdownResponse} onChange={handleResponseChange} />
+          <Textarea 
+            className="h-24 mb-2" 
+            placeholder={responsePlaceholder} 
+            value={markdownResponse} 
+            onChange={handleResponseChange}
+            onUndo={undoMarkdownResponse}
+            onRedo={redoMarkdownResponse}
+          />
         </div>
       )}
       <MetaPromptsManagerModal isOpen={isMetaPromptsManagerOpen} onClose={() => setIsMetaPromptsManagerOpen(false)} />

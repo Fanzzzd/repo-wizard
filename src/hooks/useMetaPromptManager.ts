@@ -34,17 +34,13 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
   );
 
   const { universalPrompts, editPrompts, qaPrompts } = useMemo(() => {
-    const sortedPrompts = [...localPrompts].sort((a, b) => {
-        const aIndex = promptDefs.findIndex(p => p.id === a.id);
-        const bIndex = promptDefs.findIndex(p => p.id === b.id);
-        return aIndex - bIndex;
-    });
+    // The order of localPrompts is managed by dnd-kit and should be respected.
     return {
-      universalPrompts: sortedPrompts.filter((p) => p.mode === "universal"),
-      editPrompts: sortedPrompts.filter((p) => p.mode === "edit"),
-      qaPrompts: sortedPrompts.filter((p) => p.mode === "qa"),
+      universalPrompts: localPrompts.filter((p) => p.mode === "universal"),
+      editPrompts: localPrompts.filter((p) => p.mode === "edit"),
+      qaPrompts: localPrompts.filter((p) => p.mode === "qa"),
     };
-  }, [localPrompts, promptDefs]);
+  }, [localPrompts]);
 
   useEffect(() => {
     if (isOpen) {
@@ -54,13 +50,12 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
       }));
       setLocalPrompts(currentPrompts);
 
-      if (currentPrompts.length > 0 && !selectedPromptId) {
-        setSelectedPromptId(currentPrompts[0].id);
-      } else if (currentPrompts.length === 0) {
-        setSelectedPromptId(null);
-      } else if (selectedPromptId && !currentPrompts.some(p => p.id === selectedPromptId)) {
-        setSelectedPromptId(currentPrompts[0]?.id ?? null);
-      }
+      setSelectedPromptId((currentId) => {
+        if (currentId && currentPrompts.some((p) => p.id === currentId)) {
+          return currentId;
+        }
+        return currentPrompts[0]?.id ?? null;
+      });
 
       const fetchTemplates = async () => {
         const templateFiles = [
@@ -88,25 +83,13 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
       };
       fetchTemplates();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
-
-  useEffect(() => {
-    if(isOpen) {
-        setLocalPrompts(currentPrompts => {
-            const currentIds = new Set(currentPrompts.map(p => p.id));
-            const defsToAdd = promptDefs.filter(def => !currentIds.has(def.id));
-            if (defsToAdd.length > 0) {
-                return [ ...currentPrompts, ...defsToAdd.map(def => ({...def, enabled: enabledMetaPromptIds.includes(def.id)}))];
-            }
-            return currentPrompts;
-        })
-    }
-  }, [promptDefs, isOpen, enabledMetaPromptIds]);
-
+  }, [isOpen, promptDefs, enabledMetaPromptIds]);
 
   const handleSave = () => {
-    const definitionsToSave = localPrompts.map(({ enabled, ...def }) => def);
+    const definitionsToSave: MetaPromptDefinition[] = localPrompts.map(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      ({ enabled, ...def }) => def
+    );
     const enabledIdsToSave = localPrompts
       .filter((p) => p.enabled)
       .map((p) => p.id);

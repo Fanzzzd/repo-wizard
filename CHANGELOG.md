@@ -1,3 +1,63 @@
+# [1.6.0-next.7](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.6...app-v1.6.0-next.7) (2025-07-21)
+
+
+### Bug Fixes
+
+* **dependencies:** update @tauri-apps/api and related packages to version 2.7.0 to fix action error ([b3f60c3](https://github.com/Fanzzzd/repo-wizard/commit/b3f60c3d75c4d8e8e634235ef7b1b995d74a4c75))
+
+# [1.6.0-next.6](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.5...app-v1.6.0-next.6) (2025-07-21)
+
+
+### Bug Fixes
+
+* **dependencies:** update multiple crates and versions in Cargo.lock ([512cf2e](https://github.com/Fanzzzd/repo-wizard/commit/512cf2e9bef4f9b69824951025ec2005cce6d5c5))
+
+# [1.6.0-next.5](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.4...app-v1.6.0-next.5) (2025-07-21)
+
+
+### Bug Fixes
+
+* **watcher_service:** add conditional compilation for NoCache on non-Linux platforms ([1d48832](https://github.com/Fanzzzd/repo-wizard/commit/1d488323bf71d853e3b44f1c8029496ad22baf48))
+
+# [1.6.0-next.4](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.3...app-v1.6.0-next.4) (2025-07-21)
+
+
+### Bug Fixes
+
+* **tauri:** resolve cross-platform build error in watcher_service ([fedc827](https://github.com/Fanzzzd/repo-wizard/commit/fedc82707468a9ad6aa193adf4788e1ae8305fbc))
+
+# [1.6.0-next.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.2...app-v1.6.0-next.3) (2025-07-21)
+
+
+### Features
+
+* **fs_utils, watcher_service:** integrate xvc-walker for enhanced file handling ([ecc80c5](https://github.com/Fanzzzd/repo-wizard/commit/ecc80c56d217f61f54004744bded459d628e9867))
+
+# [1.6.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0-next.1...app-v1.6.0-next.2) (2025-07-17)
+
+
+### Bug Fixes
+
+* **settingsStore:** update default custom ignore patterns to include .git ([6fd44a9](https://github.com/Fanzzzd/repo-wizard/commit/6fd44a9c9955fbb61a54e0d05a01843898349f40))
+
+
+### Features
+
+* **App:** enhance input focus handling and update edit menu items ([987c13e](https://github.com/Fanzzzd/repo-wizard/commit/987c13e08fca56febc6c5b5276b339341c14bfec))
+* **Textarea, PromptComposer:** add undo/redo functionality to Textarea component ([460d819](https://github.com/Fanzzzd/repo-wizard/commit/460d81978a8484e9ea90dd7c83c819474448d29b))
+* **watcher_service, tauriApi, workspaceStore:** enhance file watching functionality with custom ignore settings ([470d0d2](https://github.com/Fanzzzd/repo-wizard/commit/470d0d2e6589e8dbfb6eb792e94b7243613aea2e))
+* **workspaceStore, tauriApi:** implement file watching commands and enhance workspace functionality ([e77dd4f](https://github.com/Fanzzzd/repo-wizard/commit/e77dd4f4b34e0f0596ea2b1b0802a495e4a1bebd))
+
+# [1.6.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.5.0...app-v1.6.0-next.1) (2025-07-16)
+
+
+### Features
+
+* **cli:** enhance CLI integration and project handling ([bfe1183](https://github.com/Fanzzzd/repo-wizard/commit/bfe11838857f3b9e9447885863672498d059677d))
+* **cli:** integrate CLI support and enhance command line tool setup ([74b27f9](https://github.com/Fanzzzd/repo-wizard/commit/74b27f9f7a12f628128f855b081251e2de33e342))
+* **history:** prevent duplicate history and add configurable limit ([bc504ac](https://github.com/Fanzzzd/repo-wizard/commit/bc504acc3e2e25c66b33917da9d407b42a45ae01))
+* **workspaceStore:** implement file watching for project directory ([9f26e43](https://github.com/Fanzzzd/repo-wizard/commit/9f26e436a5a0bcfd1119b3980efe532830cd39b0))
+
 # [1.5.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.4.0...app-v1.5.0) (2025-07-14)
 
 

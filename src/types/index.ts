@@ -9,11 +9,11 @@ export interface FileNode {
 
 export type ComposerMode = "edit" | "qa";
 export type PromptMode = "universal" | "edit" | "qa";
-export type EditFormat = "udiff" | "diff-fenced" | "whole";
+export type EditFormat = "diff" | "whole";
 export type ReviewStatus = "pending" | "applied" | "error" | "identical";
 
 export type ChangeOperation =
-  | { type: "modify"; filePath: string; diff: string; isNewFile: boolean }
+  | { type: "modify"; filePath: string; content: string; isNewFile: boolean }
   | { type: "rewrite"; filePath: string; content: string; isNewFile: boolean }
   | { type: "delete"; filePath: string }
   | { type: "move"; fromPath: string; toPath: string };
@@ -88,3 +88,12 @@ export type CommandStreamEvent =
   | { type: "stderr"; data: number[] }
   | { type: "error"; data: string }
   | { type: "finish"; data: string };
+
+export interface CliStatusResult {
+  status: "installed" | "not_installed" | "error" | "checking";
+  error?: string;
+}
+
+export interface CliInstallResult {
+  message: string;
+}

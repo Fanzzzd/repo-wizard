@@ -1,6 +1,7 @@
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useMemo } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import {
   Menu,
   Submenu,
@@ -8,6 +9,7 @@ import {
   PredefinedMenuItem,
 } from "@tauri-apps/api/menu";
 import { platform } from "@tauri-apps/plugin-os";
+import { getMatches } from "@tauri-apps/plugin-cli";
 
 import { Layout } from "./components/Layout";
 import { MainPanel } from "./components/MainPanel";
@@ -33,55 +35,65 @@ declare global {
   }
 }
 
-function ProjectView() {
-  const { isReviewing } = useReviewStore();
-
-  const workspaceRightPanel = (
-    <TabbedPanel
-      tabs={{
-        "Compose & Review": <PromptComposer />,
-        "Prompt History": <PromptHistoryPanel />,
-      }}
-    />
-  );
-
-  const leftPanel = isReviewing ? <ChangeList /> : <WorkspaceSidebar />;
-  const rightPanel = isReviewing ? undefined : workspaceRightPanel;
-
-  return (
-    <Layout
-      leftPanel={leftPanel}
-      mainPanel={<MainPanel />}
-      rightPanel={rightPanel}
-    />
-  );
+interface SingleInstancePayload {
+  args: string[];
+  cwd: string;
 }
 
-const WelcomeView = () => {
-  const workspaceRightPanel = (
-    <TabbedPanel
-      tabs={{
-        "Compose & Review": <PromptComposer />,
-        "Prompt History": <PromptHistoryPanel />,
-      }}
-    />
-  );
-
-  return (
-    <Layout
-      leftPanel={<WorkspaceSidebar />}
-      mainPanel={<MainPanel />}
-      rightPanel={workspaceRightPanel}
-    />
-  );
-};
-
 function App() {
-  const { isInitialized, setRootPath } = useWorkspaceStore();
+  const { setRootPath } = useWorkspaceStore();
+  const { isReviewing } = useReviewStore();
   const { open: openDialog } = useDialogStore();
   const { status, updateInfo, install } = useUpdateStore();
   const { recentProjects } = useSettingsStore();
   const [fontSize, setFontSize] = useState(14);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+
+  useEffect(() => {
+    const handleFocusChange = () => {
+      const el = document.activeElement;
+      let isFocused = false;
+      if (el) {
+        const isEditor = el.closest(".monaco-editor");
+        const elTag = el.tagName.toUpperCase();
+        if (elTag === "INPUT" || elTag === "TEXTAREA" || isEditor) {
+          isFocused = true;
+        }
+      }
+      setIsInputFocused(isFocused);
+    };
+
+    document.addEventListener("focusin", handleFocusChange, true);
+    document.addEventListener("focusout", handleFocusChange, true);
+    handleFocusChange();
+
+    return () => {
+      document.removeEventListener("focusin", handleFocusChange, true);
+      document.removeEventListener("focusout", handleFocusChange, true);
+    };
+  }, []);
+
+  useEffect(() => {
+    const unlisten = listen<SingleInstancePayload>(
+      "single-instance",
+      (event) => {
+        const { args: argv, cwd } = event.payload;
+        if (argv.length > 1 && argv[1]) {
+          invoke<string>("resolve_path", { path: argv[1], cwd })
+            .then((absolutePath) => {
+              invoke("open_project_window", { rootPath: absolutePath });
+            })
+            .catch((e) => {
+              console.warn("Could not process single-instance CLI argument:", e);
+            });
+        }
+      }
+    );
+
+    return () => {
+      unlisten.then((f) => f());
+    };
+  }, []);
 
   useEffect(() => {
     const handleZoom = (e: CustomEvent) => {
@@ -116,7 +128,8 @@ function App() {
                 recentProjects.map((path) =>
                   MenuItem.new({
                     text: path,
-                    action: () => invoke("open_project_window", { rootPath: path }),
+                    action: () =>
+                      invoke("open_project_window", { rootPath: path }),
                   })
                 )
               ),
@@ -135,20 +148,27 @@ function App() {
             action: () => {
               openDialog({
                 title: `About Repo Wizard v${__APP_VERSION__}`,
-                content: "A code refactoring staging area to safely and efficiently apply LLM-suggested code changes.",
-                status: 'info',
-                type: 'alert'
-              })
+                content:
+                  "A code refactoring staging area to safely and efficiently apply LLM-suggested code changes.",
+                status: "info",
+                type: "alert",
+              });
             },
           }),
           await PredefinedMenuItem.new({ item: "Separator" }),
           await PredefinedMenuItem.new({ item: "Services" }),
           await PredefinedMenuItem.new({ item: "Separator" }),
-          await PredefinedMenuItem.new({ item: "Hide", text: "Hide Repo Wizard" }),
+          await PredefinedMenuItem.new({
+            item: "Hide",
+            text: "Hide Repo Wizard",
+          }),
           await PredefinedMenuItem.new({ item: "HideOthers" }),
           await PredefinedMenuItem.new({ item: "ShowAll" }),
           await PredefinedMenuItem.new({ item: "Separator" }),
-          await PredefinedMenuItem.new({ item: "Quit", text: "Quit Repo Wizard" }),
+          await PredefinedMenuItem.new({
+            item: "Quit",
+            text: "Quit Repo Wizard",
+          }),
         ],
       });
       allMenuItems.push(appMenu);
@@ -182,17 +202,30 @@ function App() {
     });
     allMenuItems.push(fileMenu);
 
+    const editMenuItems: (MenuItem | PredefinedMenuItem)[] = [
+      await PredefinedMenuItem.new({ item: "Undo" }),
+      await PredefinedMenuItem.new({ item: "Redo" }),
+      await PredefinedMenuItem.new({ item: "Separator" }),
+      await PredefinedMenuItem.new({ item: "Cut" }),
+      await PredefinedMenuItem.new({ item: "Copy" }),
+      await PredefinedMenuItem.new({ item: "Paste" }),
+    ];
+
+    if (isInputFocused) {
+      editMenuItems.push(await PredefinedMenuItem.new({ item: "SelectAll" }));
+    } else {
+      editMenuItems.push(
+        await MenuItem.new({
+          text: "Select All",
+          accelerator: "CmdOrCtrl+A",
+          enabled: false,
+        })
+      );
+    }
+
     const editMenu = await Submenu.new({
       text: "Edit",
-      items: [
-        await PredefinedMenuItem.new({ item: "Undo" }),
-        await PredefinedMenuItem.new({ item: "Redo" }),
-        await PredefinedMenuItem.new({ item: "Separator" }),
-        await PredefinedMenuItem.new({ item: "Cut" }),
-        await PredefinedMenuItem.new({ item: "Copy" }),
-        await PredefinedMenuItem.new({ item: "Paste" }),
-        await PredefinedMenuItem.new({ item: "SelectAll" }),
-      ],
+      items: editMenuItems,
     });
     allMenuItems.push(editMenu);
 
@@ -200,30 +233,22 @@ function App() {
       text: "View",
       items: [
         await MenuItem.new({
-          text: "Reload",
-          accelerator: "CmdOrCtrl+R",
-          action: () => window.location.reload(),
-        }),
-        await MenuItem.new({
-          text: "Force Reload",
-          accelerator: "CmdOrCtrl+Shift+R",
-          action: () => window.location.reload(),
-        }),
-        await PredefinedMenuItem.new({ item: "Separator" }),
-        await MenuItem.new({
           text: "Zoom In",
           accelerator: "CmdOrCtrl+=",
-          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'in' })),
+          action: () =>
+            window.dispatchEvent(new CustomEvent("zoom", { detail: "in" })),
         }),
         await MenuItem.new({
           text: "Zoom Out",
           accelerator: "CmdOrCtrl+-",
-          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'out' })),
+          action: () =>
+            window.dispatchEvent(new CustomEvent("zoom", { detail: "out" })),
         }),
         await MenuItem.new({
           text: "Reset Zoom",
           accelerator: "CmdOrCtrl+0",
-          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'reset' })),
+          action: () =>
+            window.dispatchEvent(new CustomEvent("zoom", { detail: "reset" })),
         }),
       ],
     });
@@ -245,12 +270,26 @@ function App() {
       items: allMenuItems,
     });
     await menu.setAsAppMenu();
-  }, [recentProjects, openDialog]);
+  }, [recentProjects, openDialog, isInputFocused]);
 
   useEffect(() => {
-    const initializeApp = () => {
+    const initializeApp = async () => {
       if (window.__RPO_WIZ_PROJECT_ROOT__) {
-        setRootPath(window.__RPO_WIZ_PROJECT_ROOT__);
+        await setRootPath(window.__RPO_WIZ_PROJECT_ROOT__);
+        return;
+      }
+
+      try {
+        const matches = await getMatches();
+        const pathArg = matches.args.path?.value;
+        if (pathArg && typeof pathArg === "string") {
+          const absolutePath = await invoke<string>("resolve_path", {
+            path: pathArg,
+          });
+          await setRootPath(absolutePath);
+        }
+      } catch (e) {
+        console.warn("Could not process CLI arguments:", e);
       }
     };
     initializeApp();
@@ -273,7 +312,7 @@ function App() {
                 {__APP_VERSION__}.
               </p>
               <p className="mt-2 text-sm text-gray-500">Release Notes:</p>
-              <div className="mt-1 max-h-40 overflow-y-auto rounded-md border bg-gray-50 p-2 text-sm">
+              <div className="mt-1 max-h-40 overflow-y-auto rounded-md border bg-gray-50 p-2 text-sm thin-scrollbar">
                 <pre className="whitespace-pre-wrap font-sans">
                   {updateInfo.body || "No release notes available."}
                 </pre>
@@ -298,11 +337,29 @@ function App() {
     showUpdateDialog();
   }, [status, updateInfo, openDialog, install]);
 
+  const workspaceRightPanel = useMemo(
+    () => (
+      <TabbedPanel
+        tabs={{
+          "Compose & Review": <PromptComposer />,
+          "Prompt History": <PromptHistoryPanel />,
+        }}
+      />
+    ),
+    []
+  );
+
+  const leftPanel = isReviewing ? <ChangeList /> : <WorkspaceSidebar />;
+
   return (
     <div className="h-full w-full flex flex-col bg-gray-50">
       <Header />
       <div className="flex-grow min-h-0">
-        {isInitialized ? <ProjectView /> : <WelcomeView />}
+        <Layout
+          leftPanel={leftPanel}
+          mainPanel={<MainPanel />}
+          rightPanel={workspaceRightPanel}
+        />
       </div>
 
       <ModalDialog />

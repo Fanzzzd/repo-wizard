@@ -1,23 +1,14 @@
-use crate::commands::IgnoreSettings;
+use crate::types::{FileNode, IgnoreSettings};
 use anyhow::{anyhow, Result};
-use ignore::overrides::OverrideBuilder;
-use ignore::WalkBuilder;
-use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tokio::fs;
 use tokio::io::AsyncReadExt;
 use uuid::Uuid;
-
-#[derive(Debug, Serialize)]
-pub struct FileNode {
-    pub path: String,
-    pub name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub children: Option<Vec<FileNode>>,
-    #[serde(rename = "isDirectory")]
-    pub is_directory: bool,
-}
+use xvc_walker::{
+    build_ignore_patterns, directory_list, update_ignore_rules, IgnoreRules, MatchResult,
+    PathMetadata,
+};
 
 fn normalize_path_str(p: &Path) -> String {
     p.to_string_lossy().replace('\\', "/")
@@ -27,106 +18,108 @@ pub async fn list_directory_recursive(
     root_path: &Path,
     settings: IgnoreSettings,
 ) -> Result<FileNode> {
-    let mut walk_builder = WalkBuilder::new(root_path);
-    walk_builder
-        .git_ignore(settings.respect_gitignore)
-        .hidden(false);
-
-    if !settings.custom_ignore_patterns.is_empty() {
-        let mut override_builder = OverrideBuilder::new(root_path);
-        for line in settings.custom_ignore_patterns.lines() {
-            let trimmed = line.trim();
-            if trimmed.is_empty() || trimmed.starts_with('#') {
-                continue;
-            }
-            let git_pattern = if let Some(unignore_pattern) = trimmed.strip_prefix('!') {
-                unignore_pattern.to_string()
-            } else {
-                format!("!{}", trimmed)
-            };
-            override_builder.add(&git_pattern)?;
-        }
-        let overrides = override_builder.build()?;
-        walk_builder.overrides(overrides);
-    }
-
-    let walker = walk_builder.build();
-    let mut parent_map: HashMap<PathBuf, Vec<PathBuf>> = HashMap::new();
-    let mut is_dir_map: HashMap<PathBuf, bool> = HashMap::new();
-
-    is_dir_map.insert(root_path.to_path_buf(), true);
-
-    for result in walker {
-        let entry = match result {
-            Ok(entry) => entry,
-            Err(_) => continue,
-        };
-        let path = entry.path();
-        if path == root_path {
-            continue;
-        }
-
-        is_dir_map.insert(
-            path.to_path_buf(),
-            entry.file_type().is_some_and(|ft| ft.is_dir()),
-        );
-
-        if let Some(parent) = path.parent() {
-            parent_map
-                .entry(parent.to_path_buf())
-                .or_default()
-                .push(path.to_path_buf());
-        }
-    }
-
-    fn build_tree_from_map(
-        path: &Path,
-        parent_map: &HashMap<PathBuf, Vec<PathBuf>>,
-        is_dir_map: &HashMap<PathBuf, bool>,
-    ) -> FileNode {
-        let is_directory = is_dir_map.get(path).cloned().unwrap_or(false);
-
-        let children = if is_directory {
-            parent_map.get(path).map(|child_paths| {
-                let mut children_nodes: Vec<FileNode> = child_paths
-                    .iter()
-                    .map(|child_path| build_tree_from_map(child_path, parent_map, is_dir_map))
-                    .collect();
-
-                children_nodes.sort_by(|a, b| {
-                    if a.is_directory != b.is_directory {
-                        b.is_directory.cmp(&a.is_directory)
-                    } else {
-                        a.name.to_lowercase().cmp(&b.name.to_lowercase())
-                    }
-                });
-
-                children_nodes
-            })
+    let root_path_owned = root_path.to_owned();
+    tokio::task::spawn_blocking(move || {
+        let root_path = &root_path_owned;
+        let ignore_filename = if settings.respect_gitignore {
+            Some(".gitignore")
         } else {
             None
         };
 
-        FileNode {
-            path: normalize_path_str(path),
-            name: path
-                .file_name()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .to_string(),
-            children,
-            is_directory,
+        let ignore_rules = if let Some(ign_fn) = ignore_filename {
+            build_ignore_patterns(&settings.custom_ignore_patterns, root_path, ign_fn)?
+        } else {
+            IgnoreRules::from_global_patterns(root_path, None, &settings.custom_ignore_patterns)
+        };
+
+        let mut parent_map: HashMap<PathBuf, Vec<PathBuf>> = HashMap::new();
+        let mut is_dir_map: HashMap<PathBuf, bool> = HashMap::new();
+
+        is_dir_map.insert(root_path.to_path_buf(), true);
+
+        let mut dir_stack: Vec<PathBuf> = vec![root_path.to_path_buf()];
+
+        while let Some(current_dir) = dir_stack.pop() {
+            let _ = update_ignore_rules(&current_dir, &ignore_rules);
+
+            if let Ok(children) = directory_list(&current_dir) {
+                for PathMetadata { path, metadata } in children.into_iter().flatten() {
+                    if path == *root_path {
+                        continue;
+                    }
+
+                    if matches!(ignore_rules.check(&path), MatchResult::Ignore) {
+                        continue;
+                    }
+
+                    let is_dir = metadata.is_dir();
+                    is_dir_map.insert(path.clone(), is_dir);
+
+                    if let Some(parent) = path.parent() {
+                        parent_map
+                            .entry(parent.to_path_buf())
+                            .or_default()
+                            .push(path.clone());
+                    }
+
+                    if is_dir {
+                        dir_stack.push(path);
+                    }
+                }
+            }
         }
-    }
 
-    let mut root_node = build_tree_from_map(root_path, &parent_map, &is_dir_map);
+        fn build_tree_from_map(
+            path: &Path,
+            parent_map: &HashMap<PathBuf, Vec<PathBuf>>,
+            is_dir_map: &HashMap<PathBuf, bool>,
+        ) -> FileNode {
+            let is_directory = is_dir_map.get(path).cloned().unwrap_or(false);
 
-    root_node.name = root_path
-        .file_name()
-        .map(|s| s.to_string_lossy().to_string())
-        .unwrap_or_else(|| root_path.to_string_lossy().to_string());
+            let children = if is_directory {
+                parent_map.get(path).map(|child_paths| {
+                    let mut children_nodes: Vec<FileNode> = child_paths
+                        .iter()
+                        .map(|child_path| build_tree_from_map(child_path, parent_map, is_dir_map))
+                        .collect();
 
-    Ok(root_node)
+                    children_nodes.sort_by(|a, b| {
+                        if a.is_directory != b.is_directory {
+                            b.is_directory.cmp(&a.is_directory)
+                        } else {
+                            a.name.to_lowercase().cmp(&b.name.to_lowercase())
+                        }
+                    });
+
+                    children_nodes
+                })
+            } else {
+                None
+            };
+
+            FileNode {
+                path: normalize_path_str(path),
+                name: path
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string(),
+                children,
+                is_directory,
+            }
+        }
+
+        let mut root_node = build_tree_from_map(root_path, &parent_map, &is_dir_map);
+
+        root_node.name = root_path
+            .file_name()
+            .map(|s| s.to_string_lossy().to_string())
+            .unwrap_or_else(|| root_path.to_string_lossy().to_string());
+
+        Ok(root_node)
+    })
+    .await?
 }
 
 pub async fn read_file_content(path: &PathBuf) -> Result<String> {
@@ -160,18 +153,14 @@ pub async fn move_file(from: &PathBuf, to: &PathBuf) -> Result<()> {
     fs::rename(from, to).await.map_err(anyhow::Error::from)
 }
 
-/// Checks if a file is likely binary by reading its first few bytes and looking for a null byte.
 pub async fn is_binary(path: &Path) -> Result<bool> {
     let mut file = match fs::File::open(path).await {
         Ok(f) => f,
-        // If we can't open it, it might be a broken symlink or permissions issue. Treat as non-text.
         Err(_) => return Ok(true),
     };
-    // Read up to the first 8000 bytes, a common heuristic for binary detection.
     let mut buffer = [0; 8000];
     let n = file.read(&mut buffer).await?;
 
-    // The presence of a null byte is a strong indicator of a binary file.
     Ok(buffer[..n].contains(&0))
 }
 

@@ -3,7 +3,6 @@ import { useWorkspaceStore } from "../../store/workspaceStore";
 import { useReviewStore } from "../../store/reviewStore";
 import { useEffect, useState } from "react";
 import { readFileContent } from "../../services/tauriApi";
-import { applyPatch } from "diff";
 import { getLanguageForFilePath } from "../../lib/language_service";
 import { showErrorDialog } from "../../lib/errorHandler";
 
@@ -54,42 +53,17 @@ export function DiffEditor() {
     
     const absolutePath = `${rootPath}/${operation.filePath}`;
     
-    if (operation.type === 'rewrite') {
-      setModifiedContent(operation.content);
-      readFileContent(absolutePath)
-        .then(setOriginalContent)
-        .catch(() => setOriginalContent(`// File does not exist, will be created.`));
-      return;
-    }
-
-    // Handle 'modify' operation
-    const applyDiff = (original: string) => {
-      try {
-        const patched = applyPatch(original, operation.diff);
-        if (patched === false) {
-          throw new Error("Patch application returned false.");
-        }
-        setModifiedContent(patched);
-      } catch (err) {
-        console.error("Failed to apply patch for", operation.filePath, err);
-        setModifiedContent(`// Error: Failed to apply patch.\n\n${err}`);
-      }
-    };
+    setModifiedContent(operation.content);
 
     if (operation.isNewFile) {
       setOriginalContent("");
-      applyDiff("");
     } else {
-      readFileContent(absolutePath)
-        .then((content) => {
-          setOriginalContent(content);
-          applyDiff(content);
-        })
+       readFileContent(absolutePath)
+        .then(setOriginalContent)
         .catch((err) => {
           showErrorDialog(err);
           const errorMessage = `// Could not load file: ${absolutePath}`;
           setOriginalContent(errorMessage);
-          setModifiedContent(errorMessage);
         });
     }
   }, [activeChange, rootPath]);

@@ -7,6 +7,9 @@ import { useHistoryStore } from "./historyStore";
 import { useReviewStore } from "./reviewStore";
 import * as projectService from "../services/projectService";
 import { showErrorDialog } from "../lib/errorHandler";
+import { listen } from "@tauri-apps/api/event";
+import { startWatching, stopWatching } from "../services/tauriApi";
+import { AppError } from "../lib/error";
 
 const getProjectStoreKey = (projectPath: string) => {
   try {
@@ -26,7 +29,7 @@ interface WorkspaceState {
 
   // Actions
   setRootPath: (rootPath: string) => Promise<void>;
-  closeProject: () => void;
+  closeProject: () => Promise<void>;
   loadFileTree: () => Promise<void>;
   setFileTree: (fileTree: FileNode | null) => void;
   setActiveFilePath: (path: string | null) => void;
@@ -47,6 +50,7 @@ const initialState: Omit<WorkspaceState, "setRootPath" | "closeProject" | "loadF
 
 let persistenceUnsubscribe: (() => void) | null = null;
 let saveTimeout: NodeJS.Timeout | null = null;
+let tauriFileWatcherUnlisten: (() => void) | null = null;
 
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   ...initialState,
@@ -58,6 +62,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       if (lastReview?.sessionBaseBackupId) { projectService.cleanupBackup(lastReview.sessionBaseBackupId); }
       if (sessionBaseBackupId) { projectService.cleanupBackup(sessionBaseBackupId); }
       if (persistenceUnsubscribe) persistenceUnsubscribe();
+      
+      if (tauriFileWatcherUnlisten) {
+        tauriFileWatcherUnlisten();
+        tauriFileWatcherUnlisten = null;
+      }
+      if (oldState.rootPath) {
+        await stopWatching(oldState.rootPath);
+      }
     }
 
     useComposerStore.getState()._reset();
@@ -99,10 +111,28 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       }, 1000);
     });
 
+    try {
+      const { respectGitignore, customIgnorePatterns } = useSettingsStore.getState();
+      const settings = { respectGitignore, customIgnorePatterns };
+      await startWatching(rootPath, settings);
+      tauriFileWatcherUnlisten = await listen<string>(
+        "file-change-event",
+        (event) => {
+          if (event.payload === get().rootPath) {
+            get().triggerFileTreeRefresh();
+          }
+        }
+      );
+    } catch (e) {
+      showErrorDialog(
+        new AppError(`Failed to set up file watcher for ${rootPath}`, e)
+      );
+    }
+
     get().loadFileTree();
   },
 
-  closeProject: () => {
+  closeProject: async () => {
     const oldState = get();
     if (oldState.isInitialized) {
       const { lastReview, sessionBaseBackupId } = useReviewStore.getState();
@@ -111,6 +141,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       if (persistenceUnsubscribe) {
         persistenceUnsubscribe();
         persistenceUnsubscribe = null;
+      }
+      if (tauriFileWatcherUnlisten) {
+        tauriFileWatcherUnlisten();
+        tauriFileWatcherUnlisten = null;
+      }
+      if (oldState.rootPath) {
+        await stopWatching(oldState.rootPath);
       }
     }
     useComposerStore.getState()._reset();

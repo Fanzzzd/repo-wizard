@@ -21,7 +21,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           {...props}
         />
         <div
-          className={`relative h-[14px] w-[14px] flex-shrink-0 rounded border-1 transition-colors
+          className={`relative h-[14px] w-[14px] flex-shrink-0 rounded border transition-colors
             ${
               checked || isIndeterminate
                 ? "border-blue-400 bg-blue-400"

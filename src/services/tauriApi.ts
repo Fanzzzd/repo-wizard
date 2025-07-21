@@ -6,6 +6,8 @@ import type {
   Commit,
   GitDiffConfig,
   CommandStreamEvent,
+  CliStatusResult,
+  CliInstallResult,
 } from "../types";
 import { AppError } from "../lib/error";
 
@@ -59,17 +61,6 @@ export const writeFileContent = async (
     return await invoke("write_file_content", { path, content });
   } catch (err) {
     throw new AppError(`Failed to write file content for: ${path}`, err);
-  }
-};
-
-export const applyPatch = async (
-  filePath: string,
-  patchStr: string
-): Promise<void> => {
-  try {
-    return await invoke("apply_patch", { filePath, patchStr });
-  } catch (err) {
-    throw new AppError(`Failed to apply patch to file: ${filePath}`, err);
   }
 };
 
@@ -147,10 +138,11 @@ export const getRelativePath = async (
 };
 
 export const parseChangesFromMarkdown = async (
-  markdown: string
+  markdown: string,
+  rootPath: string,
 ): Promise<ChangeOperation[]> => {
   try {
-    return await invoke("parse_changes_from_markdown", { markdown });
+    return await invoke("parse_changes_from_markdown", { markdown, rootPath });
   } catch (err) {
     throw new AppError("Failed to parse changes from markdown", err);
   }
@@ -238,5 +230,40 @@ export const killPty = async (): Promise<void> => {
     await invoke("kill_pty");
   } catch (err) {
     console.warn("Failed to kill PTY:", err);
+  }
+};
+
+export const getCliStatus = async (): Promise<CliStatusResult> => {
+  try {
+    return await invoke("get_cli_status");
+  } catch (err) {
+    throw new AppError("Failed to check CLI status", err);
+  }
+};
+
+export const installCliShim = async (): Promise<CliInstallResult> => {
+  try {
+    return await invoke("install_cli_shim");
+  } catch (err) {
+    throw new AppError("Failed to install CLI shim", err);
+  }
+};
+
+export const startWatching = async (
+  rootPath: string,
+  settings: IgnoreSettings
+): Promise<void> => {
+  try {
+    await invoke("start_watching", { rootPath, settings });
+  } catch (err) {
+    throw new AppError(`Failed to start watching: ${rootPath}`, err);
+  }
+};
+
+export const stopWatching = async (rootPath: string): Promise<void> => {
+  try {
+    await invoke("stop_watching", { rootPath });
+  } catch (err) {
+    console.warn(new AppError(`Failed to stop watching: ${rootPath}`, err));
   }
 };
