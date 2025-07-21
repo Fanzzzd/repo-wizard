@@ -34,6 +34,7 @@ tauri-plugin-process = "2"
 tauri-plugin-http = "2"
 tauri-plugin-store = "2"
 base64 = "0.22.1"
+crossbeam-channel = "0.5"
 tauri-plugin-os = "2"
 once_cell = "1.19.0"
 portable-pty = "0.9.0"
@@ -47,3 +48,6 @@ xvc-walker = "0.6.17"
 tauri-plugin-cli = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-single-instance = "2"
+
+[patch.crates-io]
+xvc-walker = { git = "https://github.com/Fanzzzd/xvc.git" }

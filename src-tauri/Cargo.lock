@@ -4012,6 +4012,7 @@ version = "1.6.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
+ "crossbeam-channel",
  "log",
  "nom 8.0.0",
  "notify 8.1.0",
@@ -6912,8 +6913,7 @@ dependencies = [
 [[package]]
 name = "xvc-logging"
 version = "0.6.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1bd8935947f13b660a5732c14de0c9ab514c22311b9e871b9bee3097b9072934"
+source = "git+https://github.com/Fanzzzd/xvc.git#7995b871995bc1ca47d15aa57bbda6c08d33d073"
 dependencies = [
  "crossbeam-channel",
  "fern",
@@ -6924,8 +6924,7 @@ dependencies = [
 [[package]]
 name = "xvc-walker"
 version = "0.6.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f37c140013b40a9ad780768f15350e0cfc959de180d5496ae92a333ffed2232"
+source = "git+https://github.com/Fanzzzd/xvc.git#7995b871995bc1ca47d15aa57bbda6c08d33d073"
 dependencies = [
  "anyhow",
  "crossbeam",
