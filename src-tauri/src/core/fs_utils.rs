@@ -1,14 +1,13 @@
 use crate::types::{FileNode, IgnoreSettings};
 use anyhow::{anyhow, Result};
+use crossbeam_channel::unbounded;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, RwLock};
 use tokio::fs;
 use tokio::io::AsyncReadExt;
 use uuid::Uuid;
-use xvc_walker::{
-    build_ignore_patterns, directory_list, update_ignore_rules, IgnoreRules, MatchResult,
-    PathMetadata,
-};
+use xvc_walker::{walk_parallel, IgnoreRules, PathMetadata, SharedIgnoreRules, WalkOptions};
 
 fn normalize_path_str(p: &Path) -> String {
     p.to_string_lossy().replace('\\', "/")
@@ -19,54 +18,57 @@ pub async fn list_directory_recursive(
     settings: IgnoreSettings,
 ) -> Result<FileNode> {
     let root_path_owned = root_path.to_owned();
+    let custom_ignore_patterns = settings.custom_ignore_patterns;
+    let respect_gitignore = settings.respect_gitignore;
+
     tokio::task::spawn_blocking(move || {
         let root_path = &root_path_owned;
-        let ignore_filename = if settings.respect_gitignore {
-            Some(".gitignore")
+        let ignore_filename = if respect_gitignore {
+            Some(".gitignore".to_string())
         } else {
             None
         };
 
-        let ignore_rules = if let Some(ign_fn) = ignore_filename {
-            build_ignore_patterns(&settings.custom_ignore_patterns, root_path, ign_fn)?
-        } else {
-            IgnoreRules::from_global_patterns(root_path, None, &settings.custom_ignore_patterns)
+        // Initialize with global patterns. `walk_parallel` will discover and add rules from ignore files.
+        let ignore_rules = IgnoreRules::from_global_patterns(
+            root_path,
+            ignore_filename.as_deref(),
+            &custom_ignore_patterns,
+        );
+        let shared_ignore_rules: SharedIgnoreRules = Arc::new(RwLock::new(ignore_rules));
+
+        let walk_options = WalkOptions {
+            ignore_filename,
+            include_dirs: true,
         };
+
+        let (path_sender, path_receiver) = unbounded();
+
+        // `walk_parallel` is a blocking call that will fill the channel with paths.
+        // It takes ownership of the sender and drops it when done, closing the channel.
+        walk_parallel(
+            shared_ignore_rules,
+            root_path,
+            walk_options,
+            path_sender,
+        )
+        .map_err(|e| anyhow!("Failed to walk directory in parallel: {}", e))?;
+
+        let all_paths: Vec<PathMetadata> = path_receiver.iter().filter_map(Result::ok).collect();
 
         let mut parent_map: HashMap<PathBuf, Vec<PathBuf>> = HashMap::new();
         let mut is_dir_map: HashMap<PathBuf, bool> = HashMap::new();
-
         is_dir_map.insert(root_path.to_path_buf(), true);
 
-        let mut dir_stack: Vec<PathBuf> = vec![root_path.to_path_buf()];
+        for pm in all_paths {
+            let is_dir = pm.metadata.is_dir();
+            is_dir_map.insert(pm.path.clone(), is_dir);
 
-        while let Some(current_dir) = dir_stack.pop() {
-            let _ = update_ignore_rules(&current_dir, &ignore_rules);
-
-            if let Ok(children) = directory_list(&current_dir) {
-                for PathMetadata { path, metadata } in children.into_iter().flatten() {
-                    if path == *root_path {
-                        continue;
-                    }
-
-                    if matches!(ignore_rules.check(&path), MatchResult::Ignore) {
-                        continue;
-                    }
-
-                    let is_dir = metadata.is_dir();
-                    is_dir_map.insert(path.clone(), is_dir);
-
-                    if let Some(parent) = path.parent() {
-                        parent_map
-                            .entry(parent.to_path_buf())
-                            .or_default()
-                            .push(path.clone());
-                    }
-
-                    if is_dir {
-                        dir_stack.push(path);
-                    }
-                }
+            if let Some(parent) = pm.path.parent() {
+                parent_map
+                    .entry(parent.to_path_buf())
+                    .or_default()
+                    .push(pm.path.clone());
             }
         }
 
