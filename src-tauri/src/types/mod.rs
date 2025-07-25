@@ -91,3 +91,13 @@ pub struct IgnoreSettings {
     #[serde(rename = "customIgnorePatterns")]
     pub custom_ignore_patterns: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchResult {
+    pub path: String,
+    pub relative_path: String,
+    pub name: String,
+    pub parent_dir: String,
+    pub score: i32,
+}

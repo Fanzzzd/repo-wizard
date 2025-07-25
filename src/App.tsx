@@ -28,6 +28,9 @@ import { useDialogStore } from "./store/dialogStore";
 import { useUpdateStore } from "./store/updateStore";
 import { useSettingsStore } from "./store/settingsStore";
 import { CommandRunnerModal } from "./components/common/CommandRunnerModal";
+import { FileSearchModal } from "./components/workspace/FileSearchModal";
+import { useFileSearchStore } from "./store/fileSearchStore";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 
 declare global {
   interface Window {
@@ -41,11 +44,12 @@ interface SingleInstancePayload {
 }
 
 function App() {
-  const { setRootPath } = useWorkspaceStore();
+  const { setRootPath, rootPath } = useWorkspaceStore();
   const { isReviewing } = useReviewStore();
   const { open: openDialog } = useDialogStore();
   const { status, updateInfo, install } = useUpdateStore();
   const { recentProjects } = useSettingsStore();
+  const { openModal: openFileSearchModal } = useFileSearchStore();
   const [fontSize, setFontSize] = useState(14);
   const [isInputFocused, setIsInputFocused] = useState(false);
 
@@ -189,6 +193,16 @@ function App() {
             const selected = await open({ directory: true });
             if (typeof selected === "string") {
               await useWorkspaceStore.getState().setRootPath(selected);
+            }
+          },
+        }),
+        await MenuItem.new({
+          text: "Search Files...",
+          accelerator: "CmdOrCtrl+P",
+          enabled: !!useWorkspaceStore.getState().rootPath,
+          action: () => {
+            if (useWorkspaceStore.getState().rootPath) {
+              useFileSearchStore.getState().openModal();
             }
           },
         }),
@@ -349,6 +363,32 @@ function App() {
     []
   );
 
+  // Set up global keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: "p",
+      metaKey: true, // Cmd on Mac
+      ctrlKey: false,
+      action: () => {
+        if (rootPath && !isInputFocused) {
+          openFileSearchModal();
+        }
+      },
+      description: "Open file search"
+    },
+    {
+      key: "p",
+      ctrlKey: true, // Ctrl on Windows/Linux
+      metaKey: false,
+      action: () => {
+        if (rootPath && !isInputFocused) {
+          openFileSearchModal();
+        }
+      },
+      description: "Open file search"
+    }
+  ], !isInputFocused); // Only enable when not in input fields
+
   const leftPanel = isReviewing ? <ChangeList /> : <WorkspaceSidebar />;
 
   return (
@@ -366,6 +406,7 @@ function App() {
       <Tooltip />
       <ContextMenu />
       <CommandRunnerModal />
+      <FileSearchModal />
     </div>
   );
 }
