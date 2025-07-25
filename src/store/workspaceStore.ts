@@ -90,6 +90,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
     useComposerStore.getState()._load(savedState);
     useHistoryStore.getState()._load(savedState);
+
     useSettingsStore.getState().addRecentProject(rootPath);
 
     persistenceUnsubscribe = useWorkspaceStore.subscribe((state) => {
@@ -162,6 +163,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       set({ fileTree: null });
       return;
     }
+    
     try {
       const { respectGitignore, customIgnorePatterns } = useSettingsStore.getState();
       const settings = { respectGitignore, customIgnorePatterns };
