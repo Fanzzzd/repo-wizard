@@ -6,6 +6,7 @@ export interface SearchResult {
   name: string;
   parentDir: string;
   score: number;
+  isDirectory: boolean;
 }
 
 export interface IgnoreSettings {

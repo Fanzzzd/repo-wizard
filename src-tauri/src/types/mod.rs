@@ -100,4 +100,5 @@ pub struct SearchResult {
     pub name: String,
     pub parent_dir: String,
     pub score: i32,
+    pub is_directory: bool,
 }

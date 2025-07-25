@@ -12,6 +12,7 @@ interface SearchResultItemProps {
     name: string;
     parentDir: string;
     score: number;
+    isDirectory: boolean;
   };
   isSelected: boolean;
   isFileSelected: boolean;
@@ -61,7 +62,7 @@ function SearchResultItem({
     >
       {/* File icon */}
       <div className="flex-shrink-0">
-        <FileTypeIcon filename={result.name} isDirectory={false} />
+        <FileTypeIcon filename={result.name} isDirectory={result.isDirectory} />
       </div>
 
       {/* File info */}

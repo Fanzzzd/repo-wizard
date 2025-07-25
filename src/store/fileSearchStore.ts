@@ -2,6 +2,29 @@ import { create } from "zustand";
 import { fileSearchService, type SearchResult } from "../services/fileSearchService";
 import { useWorkspaceStore } from "./workspaceStore";
 import { useSettingsStore } from "./settingsStore";
+import type { FileNode } from "../types";
+
+// Helper function to collect all file paths within a directory node
+function getAllFilesInPath(rootNode: FileNode, targetPath: string): string[] {
+  const files: string[] = [];
+  
+  function traverse(node: FileNode) {
+    if (node.path === targetPath || node.path.startsWith(targetPath + "/")) {
+      if (!node.isDirectory) {
+        files.push(node.path);
+      }
+      if (node.children) {
+        node.children.forEach(traverse);
+      }
+    } else if (node.children && targetPath.startsWith(node.path)) {
+      // Continue traversing if target path might be in this subtree
+      node.children.forEach(traverse);
+    }
+  }
+  
+  traverse(rootNode);
+  return files;
+}
 
 interface FileSearchState {
   // Modal state
@@ -102,25 +125,49 @@ export const useFileSearchStore = create<FileSearchState>((set, get) => ({
     }
   },
 
-  toggleFileSelection: (filePath: string) => {
-    const { selectedFiles } = get();
+  toggleFileSelection: async (filePath: string) => {
+    const { selectedFiles, results } = get();
     const newSelectedFiles = new Set(selectedFiles);
     
-    if (newSelectedFiles.has(filePath)) {
-      newSelectedFiles.delete(filePath);
+    // Find the result to check if it's a directory
+    const result = results.find(r => r.path === filePath);
+    const isDirectory = result?.isDirectory ?? false;
+    
+    if (isDirectory) {
+      // Handle directory selection
+      try {
+        // Get all files within this directory from the workspace store's file tree
+        const { fileTree } = useWorkspaceStore.getState();
+        if (!fileTree) return;
+        
+        const directoryFiles = getAllFilesInPath(fileTree, filePath);
+        const isCurrentlySelected = directoryFiles.every(file => newSelectedFiles.has(file));
+        
+        if (isCurrentlySelected) {
+          // Deselect all files in directory
+          directoryFiles.forEach(file => newSelectedFiles.delete(file));
+        } else {
+          // Select all files in directory
+          directoryFiles.forEach(file => newSelectedFiles.add(file));
+        }
+      } catch (error) {
+        console.error("Error handling directory selection:", error);
+        return;
+      }
     } else {
-      newSelectedFiles.add(filePath);
+      // Handle file selection
+      if (newSelectedFiles.has(filePath)) {
+        newSelectedFiles.delete(filePath);
+      } else {
+        newSelectedFiles.add(filePath);
+      }
     }
     
     set({ selectedFiles: newSelectedFiles });
     
-    // Add to workspace selected files
-    const { addSelectedFilePath, removeSelectedFilePath } = useWorkspaceStore.getState();
-    if (newSelectedFiles.has(filePath)) {
-      addSelectedFilePath(filePath);
-    } else {
-      removeSelectedFilePath(filePath);
-    }
+    // Sync with workspace selected files
+    const { setSelectedFilePaths } = useWorkspaceStore.getState();
+    setSelectedFilePaths(Array.from(newSelectedFiles));
   },
 
   selectCurrentFile: () => {

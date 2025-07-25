@@ -161,11 +161,7 @@ pub async fn search_files(
             };
             let PathMetadata { path, .. } = path_metadata;
             
-                
-            // Skip directories (we traverse them but don't index them)
-            if path.is_dir() {
-                continue;
-            }
+            let is_directory = path.is_dir();
             
             let file_name = path.file_name()
                 .and_then(|n| n.to_str())
@@ -189,15 +185,28 @@ pub async fn search_files(
                 .max()
                 .unwrap_or(-1);
             
-            // Try matching against the file extension
-            let extension_score = if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-                calculate_fuzzy_score(query, ext)
+            // Try matching against the file extension (only for files)
+            let extension_score = if !is_directory {
+                if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+                    calculate_fuzzy_score(query, ext)
+                } else {
+                    -1
+                }
             } else {
                 -1
             };
             
             // Prioritize filename matches by giving them a bonus
-            let adjusted_filename_score = if filename_score > 0 { filename_score + 1000 } else { filename_score };
+            let adjusted_filename_score = if filename_score > 0 { 
+                if is_directory {
+                    // Give directories a smaller bonus to prioritize files slightly
+                    filename_score + 800
+                } else {
+                    filename_score + 1000
+                }
+            } else { 
+                filename_score 
+            };
             
             // Use the best score from all attempts
             let final_score = [adjusted_filename_score, path_score, segment_score, extension_score]
@@ -219,6 +228,7 @@ pub async fn search_files(
                     name: file_name,
                     parent_dir,
                     score: final_score,
+                    is_directory,
                 };
                 
                 scored_results.push(search_result);
