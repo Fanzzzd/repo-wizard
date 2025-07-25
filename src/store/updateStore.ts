@@ -3,7 +3,13 @@ import { check, type Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { fetch as httpFetch } from '@tauri-apps/plugin-http';
 
-type UpdateStatus = 'idle' | 'pending' | 'up-to-date' | 'downloading' | 'ready' | 'error';
+type UpdateStatus =
+  | 'idle'
+  | 'pending'
+  | 'up-to-date'
+  | 'downloading'
+  | 'ready'
+  | 'error';
 
 interface UpdateState {
   status: UpdateStatus;
@@ -32,12 +38,16 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
     if (__APP_VERSION__.includes('-')) {
       console.log('DEV MODE: Simulating update check.');
       try {
-        const response = await httpFetch('https://github.com/Fanzzzd/repo-wizard/releases/latest/download/latest.json');
+        const response = await httpFetch(
+          'https://github.com/Fanzzzd/repo-wizard/releases/latest/download/latest.json'
+        );
         if (!response.ok) {
-          throw new Error(`Failed to fetch update manifest: ${response.status}`);
+          throw new Error(
+            `Failed to fetch update manifest: ${response.status}`
+          );
         }
         const manifest = await response.json();
-        
+
         // This is a simulated object, not a real `Update` instance.
         // It has the properties needed by the UI dialog.
         const simulatedUpdateInfo = {
@@ -64,7 +74,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
       } else {
         set({ status: 'up-to-date' });
         setTimeout(() => {
-          set((s) => (s.status === 'up-to-date' ? { status: 'idle' } : s));
+          set(s => (s.status === 'up-to-date' ? { status: 'idle' } : s));
         }, 3000);
       }
     } catch (e: any) {
@@ -76,7 +86,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   install: async () => {
     // In dev mode, installation is disabled. The dialog is informational only.
     if (__APP_VERSION__.includes('-')) {
-      console.warn("DEV MODE: Installation is disabled.");
+      console.warn('DEV MODE: Installation is disabled.');
       return;
     }
 

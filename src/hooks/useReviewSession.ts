@@ -1,17 +1,31 @@
-import { useCallback, useEffect } from "react";
-import { useReviewStore } from "../store/reviewStore";
-import { useComposerStore } from "../store/composerStore";
-import { useSettingsStore } from "../store/settingsStore";
-import { showErrorDialog } from "../lib/errorHandler";
+import { useCallback, useEffect } from 'react';
+import { useReviewStore } from '../store/reviewStore';
+import { useComposerStore } from '../store/composerStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { showErrorDialog } from '../lib/errorHandler';
 
 export function useReviewSession() {
-  const { startReview, endReview, reenterReview, applyAllPendingChanges, revertAllAppliedChanges, lastReview, isReviewing } = useReviewStore();
-  const { markdownResponse, composerMode, processedMarkdownResponse, markMarkdownAsProcessed } = useComposerStore();
+  const {
+    startReview,
+    endReview,
+    reenterReview,
+    applyAllPendingChanges,
+    revertAllAppliedChanges,
+    lastReview,
+    isReviewing,
+  } = useReviewStore();
+  const {
+    markdownResponse,
+    composerMode,
+    processedMarkdownResponse,
+    markMarkdownAsProcessed,
+  } = useComposerStore();
   const { autoReviewOnPaste } = useSettingsStore();
 
   const handleReview = useCallback(async () => {
-    if (composerMode === "qa") return;
-    const currentMarkdownResponse = useComposerStore.getState().markdownResponse;
+    if (composerMode === 'qa') return;
+    const currentMarkdownResponse =
+      useComposerStore.getState().markdownResponse;
     if (!currentMarkdownResponse.trim()) return;
 
     try {
@@ -24,13 +38,26 @@ export function useReviewSession() {
   }, [startReview, markMarkdownAsProcessed, composerMode]);
 
   useEffect(() => {
-    if (autoReviewOnPaste && composerMode === "edit" && markdownResponse.trim() && markdownResponse !== processedMarkdownResponse) {
+    if (
+      autoReviewOnPaste &&
+      composerMode === 'edit' &&
+      markdownResponse.trim() &&
+      markdownResponse !== processedMarkdownResponse
+    ) {
       const timer = setTimeout(handleReview, 500);
       return () => clearTimeout(timer);
     }
-  }, [markdownResponse, processedMarkdownResponse, autoReviewOnPaste, handleReview, composerMode]);
-  
-  const hasUnprocessedResponse = markdownResponse.trim() !== "" && markdownResponse !== processedMarkdownResponse;
+  }, [
+    markdownResponse,
+    processedMarkdownResponse,
+    autoReviewOnPaste,
+    handleReview,
+    composerMode,
+  ]);
+
+  const hasUnprocessedResponse =
+    markdownResponse.trim() !== '' &&
+    markdownResponse !== processedMarkdownResponse;
   const canReenterReview = !hasUnprocessedResponse && !!lastReview;
 
   return {
@@ -41,6 +68,6 @@ export function useReviewSession() {
     revertAll: revertAllAppliedChanges,
     isReviewing,
     hasUnprocessedResponse,
-    canReenterReview
+    canReenterReview,
   };
 }

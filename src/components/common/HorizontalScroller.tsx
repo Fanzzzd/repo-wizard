@@ -1,12 +1,11 @@
-import React, { useRef, useCallback, useEffect, useState } from "react";
+import React, { useRef, useCallback, useEffect, useState } from 'react';
 
 const maskClasses = {
-  none: "",
+  none: '',
   right:
-    "[mask-image:linear-gradient(to_right,black_calc(100%-1rem),transparent)]",
-  left:
-    "[mask-image:linear-gradient(to_left,black_calc(100%-1rem),transparent)]",
-  both: "[mask-image:linear-gradient(to_right,transparent,black_1rem,black_calc(100%-1rem),transparent)]",
+    '[mask-image:linear-gradient(to_right,black_calc(100%-1rem),transparent)]',
+  left: '[mask-image:linear-gradient(to_left,black_calc(100%-1rem),transparent)]',
+  both: '[mask-image:linear-gradient(to_right,transparent,black_1rem,black_calc(100%-1rem),transparent)]',
 };
 
 interface HorizontalScrollerRenderProps {
@@ -30,14 +29,14 @@ interface HorizontalScrollerProps {
 export function HorizontalScroller({ children }: HorizontalScrollerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [overflowState, setOverflowState] = useState<
-    "none" | "left" | "right" | "both"
-  >("none");
+    'none' | 'left' | 'right' | 'both'
+  >('none');
 
   const [showIndicator, setShowIndicator] = useState(false);
   const indicatorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [indicatorStyle, setIndicatorStyle] = useState({
-    width: "0%",
-    left: "0%",
+    width: '0%',
+    left: '0%',
   });
 
   const requestShowIndicator = useCallback(() => {
@@ -66,7 +65,7 @@ export function HorizontalScroller({ children }: HorizontalScrollerProps) {
 
     // Mask logic
     if (!overflowing) {
-      setOverflowState("none");
+      setOverflowState('none');
     } else {
       const scrollLeft = el.scrollLeft;
       const maxScrollLeft = el.scrollWidth - el.clientWidth;
@@ -76,11 +75,11 @@ export function HorizontalScroller({ children }: HorizontalScrollerProps) {
       const atEnd = scrollLeft > maxScrollLeft - tolerance;
 
       if (atStart) {
-        setOverflowState("right");
+        setOverflowState('right');
       } else if (atEnd) {
-        setOverflowState("left");
+        setOverflowState('left');
       } else {
-        setOverflowState("both");
+        setOverflowState('both');
       }
     }
 
@@ -101,7 +100,7 @@ export function HorizontalScroller({ children }: HorizontalScrollerProps) {
         left: `${thumbPosPercent}%`,
       });
     } else {
-      setIndicatorStyle({ width: "0%", left: "0%" });
+      setIndicatorStyle({ width: '0%', left: '0%' });
     }
   }, []);
 
@@ -117,8 +116,8 @@ export function HorizontalScroller({ children }: HorizontalScrollerProps) {
 
     updateScrollState();
 
-    el.addEventListener("scroll", handleScrollAndResize, { passive: true });
-    
+    el.addEventListener('scroll', handleScrollAndResize, { passive: true });
+
     const resizeObserver = new ResizeObserver(handleScrollAndResize);
     resizeObserver.observe(el);
 
@@ -126,14 +125,15 @@ export function HorizontalScroller({ children }: HorizontalScrollerProps) {
     mutationObserver.observe(el, { childList: true });
 
     return () => {
-      el.removeEventListener("scroll", handleScrollAndResize);
+      el.removeEventListener('scroll', handleScrollAndResize);
       resizeObserver.disconnect();
       mutationObserver.disconnect();
-      if (indicatorTimeoutRef.current) clearTimeout(indicatorTimeoutRef.current);
+      if (indicatorTimeoutRef.current)
+        clearTimeout(indicatorTimeoutRef.current);
     };
   }, [updateScrollState, requestShowIndicator, requestHideIndicator]);
 
-  const isOverflowing = overflowState !== "none";
+  const isOverflowing = overflowState !== 'none';
 
   return children({
     scrollContainerRef,
@@ -145,7 +145,7 @@ export function HorizontalScroller({ children }: HorizontalScrollerProps) {
     scrollbar: (
       <div
         className={`absolute bottom-[2px] left-2 right-2 h-1 transition-opacity duration-300 pointer-events-none ${
-          isOverflowing && showIndicator ? "opacity-100" : "opacity-0"
+          isOverflowing && showIndicator ? 'opacity-100' : 'opacity-0'
         }`}
       >
         <div className="relative h-full bg-blue-200/50 rounded-full">

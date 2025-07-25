@@ -1,5 +1,5 @@
-import { useTooltipStore } from "../../store/tooltipStore";
-import { AnimatePresence, motion } from "motion/react";
+import { useTooltipStore } from '../../store/tooltipStore';
+import { AnimatePresence, motion } from 'motion/react';
 
 export function Tooltip() {
   const { isVisible, content, position } = useTooltipStore();

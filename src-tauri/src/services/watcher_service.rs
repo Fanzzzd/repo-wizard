@@ -1,15 +1,15 @@
 use crate::types::IgnoreSettings;
 use anyhow::Result;
 use ignore::WalkBuilder;
-use notify_debouncer_full::{
-    new_debouncer_opt,
-    notify::{Config, RecursiveMode, RecommendedWatcher},
-    DebounceEventResult,
-};
-#[cfg(not(target_os = "linux"))]
-use notify_debouncer_full::NoCache;
 #[cfg(target_os = "linux")]
 use notify_debouncer_full::FileIdMap;
+#[cfg(not(target_os = "linux"))]
+use notify_debouncer_full::NoCache;
+use notify_debouncer_full::{
+    new_debouncer_opt,
+    notify::{Config, RecommendedWatcher, RecursiveMode},
+    DebounceEventResult,
+};
 
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, path::Path, sync::Mutex, time::Duration};
@@ -36,40 +36,40 @@ pub fn start_watching(
     let event_handler_settings = settings.clone();
     let event_handler_root_path = root_path.to_path_buf();
 
-    let event_handler = move |result: DebounceEventResult| {
-        match result {
-            Ok(events) => {
-                let has_unignored_change = events.iter().any(|event| {
-                    event.paths.iter().any(|p| {
-                        let mut builder = WalkBuilder::new(&event_handler_root_path);
-                        builder.add(p);
-                        builder
-                            .hidden(false)
-                            .git_ignore(event_handler_settings.respect_gitignore)
-                            .max_depth(Some(0));
+    let event_handler = move |result: DebounceEventResult| match result {
+        Ok(events) => {
+            let has_unignored_change = events.iter().any(|event| {
+                event.paths.iter().any(|p| {
+                    let mut builder = WalkBuilder::new(&event_handler_root_path);
+                    builder.add(p);
+                    builder
+                        .hidden(false)
+                        .git_ignore(event_handler_settings.respect_gitignore)
+                        .max_depth(Some(0));
 
-                        if !event_handler_settings.custom_ignore_patterns.is_empty() {
-                            if let Err(e) = builder.add_custom_ignore_patterns(&event_handler_settings.custom_ignore_patterns) {
-                                log::error!("Failed to apply custom ignore patterns: {}", e);
-                            }
+                    if !event_handler_settings.custom_ignore_patterns.is_empty() {
+                        if let Err(e) = builder.add_custom_ignore_patterns(
+                            &event_handler_settings.custom_ignore_patterns,
+                        ) {
+                            log::error!("Failed to apply custom ignore patterns: {}", e);
                         }
-
-                        builder.build().next().is_some()
-                    })
-                });
-
-                if has_unignored_change {
-                    if let Err(e) = event_handler_app_handle
-                        .emit("file-change-event", event_handler_path_str.clone())
-                    {
-                        log::error!("Failed to emit file-change-event: {}", e);
                     }
+
+                    builder.build().next().is_some()
+                })
+            });
+
+            if has_unignored_change {
+                if let Err(e) = event_handler_app_handle
+                    .emit("file-change-event", event_handler_path_str.clone())
+                {
+                    log::error!("Failed to emit file-change-event: {}", e);
                 }
             }
-            Err(errors) => {
-                for error in errors {
-                    log::error!("File watch error: {error:?}");
-                }
+        }
+        Err(errors) => {
+            for error in errors {
+                log::error!("File watch error: {error:?}");
             }
         }
     };
@@ -98,6 +98,5 @@ pub fn start_watching(
 
 pub fn stop_watching(root_path: &Path) {
     let mut watchers = WATCHERS.lock().unwrap();
-    if let Some(_debouncer) = watchers.remove(root_path.to_string_lossy().as_ref()) {
-    }
+    if let Some(_debouncer) = watchers.remove(root_path.to_string_lossy().as_ref()) {}
 }

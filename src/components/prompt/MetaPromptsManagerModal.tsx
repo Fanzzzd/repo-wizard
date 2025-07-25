@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from 'react';
 import type {
   MetaPrompt,
   PromptMode,
@@ -7,7 +7,7 @@ import type {
   TerminalCommandConfig,
   Commit,
   GitStatus,
-} from "../../types";
+} from '../../types';
 import {
   X,
   Plus,
@@ -21,13 +21,13 @@ import {
   GitBranch,
   Terminal,
   AlertCircle,
-} from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import { Input } from "../common/Input";
-import { Textarea } from "../common/Textarea";
-import { Button } from "../common/Button";
-import { SortableItem, DragHandle } from "../common/Sortable/SortableItem";
-import { SortableOverlay } from "../common/Sortable/SortableOverlay";
+} from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { Input } from '../common/Input';
+import { Textarea } from '../common/Textarea';
+import { Button } from '../common/Button';
+import { SortableItem, DragHandle } from '../common/Sortable/SortableItem';
+import { SortableOverlay } from '../common/Sortable/SortableOverlay';
 import {
   DndContext,
   PointerSensor,
@@ -36,16 +36,16 @@ import {
   useSensors,
   closestCorners,
   useDroppable,
-} from "@dnd-kit/core";
+} from '@dnd-kit/core';
 import {
   SortableContext,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { ToggleSwitch } from "../common/ToggleSwitch";
-import { SegmentedControl } from "../common/SegmentedControl";
-import { useMetaPromptManager } from "../../hooks/useMetaPromptManager";
-import { useWorkspaceStore } from "../../store/workspaceStore";
-import * as tauriApi from "../../services/tauriApi";
+} from '@dnd-kit/sortable';
+import { ToggleSwitch } from '../common/ToggleSwitch';
+import { SegmentedControl } from '../common/SegmentedControl';
+import { useMetaPromptManager } from '../../hooks/useMetaPromptManager';
+import { useWorkspaceStore } from '../../store/workspaceStore';
+import * as tauriApi from '../../services/tauriApi';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -56,7 +56,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from "../common/DropdownMenu";
+} from '../common/DropdownMenu';
 
 interface MetaPromptsManagerModalProps {
   isOpen: boolean;
@@ -65,20 +65,20 @@ interface MetaPromptsManagerModalProps {
 
 function PromptItemDisplay({ prompt }: { prompt: MetaPrompt }) {
   const { icon } = useMemo(() => {
-    if (prompt.promptType === "magic") {
+    if (prompt.promptType === 'magic') {
       let magicIcon;
       switch (prompt.magicType) {
-        case "file-tree":
+        case 'file-tree':
           magicIcon = (
             <FolderTree size={16} className="text-green-600 flex-shrink-0" />
           );
           break;
-        case "git-diff":
+        case 'git-diff':
           magicIcon = (
             <GitBranch size={16} className="text-indigo-600 flex-shrink-0" />
           );
           break;
-        case "terminal-command":
+        case 'terminal-command':
           magicIcon = (
             <Terminal size={16} className="text-yellow-600 flex-shrink-0" />
           );
@@ -90,13 +90,13 @@ function PromptItemDisplay({ prompt }: { prompt: MetaPrompt }) {
       }
       return { icon: magicIcon };
     }
-    if (prompt.mode === "universal") {
+    if (prompt.mode === 'universal') {
       return {
         icon: <Wand2 size={16} className="text-purple-500 flex-shrink-0" />,
       };
     }
     const iconEl =
-      prompt.mode === "edit" ? (
+      prompt.mode === 'edit' ? (
         <Edit size={16} className="text-blue-500 flex-shrink-0" />
       ) : (
         <MessageSquare size={16} className="text-blue-500 flex-shrink-0" />
@@ -117,7 +117,7 @@ function PromptItemDisplay({ prompt }: { prompt: MetaPrompt }) {
         <ToggleSwitch
           checked={prompt.enabled}
           onChange={() => {}}
-          title={prompt.enabled ? "Enabled" : "Disabled"}
+          title={prompt.enabled ? 'Enabled' : 'Disabled'}
         />
       </div>
     </div>
@@ -135,67 +135,67 @@ function SortablePromptItem({
   onSelect: (id: string) => void;
   selectedPromptId: string | null;
   onContextMenu: (e: React.MouseEvent, prompt: MetaPrompt) => void;
-  onUpdate: (update: Partial<Omit<MetaPrompt, "id">>) => void;
+  onUpdate: (update: Partial<Omit<MetaPrompt, 'id'>>) => void;
 }) {
   const isSelected = selectedPromptId === prompt.id;
 
   const { selectedClasses, icon } = useMemo(() => {
-    if (prompt.promptType === "magic") {
+    if (prompt.promptType === 'magic') {
       let magicIcon, selectedBg;
       switch (prompt.magicType) {
-        case "file-tree":
+        case 'file-tree':
           magicIcon = (
             <FolderTree size={16} className="text-green-600 flex-shrink-0" />
           );
-          selectedBg = "bg-green-100 text-green-800";
+          selectedBg = 'bg-green-100 text-green-800';
           break;
-        case "git-diff":
+        case 'git-diff':
           magicIcon = (
             <GitBranch size={16} className="text-indigo-600 flex-shrink-0" />
           );
-          selectedBg = "bg-indigo-100 text-indigo-800";
+          selectedBg = 'bg-indigo-100 text-indigo-800';
           break;
-        case "terminal-command":
+        case 'terminal-command':
           magicIcon = (
             <Terminal size={16} className="text-yellow-600 flex-shrink-0" />
           );
-          selectedBg = "bg-yellow-100 text-yellow-800";
+          selectedBg = 'bg-yellow-100 text-yellow-800';
           break;
         default:
           magicIcon = (
             <Wand2 size={16} className="text-gray-500 flex-shrink-0" />
           );
-          selectedBg = "bg-gray-200 text-gray-800";
+          selectedBg = 'bg-gray-200 text-gray-800';
       }
       return { selectedClasses: selectedBg, icon: magicIcon };
     }
 
-    if (prompt.mode === "universal") {
+    if (prompt.mode === 'universal') {
       return {
-        selectedClasses: "bg-purple-100 text-purple-800",
+        selectedClasses: 'bg-purple-100 text-purple-800',
         icon: <Wand2 size={16} className="text-purple-500 flex-shrink-0" />,
       };
     }
     const iconEl =
-      prompt.mode === "edit" ? (
+      prompt.mode === 'edit' ? (
         <Edit size={16} className="text-blue-500 flex-shrink-0" />
       ) : (
         <MessageSquare size={16} className="text-blue-500 flex-shrink-0" />
       );
     return {
-      selectedClasses: "bg-blue-100 text-blue-800",
+      selectedClasses: 'bg-blue-100 text-blue-800',
       icon: iconEl,
     };
   }, [prompt]);
 
   const itemClasses = isSelected
     ? selectedClasses
-    : "text-gray-700 hover:bg-gray-100";
+    : 'text-gray-700 hover:bg-gray-100';
 
   return (
     <SortableItem id={prompt.id}>
       <div
-        onContextMenu={(e) => onContextMenu(e, prompt)}
+        onContextMenu={e => onContextMenu(e, prompt)}
         onClick={() => onSelect(prompt.id)}
         className={`w-full text-left flex items-center justify-between p-2 rounded-md text-sm mb-1 group select-none cursor-default ${itemClasses}`}
       >
@@ -212,8 +212,8 @@ function SortablePromptItem({
         <div className="ml-2 flex-shrink-0">
           <ToggleSwitch
             checked={prompt.enabled}
-            onChange={(enabled) => onUpdate({ enabled })}
-            title={prompt.enabled ? "Click to disable" : "Click to enable"}
+            onChange={enabled => onUpdate({ enabled })}
+            title={prompt.enabled ? 'Click to disable' : 'Click to enable'}
           />
         </div>
       </div>
@@ -239,11 +239,11 @@ function PromptListSection({
   selectedPromptId: string | null;
   onUpdatePrompt: (
     prompt: MetaPrompt,
-    update: Partial<Omit<MetaPrompt, "id">>
+    update: Partial<Omit<MetaPrompt, 'id'>>
   ) => void;
   onContextMenu: (e: React.MouseEvent, prompt: MetaPrompt) => void;
 }) {
-  const promptIds = useMemo(() => prompts.map((p) => p.id), [prompts]);
+  const promptIds = useMemo(() => prompts.map(p => p.id), [prompts]);
   const { setNodeRef } = useDroppable({ id: mode });
 
   return (
@@ -258,14 +258,14 @@ function PromptListSection({
         id={mode}
       >
         <div className="space-y-1 min-h-[1px]">
-          {prompts.map((prompt) => (
+          {prompts.map(prompt => (
             <SortablePromptItem
               key={prompt.id}
               prompt={prompt}
               onSelect={onSelect}
               selectedPromptId={selectedPromptId}
               onContextMenu={onContextMenu}
-              onUpdate={(update) => onUpdatePrompt(prompt, update)}
+              onUpdate={update => onUpdatePrompt(prompt, update)}
             />
           ))}
         </div>
@@ -279,21 +279,21 @@ function FileTreeConfigEditor({
   onUpdate,
 }: {
   prompt: MetaPrompt;
-  onUpdate: (update: Partial<Omit<MetaPrompt, "id">>) => void;
+  onUpdate: (update: Partial<Omit<MetaPrompt, 'id'>>) => void;
 }) {
   const config = prompt.fileTreeConfig ?? {
-    scope: "all",
+    scope: 'all',
     maxFilesPerDirectory: null,
-    ignorePatterns: "",
+    ignorePatterns: '',
   };
 
   const handleConfigChange = (update: Partial<FileTreeConfig>) => {
     onUpdate({ fileTreeConfig: { ...config, ...update } });
   };
 
-  const scopeOptions: { value: FileTreeConfig["scope"]; label: string }[] = [
-    { value: "all", label: "All Files" },
-    { value: "selected", label: "Selected Files" },
+  const scopeOptions: { value: FileTreeConfig['scope']; label: string }[] = [
+    { value: 'all', label: 'All Files' },
+    { value: 'selected', label: 'Selected Files' },
   ];
 
   return (
@@ -308,13 +308,13 @@ function FileTreeConfigEditor({
         <SegmentedControl
           options={scopeOptions}
           value={config.scope}
-          onChange={(scope) => handleConfigChange({ scope })}
+          onChange={scope => handleConfigChange({ scope })}
           layoutId="filetree-scope-slider"
         />
         <p className="text-xs text-gray-500 mt-1">
-          {config.scope === "all"
-            ? "The tree will include all files in the project."
-            : "The tree will only include files currently selected in the workspace."}
+          {config.scope === 'all'
+            ? 'The tree will include all files in the project.'
+            : 'The tree will only include files currently selected in the workspace.'}
         </p>
       </div>
       <div>
@@ -324,8 +324,8 @@ function FileTreeConfigEditor({
         <Input
           type="number"
           placeholder="No limit"
-          value={config.maxFilesPerDirectory ?? ""}
-          onChange={(e) =>
+          value={config.maxFilesPerDirectory ?? ''}
+          onChange={e =>
             handleConfigChange({
               maxFilesPerDirectory: e.target.value
                 ? parseInt(e.target.value, 10)
@@ -346,9 +346,7 @@ function FileTreeConfigEditor({
           placeholder="e.g., *.log, node_modules/, .DS_Store"
           className="h-24 text-xs"
           value={config.ignorePatterns}
-          onChange={(e) =>
-            handleConfigChange({ ignorePatterns: e.target.value })
-          }
+          onChange={e => handleConfigChange({ ignorePatterns: e.target.value })}
         />
         <p className="text-xs text-gray-500 mt-1">
           Comma-separated list. Use `*` for wildcards (e.g., `*.tmp`) and end
@@ -365,10 +363,10 @@ function GitDiffConfigEditor({
   rootPath,
 }: {
   prompt: MetaPrompt;
-  onUpdate: (update: Partial<Omit<MetaPrompt, "id">>) => void;
+  onUpdate: (update: Partial<Omit<MetaPrompt, 'id'>>) => void;
   rootPath: string | null;
 }) {
-  const config = prompt.gitDiffConfig ?? { type: "unstaged", hash: null };
+  const config = prompt.gitDiffConfig ?? { type: 'unstaged', hash: null };
   const [isRepo, setIsRepo] = useState(false);
   const [status, setStatus] = useState<GitStatus | null>(null);
   const [commits, setCommits] = useState<Commit[]>([]);
@@ -400,10 +398,10 @@ function GitDiffConfigEditor({
     onUpdate({ gitDiffConfig: { ...config, ...update } });
   };
 
-  const diffTypeOptions: { value: GitDiffConfig["type"]; label: string }[] = [
-    { value: "unstaged", label: "Unstaged" },
-    { value: "staged", label: "Staged" },
-    { value: "commit", label: "Commit" },
+  const diffTypeOptions: { value: GitDiffConfig['type']; label: string }[] = [
+    { value: 'unstaged', label: 'Unstaged' },
+    { value: 'staged', label: 'Staged' },
+    { value: 'commit', label: 'Commit' },
   ];
 
   if (isLoading) {
@@ -433,38 +431,36 @@ function GitDiffConfigEditor({
         <SegmentedControl
           options={diffTypeOptions}
           value={config.type}
-          onChange={(type) => handleConfigChange({ type, hash: null })}
+          onChange={type => handleConfigChange({ type, hash: null })}
           layoutId="gitdiff-type-slider"
         />
         <p className="text-xs text-gray-500 mt-1">
-          {config.type === "unstaged" &&
+          {config.type === 'unstaged' &&
             `Includes ${
-              status?.hasUnstagedChanges ? "" : "no"
+              status?.hasUnstagedChanges ? '' : 'no'
             } unstaged changes.`}
-          {config.type === "staged" &&
-            `Includes ${
-              status?.hasStagedChanges ? "" : "no"
-            } staged changes.`}
-          {config.type === "commit" && "Shows changes from a specific commit."}
+          {config.type === 'staged' &&
+            `Includes ${status?.hasStagedChanges ? '' : 'no'} staged changes.`}
+          {config.type === 'commit' && 'Shows changes from a specific commit.'}
         </p>
       </div>
-      {config.type === "commit" && (
+      {config.type === 'commit' && (
         <div>
           <label className="text-sm font-medium text-gray-700 mb-1 block">
             Select Commit
           </label>
           {commits.length > 0 ? (
             <select
-              value={config.hash ?? ""}
-              onChange={(e) => handleConfigChange({ hash: e.target.value })}
+              value={config.hash ?? ''}
+              onChange={e => handleConfigChange({ hash: e.target.value })}
               className="form-input-base w-full"
             >
               <option value="" disabled>
                 -- Select a commit --
               </option>
-              {commits.map((commit) => (
+              {commits.map(commit => (
                 <option key={commit.hash} value={commit.hash}>
-                  {commit.hash.slice(0, 7)} - {commit.message} ({commit.author},{" "}
+                  {commit.hash.slice(0, 7)} - {commit.message} ({commit.author},{' '}
                   {commit.date})
                 </option>
               ))}
@@ -483,9 +479,9 @@ function TerminalCommandConfigEditor({
   onUpdate,
 }: {
   prompt: MetaPrompt;
-  onUpdate: (update: Partial<Omit<MetaPrompt, "id">>) => void;
+  onUpdate: (update: Partial<Omit<MetaPrompt, 'id'>>) => void;
 }) {
-  const config = prompt.terminalCommandConfig ?? { command: "" };
+  const config = prompt.terminalCommandConfig ?? { command: '' };
 
   const handleConfigChange = (update: Partial<TerminalCommandConfig>) => {
     onUpdate({ terminalCommandConfig: { ...config, ...update } });
@@ -504,7 +500,7 @@ function TerminalCommandConfigEditor({
           type="text"
           placeholder="e.g., pnpm test"
           value={config.command}
-          onChange={(e) => handleConfigChange({ command: e.target.value })}
+          onChange={e => handleConfigChange({ command: e.target.value })}
         />
         <p className="text-xs text-gray-500 mt-1">
           The command will be executed in the project root. Output will be
@@ -548,9 +544,9 @@ export function MetaPromptsManagerModal({
   );
 
   const modeOptions: { value: PromptMode; label: string }[] = [
-    { value: "universal", label: "Universal" },
-    { value: "edit", label: "Edit Mode" },
-    { value: "qa", label: "QA Mode" },
+    { value: 'universal', label: 'Universal' },
+    { value: 'edit', label: 'Edit Mode' },
+    { value: 'qa', label: 'QA Mode' },
   ];
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -561,13 +557,17 @@ export function MetaPromptsManagerModal({
     universal: {
       prompts: universalPrompts,
       icon: <Wand2 size={14} />,
-      title: "Universal",
+      title: 'Universal',
     },
-    edit: { prompts: editPrompts, icon: <Edit size={14} />, title: "Edit Mode" },
+    edit: {
+      prompts: editPrompts,
+      icon: <Edit size={14} />,
+      title: 'Edit Mode',
+    },
     qa: {
       prompts: qaPrompts,
       icon: <MessageSquare size={14} />,
-      title: "QA Mode",
+      title: 'QA Mode',
     },
   };
 
@@ -593,7 +593,7 @@ export function MetaPromptsManagerModal({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <header className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
               <h2 className="text-lg font-bold text-gray-900">
@@ -653,20 +653,20 @@ export function MetaPromptsManagerModal({
                       <DropdownMenuContent>
                         <DropdownMenuLabel>Magic Prompt</DropdownMenuLabel>
                         <DropdownMenuItem
-                          onSelect={() => handleAddMagicPrompt("file-tree")}
+                          onSelect={() => handleAddMagicPrompt('file-tree')}
                           leftIcon={<FolderTree size={16} />}
                         >
                           File Tree
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onSelect={() => handleAddMagicPrompt("git-diff")}
+                          onSelect={() => handleAddMagicPrompt('git-diff')}
                           leftIcon={<GitBranch size={16} />}
                         >
                           Git Diff
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onSelect={() =>
-                            handleAddMagicPrompt("terminal-command")
+                            handleAddMagicPrompt('terminal-command')
                           }
                           leftIcon={<Terminal size={16} />}
                         >
@@ -674,7 +674,7 @@ export function MetaPromptsManagerModal({
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onSelect={() => handleAddBlankPrompt("universal")}
+                          onSelect={() => handleAddBlankPrompt('universal')}
                           leftIcon={<Plus size={16} />}
                         >
                           Add Blank Prompt
@@ -719,7 +719,7 @@ export function MetaPromptsManagerModal({
                       <Input
                         type="text"
                         value={selectedPrompt.name}
-                        onChange={(e) =>
+                        onChange={e =>
                           handleUpdatePromptById(selectedPrompt.id, {
                             name: e.target.value,
                           })
@@ -734,21 +734,21 @@ export function MetaPromptsManagerModal({
                       <SegmentedControl
                         options={modeOptions}
                         value={selectedPrompt.mode}
-                        onChange={(mode) =>
+                        onChange={mode =>
                           handleUpdatePromptById(selectedPrompt.id, { mode })
                         }
                         layoutId="prompt-mode-slider"
                       />
                     </div>
 
-                    {selectedPrompt.promptType !== "magic" && (
+                    {selectedPrompt.promptType !== 'magic' && (
                       <div>
                         <label className="text-sm font-medium text-gray-700 mb-1 block">
                           Content
                         </label>
                         <Textarea
                           value={selectedPrompt.content}
-                          onChange={(e) =>
+                          onChange={e =>
                             handleUpdatePromptById(selectedPrompt.id, {
                               content: e.target.value,
                             })
@@ -758,14 +758,14 @@ export function MetaPromptsManagerModal({
                         />
                       </div>
                     )}
-                    {selectedPrompt.promptType === "magic" && (
+                    {selectedPrompt.promptType === 'magic' && (
                       <div>
                         <label className="text-sm font-medium text-gray-700 mb-1 block">
                           Template
                         </label>
                         <Textarea
                           value={selectedPrompt.content}
-                          onChange={(e) =>
+                          onChange={e =>
                             handleUpdatePromptById(selectedPrompt.id, {
                               content: e.target.value,
                             })
@@ -773,27 +773,27 @@ export function MetaPromptsManagerModal({
                           className="h-48 text-xs"
                           placeholder="Enter meta prompt template..."
                         />
-                        {selectedPrompt.magicType === "file-tree" && (
+                        {selectedPrompt.magicType === 'file-tree' && (
                           <FileTreeConfigEditor
                             prompt={selectedPrompt}
-                            onUpdate={(update) =>
+                            onUpdate={update =>
                               handleUpdatePromptById(selectedPrompt.id, update)
                             }
                           />
                         )}
-                        {selectedPrompt.magicType === "git-diff" && (
+                        {selectedPrompt.magicType === 'git-diff' && (
                           <GitDiffConfigEditor
                             prompt={selectedPrompt}
-                            onUpdate={(update) =>
+                            onUpdate={update =>
                               handleUpdatePromptById(selectedPrompt.id, update)
                             }
                             rootPath={rootPath}
                           />
                         )}
-                        {selectedPrompt.magicType === "terminal-command" && (
+                        {selectedPrompt.magicType === 'terminal-command' && (
                           <TerminalCommandConfigEditor
                             prompt={selectedPrompt}
-                            onUpdate={(update) =>
+                            onUpdate={update =>
                               handleUpdatePromptById(selectedPrompt.id, update)
                             }
                           />

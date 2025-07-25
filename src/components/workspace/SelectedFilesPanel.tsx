@@ -1,11 +1,15 @@
-import { useWorkspaceStore } from "../../store/workspaceStore";
-import { X, ArrowDownAZ, ArrowDown10 } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
-import { getRelativePath, readFileContent, isBinaryFile } from "../../services/tauriApi";
-import { estimateTokens, formatTokenCount } from "../../lib/token_estimator";
-import { ShortenedPath } from "../common/ShortenedPath";
-import { showErrorDialog } from "../../lib/errorHandler";
-import { AppError, isFileNotFoundError } from "../../lib/error";
+import { useWorkspaceStore } from '../../store/workspaceStore';
+import { X, ArrowDownAZ, ArrowDown10 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import {
+  getRelativePath,
+  readFileContent,
+  isBinaryFile,
+} from '../../services/tauriApi';
+import { estimateTokens, formatTokenCount } from '../../lib/token_estimator';
+import { ShortenedPath } from '../common/ShortenedPath';
+import { showErrorDialog } from '../../lib/errorHandler';
+import { AppError, isFileNotFoundError } from '../../lib/error';
 
 export function SelectedFilesPanel() {
   const {
@@ -18,7 +22,7 @@ export function SelectedFilesPanel() {
   const [fileDetails, setFileDetails] = useState<
     { path: string; shortPath: string; tokens: number; isBinary: boolean }[]
   >([]);
-  const [sortBy, setSortBy] = useState<"name" | "tokens">("name");
+  const [sortBy, setSortBy] = useState<'name' | 'tokens'>('name');
 
   useEffect(() => {
     if (!rootPath || selectedFilePaths.length === 0) {
@@ -28,7 +32,7 @@ export function SelectedFilesPanel() {
 
     const fetchDetails = async () => {
       const details = await Promise.all(
-        selectedFilePaths.map(async (path) => {
+        selectedFilePaths.map(async path => {
           try {
             const shortPath = await getRelativePath(path, rootPath);
             const isBinary = await isBinaryFile(path);
@@ -45,12 +49,28 @@ export function SelectedFilesPanel() {
               removeSelectedFilePath(path);
               return null;
             }
-            showErrorDialog(new AppError(`Failed to read file for token count: ${path}`, error));
+            showErrorDialog(
+              new AppError(
+                `Failed to read file for token count: ${path}`,
+                error
+              )
+            );
             return null;
           }
         })
       );
-      setFileDetails(details.filter((d): d is { path: string; shortPath: string; tokens: number; isBinary: boolean; } => d !== null));
+      setFileDetails(
+        details.filter(
+          (
+            d
+          ): d is {
+            path: string;
+            shortPath: string;
+            tokens: number;
+            isBinary: boolean;
+          } => d !== null
+        )
+      );
     };
 
     fetchDetails();
@@ -63,7 +83,7 @@ export function SelectedFilesPanel() {
 
   const sortedFiles = useMemo(() => {
     const filesWithDetails = [...fileDetails];
-    if (sortBy === "tokens") {
+    if (sortBy === 'tokens') {
       return filesWithDetails.sort((a, b) => {
         if (a.isBinary !== b.isBinary) {
           return a.isBinary ? 1 : -1;
@@ -84,23 +104,23 @@ export function SelectedFilesPanel() {
         </h3>
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setSortBy("name")}
+            onClick={() => setSortBy('name')}
             title="Sort by name"
             className={`p-1 rounded-md transition-colors ${
-              sortBy === "name"
-                ? "bg-blue-100 text-blue-700"
-                : "text-gray-500 hover:bg-gray-200"
+              sortBy === 'name'
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-gray-500 hover:bg-gray-200'
             }`}
           >
             <ArrowDownAZ size={16} />
           </button>
           <button
-            onClick={() => setSortBy("tokens")}
+            onClick={() => setSortBy('tokens')}
             title="Sort by token count"
             className={`p-1 rounded-md transition-colors ${
-              sortBy === "tokens"
-                ? "bg-blue-100 text-blue-700"
-                : "text-gray-500 hover:bg-gray-200"
+              sortBy === 'tokens'
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-gray-500 hover:bg-gray-200'
             }`}
           >
             <ArrowDown10 size={16} />
@@ -116,10 +136,8 @@ export function SelectedFilesPanel() {
                 <li
                   key={path}
                   className={`flex items-center justify-between p-1.5 rounded group select-none ${
-                    isActive
-                      ? "bg-blue-100 text-blue-900"
-                      : "hover:bg-gray-100"
-                  } ${isBinary ? "cursor-not-allowed" : "cursor-default"}`}
+                    isActive ? 'bg-blue-100 text-blue-900' : 'hover:bg-gray-100'
+                  } ${isBinary ? 'cursor-not-allowed' : 'cursor-default'}`}
                   onClick={() => !isBinary && setActiveFilePath(path)}
                 >
                   <ShortenedPath
@@ -128,15 +146,17 @@ export function SelectedFilesPanel() {
                   />
                   <div className="flex items-center flex-shrink-0 ml-2">
                     <span className="text-gray-500 w-20 text-right">
-                      {isBinary ? 'Binary File' : `${formatTokenCount(tokens)} tokens`}
+                      {isBinary
+                        ? 'Binary File'
+                        : `${formatTokenCount(tokens)} tokens`}
                     </span>
                     <button
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         removeSelectedFilePath(path);
                       }}
                       className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 ml-2"
-                      title={`Remove ${path.split("/").pop()}`}
+                      title={`Remove ${path.split('/').pop()}`}
                     >
                       <X size={14} />
                     </button>
