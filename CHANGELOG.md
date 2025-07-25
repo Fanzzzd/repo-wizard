@@ -1,3 +1,10 @@
+# [1.7.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.1...app-v1.7.0-next.1) (2025-07-25)
+
+
+### Features
+
+* **core:** Switch to custom ignore crate for performance and git parity ([22027e3](https://github.com/Fanzzzd/repo-wizard/commit/22027e35b112209b5e74bd751ae9cc83228abd99))
+
 ## [1.6.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0...app-v1.6.1) (2025-07-21)
 
 

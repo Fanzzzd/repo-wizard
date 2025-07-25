@@ -1,7 +1,7 @@
 {
   "name": "repo-wizard",
   "private": true,
-  "version": "1.6.1",
+  "version": "1.7.0-next.1",
   "type": "module",
   "scripts": {
     "dev": "cross-env RUST_BACKTRACE=1 tauri dev --config src-tauri/tauri.dev.conf.json",
