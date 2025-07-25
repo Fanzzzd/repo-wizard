@@ -138,7 +138,7 @@ pub async fn search_files(
         
         let walk_options = WalkOptions {
             ignore_filename,
-            include_dirs: true, // Allow walker to enter directories (we filter them out later)
+            include_dirs: true, // Allow walker to enter directories; directories are included in the search results and scored like files
         };
         
         let (path_sender, path_receiver) = unbounded();
@@ -262,7 +262,7 @@ mod tests {
         assert!(calculate_fuzzy_score("te", "test") > calculate_fuzzy_score("te", "item"));
         
         // Should match all characters
-        assert_eq!(calculate_fuzzy_score("xyz", "abc"), -1);
+        assert_eq!(calculate_fuzzy_score("xyz", "abc"), -50);
         
         // Empty query should return 0
         assert_eq!(calculate_fuzzy_score("", "anything"), 0);

@@ -199,9 +199,9 @@ function App() {
         await MenuItem.new({
           text: "Search Files...",
           accelerator: "CmdOrCtrl+P",
-          enabled: !!useWorkspaceStore.getState().rootPath,
+          enabled: !!rootPath,
           action: () => {
-            if (useWorkspaceStore.getState().rootPath) {
+            if (rootPath) {
               useFileSearchStore.getState().openModal();
             }
           },
@@ -284,7 +284,7 @@ function App() {
       items: allMenuItems,
     });
     await menu.setAsAppMenu();
-  }, [recentProjects, openDialog, isInputFocused]);
+  }, [recentProjects, openDialog, isInputFocused, rootPath]);
 
   useEffect(() => {
     const initializeApp = async () => {

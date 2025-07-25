@@ -18,6 +18,18 @@ export function useKeyboardShortcuts(
     if (!enabled) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Prevent shortcuts when typing in input, textarea, or contentEditable elements
+      const target = event.target as HTMLElement | null;
+      if (
+        target && (
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable
+        )
+      ) {
+        return;
+      }
+
       for (const shortcut of shortcuts) {
         const keyMatches = event.key === shortcut.key;
         const metaMatches = !!shortcut.metaKey === event.metaKey;

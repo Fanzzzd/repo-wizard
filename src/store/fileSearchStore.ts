@@ -46,7 +46,7 @@ interface FileSearchState {
   setSelectedIndex: (index: number) => void;
   selectNext: () => void;
   selectPrevious: () => void;
-  toggleFileSelection: (filePath: string) => void;
+  toggleFileSelection: (filePath: string) => Promise<void>;
   selectCurrentFile: () => void;
   selectAndClose: () => void;
   reset: () => void;
