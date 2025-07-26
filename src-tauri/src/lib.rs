@@ -67,7 +67,8 @@ pub fn run() {
             commands::get_cli_status,
             commands::install_cli_shim,
             commands::start_watching,
-            commands::stop_watching
+            commands::stop_watching,
+            commands::search_files
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

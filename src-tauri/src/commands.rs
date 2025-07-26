@@ -1,11 +1,12 @@
 use crate::core::path_utils;
 use crate::error::Result;
 use crate::services::{
-    cli_service, git_service, project_service, pty_service, review_service, watcher_service,
+    cli_service, file_search_service, git_service, project_service, pty_service, review_service,
+    watcher_service,
 };
 use crate::types::{
     ChangeOperation, CliInstallResult, CliStatusResult, CommandStreamEvent, Commit, DiffOption,
-    FileNode, GitStatus, IgnoreSettings,
+    FileNode, GitStatus, IgnoreSettings, SearchResult,
 };
 use base64::{engine::general_purpose, Engine as _};
 use std::path::PathBuf;
@@ -227,4 +228,17 @@ pub async fn start_watching(
 pub async fn stop_watching(root_path: String) -> Result<()> {
     watcher_service::stop_watching(&PathBuf::from(root_path));
     Ok(())
+}
+
+#[tauri::command]
+pub async fn search_files(
+    query: String,
+    root_path: String,
+    settings: IgnoreSettings,
+    limit: Option<usize>,
+) -> Result<Vec<SearchResult>> {
+    Ok(
+        file_search_service::search_files(&PathBuf::from(root_path), &query, settings, limit)
+            .await?,
+    )
 }
