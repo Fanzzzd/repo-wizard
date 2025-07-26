@@ -1,3 +1,10 @@
+# [1.7.0-next.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.7.0-next.2...app-v1.7.0-next.3) (2025-07-26)
+
+
+### Features
+
+* **search:** implement fuzzy file and folder search ([7539a87](https://github.com/Fanzzzd/repo-wizard/commit/7539a878a4b552ee57c8360610b876452eac4b6c)), closes [#9](https://github.com/Fanzzzd/repo-wizard/issues/9)
+
 # [1.7.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.7.0-next.1...app-v1.7.0-next.2) (2025-07-25)
 
 
