@@ -1,8 +1,8 @@
-import { create } from "zustand";
-import { Store as TauriStore } from "@tauri-apps/plugin-store";
-import type { EditFormat, MetaPromptDefinition } from "../types";
+import { create } from 'zustand';
+import { Store as TauriStore } from '@tauri-apps/plugin-store';
+import type { EditFormat, MetaPromptDefinition } from '../types';
 
-const SETTINGS_FILE = "app-settings.json";
+const SETTINGS_FILE = 'app-settings.json';
 
 const defaultSystemPrompt = `Act as an expert software developer.
 Always use best practices when coding.
@@ -51,9 +51,9 @@ const getTauriStore = async (): Promise<TauriStore> => {
 export const useSettingsStore = create<SettingsState>((set, get) => {
   const initialState = {
     respectGitignore: true,
-    customIgnorePatterns: ".git",
+    customIgnorePatterns: '.git',
     customSystemPrompt: defaultSystemPrompt,
-    editFormat: "whole" as EditFormat,
+    editFormat: 'whole' as EditFormat,
     metaPrompts: [] as MetaPromptDefinition[],
     autoReviewOnPaste: true,
     recentProjects: [] as string[],
@@ -67,7 +67,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { _isInitialized, _hasHydrated, _init, ...stateToSave } = state;
       const store = await getTauriStore();
-      await store.set("state", stateToSave);
+      await store.set('state', stateToSave);
       await store.save();
     }, 500);
   };
@@ -81,40 +81,43 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       if (get()._isInitialized) return;
 
       const store = await getTauriStore();
-      const savedState = await store.get<Partial<SettingsState>>("state");
-      
+      const savedState = await store.get<Partial<SettingsState>>('state');
+
       if (savedState) {
-        if (savedState.recentProjects && !Array.isArray(savedState.recentProjects)) {
-            savedState.recentProjects = [];
+        if (
+          savedState.recentProjects &&
+          !Array.isArray(savedState.recentProjects)
+        ) {
+          savedState.recentProjects = [];
         }
         set(savedState);
       }
-      
+
       set({ _isInitialized: true, _hasHydrated: true });
 
-      useSettingsStore.subscribe((state) => {
+      useSettingsStore.subscribe(state => {
         if (state._hasHydrated) {
-            debouncedSave(state);
+          debouncedSave(state);
         }
       });
     },
 
-    setRespectGitignore: (value) => set({ respectGitignore: value }),
-    setCustomIgnorePatterns: (value) => set({ customIgnorePatterns: value }),
-    setCustomSystemPrompt: (prompt) => set({ customSystemPrompt: prompt }),
-    setEditFormat: (format) => set({ editFormat: format }),
-    setMetaPrompts: (prompts) => set({ metaPrompts: prompts }),
-    setAutoReviewOnPaste: (value) => set({ autoReviewOnPaste: value }),
-    setPromptHistoryLimit: (limit) => set({ promptHistoryLimit: limit }),
-    addRecentProject: (path) =>
-      set((state) => {
-        const otherProjects = state.recentProjects.filter((p) => p !== path);
+    setRespectGitignore: value => set({ respectGitignore: value }),
+    setCustomIgnorePatterns: value => set({ customIgnorePatterns: value }),
+    setCustomSystemPrompt: prompt => set({ customSystemPrompt: prompt }),
+    setEditFormat: format => set({ editFormat: format }),
+    setMetaPrompts: prompts => set({ metaPrompts: prompts }),
+    setAutoReviewOnPaste: value => set({ autoReviewOnPaste: value }),
+    setPromptHistoryLimit: limit => set({ promptHistoryLimit: limit }),
+    addRecentProject: path =>
+      set(state => {
+        const otherProjects = state.recentProjects.filter(p => p !== path);
         const newRecentProjects = [path, ...otherProjects].slice(0, 20); // Keep last 20
         return { recentProjects: newRecentProjects };
       }),
-    removeRecentProject: (path) =>
-      set((state) => ({
-        recentProjects: state.recentProjects.filter((p) => p !== path),
+    removeRecentProject: path =>
+      set(state => ({
+        recentProjects: state.recentProjects.filter(p => p !== path),
       })),
   };
 });

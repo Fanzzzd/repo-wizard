@@ -1,3 +1,17 @@
+# [1.7.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.7.0-next.1...app-v1.7.0-next.2) (2025-07-25)
+
+
+### Features
+
+* **formatting:** Add Prettier for code formatting and linting ([5d1010d](https://github.com/Fanzzzd/repo-wizard/commit/5d1010d685c96a608605e7a02e1d986dcb25be3d))
+
+# [1.7.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.1...app-v1.7.0-next.1) (2025-07-25)
+
+
+### Features
+
+* **core:** Switch to custom ignore crate for performance and git parity ([22027e3](https://github.com/Fanzzzd/repo-wizard/commit/22027e35b112209b5e74bd751ae9cc83228abd99))
+
 ## [1.6.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.0...app-v1.6.1) (2025-07-21)
 
 

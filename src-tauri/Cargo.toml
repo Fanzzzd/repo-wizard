@@ -1,6 +1,6 @@
 [package]
 name = "repo-wizard"
-version = "1.6.1"
+version = "1.7.0"
 description = "A code refactoring staging area to safely and efficiently apply LLM-suggested code changes."
 authors = ["fanzzzd"]
 edition = "2021"
@@ -41,13 +41,12 @@ portable-pty = "0.9.0"
 nom = "8.0.0"
 notify = { version = "8.1.0", features = ["serde"] }
 notify-debouncer-full = "0.5.0"
-xvc-walker = "0.6.17"
+ignore = { git = "https://github.com/Fanzzzd/ripgrep.git" }
+tempfile = "3.10.1"
+lru = "0.16.0"
 
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-cli = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-single-instance = "2"
-
-[patch.crates-io]
-xvc-walker = { git = "https://github.com/Fanzzzd/xvc.git" }

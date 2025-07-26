@@ -1,9 +1,9 @@
-import React, { useEffect, useRef } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { Search, File, Folder, Check } from "lucide-react";
-import { useFileSearchStore } from "../../store/fileSearchStore";
-import { useWorkspaceStore } from "../../store/workspaceStore";
-import { FileTypeIcon } from "./FileTypeIcon";
+import React, { useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { Search, File, Folder, Check } from 'lucide-react';
+import { useFileSearchStore } from '../../store/fileSearchStore';
+import { useWorkspaceStore } from '../../store/workspaceStore';
+import { FileTypeIcon } from './FileTypeIcon';
 
 interface SearchResultItemProps {
   result: {
@@ -33,8 +33,8 @@ function SearchResultItem({
   useEffect(() => {
     if (isSelected && itemRef.current) {
       itemRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
+        behavior: 'smooth',
+        block: 'nearest',
       });
     }
   }, [isSelected]);
@@ -54,8 +54,8 @@ function SearchResultItem({
       ref={itemRef}
       className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors ${
         isSelected
-          ? "bg-blue-100 text-blue-900"
-          : "hover:bg-gray-50 text-gray-700"
+          ? 'bg-blue-100 text-blue-900'
+          : 'hover:bg-gray-50 text-gray-700'
       }`}
       onClick={handleClick}
       title={result.relativePath}
@@ -73,7 +73,7 @@ function SearchResultItem({
             <>
               <span className="text-gray-400 text-sm">in</span>
               <span className="text-gray-500 text-sm truncate">
-                {result.parentDir || "/"}
+                {result.parentDir || '/'}
               </span>
             </>
           )}
@@ -84,8 +84,8 @@ function SearchResultItem({
       <div
         className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-colors ${
           isFileSelected
-            ? "bg-blue-500 border-blue-500 text-white"
-            : "border-gray-300 hover:border-blue-400"
+            ? 'bg-blue-500 border-blue-500 text-white'
+            : 'border-gray-300 hover:border-blue-400'
         }`}
         onClick={handleToggleClick}
       >
@@ -129,19 +129,19 @@ export function FileSearchModal() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
-        case "Escape":
+        case 'Escape':
           e.preventDefault();
           closeModal();
           break;
-        case "ArrowDown":
+        case 'ArrowDown':
           e.preventDefault();
           selectNext();
           break;
-        case "ArrowUp":
+        case 'ArrowUp':
           e.preventDefault();
           selectPrevious();
           break;
-        case "Enter":
+        case 'Enter':
           e.preventDefault();
           if (e.metaKey || e.ctrlKey) {
             // Cmd/Ctrl+Enter: select current file and keep modal open
@@ -151,7 +151,7 @@ export function FileSearchModal() {
             selectAndClose();
           }
           break;
-        case "Tab":
+        case 'Tab':
           e.preventDefault();
           // Tab: add to selection without closing
           selectCurrentFile();
@@ -159,8 +159,8 @@ export function FileSearchModal() {
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [
     isOpen,
     selectNext,
@@ -206,7 +206,7 @@ export function FileSearchModal() {
           exit={{ opacity: 0, scale: 0.95, y: -20 }}
           transition={{ duration: 0.15 }}
           className="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-200"
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
           {/* Search input */}
           <div className="flex items-center gap-3 p-4 border-b border-gray-200">
@@ -228,7 +228,7 @@ export function FileSearchModal() {
 
           {/* Results */}
           <div className="max-h-96 overflow-y-auto">
-            {query.trim() === "" ? (
+            {query.trim() === '' ? (
               <div className="p-8 text-center text-gray-500">
                 <File size={48} className="mx-auto mb-4 text-gray-300" />
                 <p className="text-lg font-medium">Search for files</p>
@@ -246,9 +246,7 @@ export function FileSearchModal() {
               <div className="p-8 text-center text-gray-500">
                 <Folder size={48} className="mx-auto mb-4 text-gray-300" />
                 <p className="text-lg font-medium">No files found</p>
-                <p className="text-sm mt-1">
-                  Try adjusting your search query
-                </p>
+                <p className="text-sm mt-1">Try adjusting your search query</p>
               </div>
             ) : (
               <div className="py-2">
@@ -270,7 +268,8 @@ export function FileSearchModal() {
           {selectedFiles.size > 0 && (
             <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
               <span className="text-sm text-gray-600">
-                {selectedFiles.size} file{selectedFiles.size !== 1 ? "s" : ""} selected
+                {selectedFiles.size} file{selectedFiles.size !== 1 ? 's' : ''}{' '}
+                selected
               </span>
               <button
                 onClick={closeModal}

@@ -1,10 +1,11 @@
 use crate::core::path_utils;
 use crate::error::Result;
 use crate::services::{
-    cli_service, file_search_service, git_service, project_service, pty_service, review_service, watcher_service,
+    cli_service, file_search_service, git_service, project_service, pty_service, review_service,
+    watcher_service,
 };
 use crate::types::{
-    ChangeOperation, CliInstallResult, CliStatusResult, Commit, CommandStreamEvent, DiffOption,
+    ChangeOperation, CliInstallResult, CliStatusResult, CommandStreamEvent, Commit, DiffOption,
     FileNode, GitStatus, IgnoreSettings, SearchResult,
 };
 use base64::{engine::general_purpose, Engine as _};
@@ -57,10 +58,7 @@ pub async fn close_window(window: tauri::Window) -> Result<()> {
 }
 
 #[tauri::command]
-pub async fn list_directory_recursive(
-    path: String,
-    settings: IgnoreSettings,
-) -> Result<FileNode> {
+pub async fn list_directory_recursive(path: String, settings: IgnoreSettings) -> Result<FileNode> {
     Ok(project_service::list_directory_recursive(&PathBuf::from(path), settings).await?)
 }
 
@@ -167,7 +165,10 @@ pub async fn get_recent_commits(repo_path: String, count: u32) -> Result<Vec<Com
 
 #[tauri::command]
 pub async fn get_git_diff(repo_path: String, option: DiffOption) -> Result<String> {
-    Ok(git_service::get_git_diff(&PathBuf::from(repo_path), option)?)
+    Ok(git_service::get_git_diff(
+        &PathBuf::from(repo_path),
+        option,
+    )?)
 }
 
 #[tauri::command]
@@ -236,10 +237,8 @@ pub async fn search_files(
     settings: IgnoreSettings,
     limit: Option<usize>,
 ) -> Result<Vec<SearchResult>> {
-    Ok(file_search_service::search_files(
-        &PathBuf::from(root_path),
-        &query,
-        settings,
-        limit,
-    ).await?)
+    Ok(
+        file_search_service::search_files(&PathBuf::from(root_path), &query, settings, limit)
+            .await?,
+    )
 }

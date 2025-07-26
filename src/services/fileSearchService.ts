@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from '@tauri-apps/api/core';
 
 export interface SearchResult {
   path: string;
@@ -48,7 +48,7 @@ export class FileSearchService {
     }
 
     const cacheKey = this.getCacheKey(query, rootPath);
-    
+
     // Check cache first
     if (this.isValidCache(cacheKey)) {
       const cached = this.searchCache.get(cacheKey);
@@ -58,7 +58,7 @@ export class FileSearchService {
     }
 
     try {
-      const results = await invoke<SearchResult[]>("search_files", {
+      const results = await invoke<SearchResult[]>('search_files', {
         query: query.trim(),
         rootPath,
         settings,
@@ -71,7 +71,7 @@ export class FileSearchService {
 
       return results;
     } catch (error) {
-      console.error("File search error:", error);
+      console.error('File search error:', error);
       return [];
     }
   }
@@ -92,7 +92,7 @@ export class FileSearchService {
     delay: number = 150
   ): void {
     const debounceKey = `${rootPath}:${query}`;
-    
+
     // Clear existing timer
     const existingTimer = this.debounceTimers.get(debounceKey);
     if (existingTimer) {

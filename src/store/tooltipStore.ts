@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 interface TooltipState {
   content: React.ReactNode | null;
@@ -12,12 +12,12 @@ interface TooltipState {
   updatePosition: (position: { x: number; y: number }) => void;
 }
 
-export const useTooltipStore = create<TooltipState>((set) => ({
+export const useTooltipStore = create<TooltipState>(set => ({
   content: null,
   position: { x: 0, y: 0 },
   isVisible: false,
   showTooltip: (content, position) =>
     set({ isVisible: true, content, position }),
   hideTooltip: () => set({ isVisible: false }),
-  updatePosition: (position) => set({ position }),
+  updatePosition: position => set({ position }),
 }));

@@ -53,9 +53,9 @@ const extensionToLanguageMap: Record<string, string> = {
 };
 
 const filenameToLanguageMap: Record<string, string> = {
-    'dockerfile': 'dockerfile',
-    'makefile': 'makefile',
-    'cmakelists.txt': 'cmake',
+  dockerfile: 'dockerfile',
+  makefile: 'makefile',
+  'cmakelists.txt': 'cmake',
 };
 
 /**
@@ -77,12 +77,12 @@ export function getLanguageForFilePath(filePath: string): string | undefined {
   if (filenameToLanguageMap[filename]) {
     return filenameToLanguageMap[filename];
   }
-  
+
   // Then, check by extension.
   const extension = filename.split('.').pop();
   if (extension && extensionToLanguageMap[extension]) {
     return extensionToLanguageMap[extension];
   }
-  
+
   return undefined;
 }

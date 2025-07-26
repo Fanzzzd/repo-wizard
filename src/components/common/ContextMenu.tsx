@@ -1,8 +1,17 @@
-import { useEffect, useRef } from "react";
-import { useContextMenuStore, type ContextMenuItem } from "../../store/contextMenuStore";
-import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useRef } from 'react';
+import {
+  useContextMenuStore,
+  type ContextMenuItem,
+} from '../../store/contextMenuStore';
+import { AnimatePresence, motion } from 'motion/react';
 
-function MenuItem({ item, close }: { item: ContextMenuItem; close: () => void }) {
+function MenuItem({
+  item,
+  close,
+}: {
+  item: ContextMenuItem;
+  close: () => void;
+}) {
   if (item.isSeparator) {
     return <div className="h-px bg-gray-200 my-1 mx-[-4px]" />;
   }
@@ -19,8 +28,8 @@ function MenuItem({ item, close }: { item: ContextMenuItem; close: () => void })
       className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-left transition-colors
         ${
           item.isDanger
-            ? "text-red-600 hover:bg-red-50"
-            : "text-gray-700 hover:bg-gray-100"
+            ? 'text-red-600 hover:bg-red-50'
+            : 'text-gray-700 hover:bg-gray-100'
         }
         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
     >
@@ -41,10 +50,10 @@ export function ContextMenu() {
       }
     };
     if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen, close]);
 

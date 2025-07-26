@@ -9,8 +9,9 @@ use tokio::io::AsyncWriteExt;
 use std::os::unix::fs::PermissionsExt;
 
 fn get_shim_dir() -> Result<PathBuf> {
-    let home_dir =
-        env::var("HOME").or_else(|_| env::var("USERPROFILE")).map(PathBuf::from)
+    let home_dir = env::var("HOME")
+        .or_else(|_| env::var("USERPROFILE"))
+        .map(PathBuf::from)
         .map_err(|_| anyhow!("Could not resolve home directory"))?;
     Ok(home_dir.join(".repo-wizard").join("bin"))
 }
@@ -40,7 +41,9 @@ async fn add_shim_dir_to_path(shim_dir: &Path) -> Result<()> {
     }
 
     let shell = env::var("SHELL").unwrap_or_else(|_| "sh".to_string());
-    let home = env::var("HOME").map(PathBuf::from).map_err(|_| anyhow!("Cannot find HOME dir"))?;
+    let home = env::var("HOME")
+        .map(PathBuf::from)
+        .map_err(|_| anyhow!("Cannot find HOME dir"))?;
 
     let profile_file_name;
     let export_line;
@@ -66,7 +69,10 @@ async fn add_shim_dir_to_path(shim_dir: &Path) -> Result<()> {
     if profile_path.exists() {
         let content = fs::read_to_string(&profile_path).await?;
         if !content.contains(&*shim_dir_str) {
-            let mut file = fs::OpenOptions::new().append(true).open(&profile_path).await?;
+            let mut file = fs::OpenOptions::new()
+                .append(true)
+                .open(&profile_path)
+                .await?;
             file.write_all(export_line.as_bytes()).await?;
         }
     } else {

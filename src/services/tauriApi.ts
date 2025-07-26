@@ -1,4 +1,4 @@
-import { invoke, Channel } from "@tauri-apps/api/core";
+import { invoke, Channel } from '@tauri-apps/api/core';
 import type {
   FileNode,
   ChangeOperation,
@@ -8,8 +8,8 @@ import type {
   CommandStreamEvent,
   CliStatusResult,
   CliInstallResult,
-} from "../types";
-import { AppError } from "../lib/error";
+} from '../types';
+import { AppError } from '../lib/error';
 
 interface IgnoreSettings {
   respectGitignore: boolean;
@@ -21,7 +21,7 @@ export const listDirectoryRecursive = async (
   settings: IgnoreSettings
 ): Promise<FileNode> => {
   try {
-    return await invoke("list_directory_recursive", { path, settings });
+    return await invoke('list_directory_recursive', { path, settings });
   } catch (err) {
     throw new AppError(`Failed to list directory: ${path}`, err);
   }
@@ -29,7 +29,7 @@ export const listDirectoryRecursive = async (
 
 export const readFileAsBase64 = async (path: string): Promise<string> => {
   try {
-    return await invoke("read_file_as_base64", { path });
+    return await invoke('read_file_as_base64', { path });
   } catch (err) {
     throw new AppError(`Failed to read file as base64 for: ${path}`, err);
   }
@@ -37,7 +37,7 @@ export const readFileAsBase64 = async (path: string): Promise<string> => {
 
 export const readFileContent = async (path: string): Promise<string> => {
   try {
-    return await invoke("read_file_content", { path });
+    return await invoke('read_file_content', { path });
   } catch (err) {
     throw new AppError(`Failed to read file content for: ${path}`, err);
   }
@@ -45,10 +45,12 @@ export const readFileContent = async (path: string): Promise<string> => {
 
 export const isBinaryFile = async (path: string): Promise<boolean> => {
   try {
-    return await invoke("is_binary_file", { path });
+    return await invoke('is_binary_file', { path });
   } catch (err) {
     // If check fails, assume it's binary to be safe.
-    console.warn(new AppError(`Failed to check if file is binary: ${path}`, err));
+    console.warn(
+      new AppError(`Failed to check if file is binary: ${path}`, err)
+    );
     return true;
   }
 };
@@ -58,7 +60,7 @@ export const writeFileContent = async (
   content: string
 ): Promise<void> => {
   try {
-    return await invoke("write_file_content", { path, content });
+    return await invoke('write_file_content', { path, content });
   } catch (err) {
     throw new AppError(`Failed to write file content for: ${path}`, err);
   }
@@ -66,7 +68,7 @@ export const writeFileContent = async (
 
 export const deleteFile = async (filePath: string): Promise<void> => {
   try {
-    return await invoke("delete_file", { filePath });
+    return await invoke('delete_file', { filePath });
   } catch (err) {
     throw new AppError(`Failed to delete file: ${filePath}`, err);
   }
@@ -74,7 +76,7 @@ export const deleteFile = async (filePath: string): Promise<void> => {
 
 export const moveFile = async (from: string, to: string): Promise<void> => {
   try {
-    return await invoke("move_file", { from, to });
+    return await invoke('move_file', { from, to });
   } catch (err) {
     throw new AppError(`Failed to move file from ${from} to ${to}`, err);
   }
@@ -85,7 +87,7 @@ export const backupFiles = async (
   filePaths: string[]
 ): Promise<string> => {
   try {
-    return await invoke("backup_files", { rootPath, filePaths });
+    return await invoke('backup_files', { rootPath, filePaths });
   } catch (err) {
     throw new AppError(`Failed to backup files for project: ${rootPath}`, err);
   }
@@ -97,13 +99,16 @@ export const revertFileFromBackup = async (
   relativePath: string
 ): Promise<void> => {
   try {
-    return await invoke("revert_file_from_backup", {
+    return await invoke('revert_file_from_backup', {
       rootPath,
       backupId,
       relativePath,
     });
   } catch (err) {
-    throw new AppError(`Failed to revert file from backup: ${relativePath}`, err);
+    throw new AppError(
+      `Failed to revert file from backup: ${relativePath}`,
+      err
+    );
   }
 };
 
@@ -112,7 +117,7 @@ export const readFileFromBackup = async (
   relativePath: string
 ): Promise<string> => {
   try {
-    return await invoke("read_file_from_backup", { backupId, relativePath });
+    return await invoke('read_file_from_backup', { backupId, relativePath });
   } catch (err) {
     throw new AppError(`Failed to read file from backup: ${relativePath}`, err);
   }
@@ -120,7 +125,7 @@ export const readFileFromBackup = async (
 
 export const deleteBackup = async (backupId: string): Promise<void> => {
   try {
-    return await invoke("delete_backup", { backupId });
+    return await invoke('delete_backup', { backupId });
   } catch (err) {
     throw new AppError(`Failed to delete backup: ${backupId}`, err);
   }
@@ -131,7 +136,7 @@ export const getRelativePath = async (
   rootPath: string
 ): Promise<string> => {
   try {
-    return await invoke("get_relative_path", { fullPath, rootPath });
+    return await invoke('get_relative_path', { fullPath, rootPath });
   } catch (err) {
     throw new AppError(`Failed to get relative path for: ${fullPath}`, err);
   }
@@ -139,18 +144,18 @@ export const getRelativePath = async (
 
 export const parseChangesFromMarkdown = async (
   markdown: string,
-  rootPath: string,
+  rootPath: string
 ): Promise<ChangeOperation[]> => {
   try {
-    return await invoke("parse_changes_from_markdown", { markdown, rootPath });
+    return await invoke('parse_changes_from_markdown', { markdown, rootPath });
   } catch (err) {
-    throw new AppError("Failed to parse changes from markdown", err);
+    throw new AppError('Failed to parse changes from markdown', err);
   }
 };
 
 export const isGitRepository = async (path: string): Promise<boolean> => {
   try {
-    return await invoke("is_git_repository", { path });
+    return await invoke('is_git_repository', { path });
   } catch (err) {
     throw new AppError(`Failed to check if path is git repo: ${path}`, err);
   }
@@ -158,7 +163,7 @@ export const isGitRepository = async (path: string): Promise<boolean> => {
 
 export const getGitStatus = async (repoPath: string): Promise<GitStatus> => {
   try {
-    return await invoke("get_git_status", { repoPath });
+    return await invoke('get_git_status', { repoPath });
   } catch (err) {
     throw new AppError(`Failed to get git status for: ${repoPath}`, err);
   }
@@ -169,7 +174,7 @@ export const getRecentCommits = async (
   count: number
 ): Promise<Commit[]> => {
   try {
-    return await invoke("get_recent_commits", { repoPath, count });
+    return await invoke('get_recent_commits', { repoPath, count });
   } catch (err) {
     throw new AppError(`Failed to get recent commits for: ${repoPath}`, err);
   }
@@ -180,17 +185,17 @@ export const getGitDiff = async (
   config: GitDiffConfig
 ): Promise<string> => {
   let option: { type: string; hash?: string };
-  if (config.type === "commit") {
+  if (config.type === 'commit') {
     if (!config.hash) {
-      throw new AppError("Commit hash is required for commit diff.", null);
+      throw new AppError('Commit hash is required for commit diff.', null);
     }
-    option = { type: "commit", hash: config.hash };
+    option = { type: 'commit', hash: config.hash };
   } else {
     option = { type: config.type };
   }
 
   try {
-    return await invoke("get_git_diff", { repoPath, option });
+    return await invoke('get_git_diff', { repoPath, option });
   } catch (err) {
     throw new AppError(`Failed to get git diff for: ${repoPath}`, err);
   }
@@ -202,16 +207,16 @@ export const startPtySession = async (
   onEvent: Channel<CommandStreamEvent>
 ) => {
   try {
-    await invoke("start_pty_session", { rootPath, command, onEvent });
+    await invoke('start_pty_session', { rootPath, command, onEvent });
   } catch (err) {
-    console.error("Failed to start PTY session:", err);
+    console.error('Failed to start PTY session:', err);
     throw err;
   }
 };
 
 export const resizePty = async (rows: number, cols: number): Promise<void> => {
   try {
-    await invoke("resize_pty", { rows, cols });
+    await invoke('resize_pty', { rows, cols });
   } catch (err) {
     console.warn(`Failed to resize PTY:`, err);
   }
@@ -219,33 +224,33 @@ export const resizePty = async (rows: number, cols: number): Promise<void> => {
 
 export const writeToPty = async (text: string): Promise<void> => {
   try {
-    await invoke("write_to_pty", { text });
+    await invoke('write_to_pty', { text });
   } catch (err) {
-    console.warn("Failed to write to PTY:", err);
+    console.warn('Failed to write to PTY:', err);
   }
 };
 
 export const killPty = async (): Promise<void> => {
   try {
-    await invoke("kill_pty");
+    await invoke('kill_pty');
   } catch (err) {
-    console.warn("Failed to kill PTY:", err);
+    console.warn('Failed to kill PTY:', err);
   }
 };
 
 export const getCliStatus = async (): Promise<CliStatusResult> => {
   try {
-    return await invoke("get_cli_status");
+    return await invoke('get_cli_status');
   } catch (err) {
-    throw new AppError("Failed to check CLI status", err);
+    throw new AppError('Failed to check CLI status', err);
   }
 };
 
 export const installCliShim = async (): Promise<CliInstallResult> => {
   try {
-    return await invoke("install_cli_shim");
+    return await invoke('install_cli_shim');
   } catch (err) {
-    throw new AppError("Failed to install CLI shim", err);
+    throw new AppError('Failed to install CLI shim', err);
   }
 };
 
@@ -254,7 +259,7 @@ export const startWatching = async (
   settings: IgnoreSettings
 ): Promise<void> => {
   try {
-    await invoke("start_watching", { rootPath, settings });
+    await invoke('start_watching', { rootPath, settings });
   } catch (err) {
     throw new AppError(`Failed to start watching: ${rootPath}`, err);
   }
@@ -262,7 +267,7 @@ export const startWatching = async (
 
 export const stopWatching = async (rootPath: string): Promise<void> => {
   try {
-    await invoke("stop_watching", { rootPath });
+    await invoke('stop_watching', { rootPath });
   } catch (err) {
     console.warn(new AppError(`Failed to stop watching: ${rootPath}`, err));
   }

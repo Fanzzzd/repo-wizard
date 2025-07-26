@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 export interface KeyboardShortcut {
   key: string;
@@ -21,11 +21,10 @@ export function useKeyboardShortcuts(
       // Prevent shortcuts when typing in input, textarea, or contentEditable elements
       const target = event.target as HTMLElement | null;
       if (
-        target && (
-          target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable
-        )
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
       ) {
         return;
       }
@@ -37,7 +36,13 @@ export function useKeyboardShortcuts(
         const shiftMatches = !!shortcut.shiftKey === event.shiftKey;
         const altMatches = !!shortcut.altKey === event.altKey;
 
-        if (keyMatches && metaMatches && ctrlMatches && shiftMatches && altMatches) {
+        if (
+          keyMatches &&
+          metaMatches &&
+          ctrlMatches &&
+          shiftMatches &&
+          altMatches
+        ) {
           event.preventDefault();
           event.stopPropagation();
           shortcut.action();
@@ -46,15 +51,15 @@ export function useKeyboardShortcuts(
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [shortcuts, enabled]);
 }
 
 // Hook specifically for global shortcuts that should work everywhere
 export function useGlobalKeyboardShortcuts() {
   const shortcuts: KeyboardShortcut[] = [];
-  
+
   // This hook can be extended with more global shortcuts
   return shortcuts;
 }
