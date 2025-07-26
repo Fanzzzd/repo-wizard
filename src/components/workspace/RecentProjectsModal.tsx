@@ -1,9 +1,9 @@
-import { useState, useMemo, useEffect, useRef } from "react";
-import { useSettingsStore } from "../../store/settingsStore";
-import { AnimatePresence, motion } from "motion/react";
-import { Button } from "../common/Button";
-import { Input } from "../common/Input";
-import { Folder, Search, X } from "lucide-react";
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useSettingsStore } from '../../store/settingsStore';
+import { AnimatePresence, motion } from 'motion/react';
+import { Button } from '../common/Button';
+import { Input } from '../common/Input';
+import { Folder, Search, X } from 'lucide-react';
 
 interface RecentProjectsModalProps {
   isOpen: boolean;
@@ -19,13 +19,13 @@ export function RecentProjectsModal({
   onOpenAnother,
 }: RecentProjectsModalProps) {
   const { recentProjects, removeRecentProject } = useSettingsStore();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
-      setSearchTerm("");
+      setSearchTerm('');
     }
   }, [isOpen]);
 
@@ -34,7 +34,7 @@ export function RecentProjectsModal({
       return recentProjects;
     }
     const lowerCaseSearch = searchTerm.toLowerCase();
-    return recentProjects.filter((path) =>
+    return recentProjects.filter(path =>
       path.toLowerCase().includes(lowerCaseSearch)
     );
   }, [recentProjects, searchTerm]);
@@ -66,7 +66,7 @@ export function RecentProjectsModal({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className="bg-white rounded-lg shadow-xl w-full max-w-2xl h-[70vh] flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <header className="p-4 border-b flex items-center justify-between flex-shrink-0">
               <h2 className="text-lg font-bold text-gray-900">Open Project</h2>
@@ -85,7 +85,7 @@ export function RecentProjectsModal({
                   type="text"
                   placeholder="Search recent projects..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
                 <Search
@@ -98,7 +98,7 @@ export function RecentProjectsModal({
             <main className="flex-grow flex flex-col min-h-0 bg-gray-50 overflow-y-auto thin-scrollbar">
               {filteredProjects.length > 0 ? (
                 <ul className="p-2 space-y-1">
-                  {filteredProjects.map((path) => (
+                  {filteredProjects.map(path => (
                     <li key={path}>
                       <div
                         onClick={() => handleSelect(path)}
@@ -119,7 +119,7 @@ export function RecentProjectsModal({
                           </div>
                         </div>
                         <button
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             removeRecentProject(path);
                           }}

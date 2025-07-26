@@ -1,7 +1,7 @@
-import type { CSSProperties, PropsWithChildren } from "react";
-import type { UniqueIdentifier } from "@dnd-kit/core";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import type { CSSProperties, PropsWithChildren } from 'react';
+import type { UniqueIdentifier } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 export function SortableItem({
   children,
@@ -19,7 +19,9 @@ export function SortableItem({
   const style: CSSProperties = {
     opacity: isDragging ? 0.4 : undefined,
     transform: CSS.Translate.toString(transform),
-    transition: transition ? `${transition}, opacity 200ms ease` : "opacity 200ms ease",
+    transition: transition
+      ? `${transition}, opacity 200ms ease`
+      : 'opacity 200ms ease',
   };
 
   return (
@@ -30,11 +32,5 @@ export function SortableItem({
 }
 
 export function DragHandle({ children }: PropsWithChildren<{}>) {
-  return (
-    <div
-      className="flex items-center justify-center"
-    >
-      {children}
-    </div>
-  );
+  return <div className="flex items-center justify-center">{children}</div>;
 }

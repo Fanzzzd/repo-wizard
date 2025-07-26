@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from 'uuid';
 
 export interface FileNode {
   path: string;
@@ -7,16 +7,16 @@ export interface FileNode {
   isDirectory: boolean;
 }
 
-export type ComposerMode = "edit" | "qa";
-export type PromptMode = "universal" | "edit" | "qa";
-export type EditFormat = "diff" | "whole";
-export type ReviewStatus = "pending" | "applied" | "error" | "identical";
+export type ComposerMode = 'edit' | 'qa';
+export type PromptMode = 'universal' | 'edit' | 'qa';
+export type EditFormat = 'diff' | 'whole';
+export type ReviewStatus = 'pending' | 'applied' | 'error' | 'identical';
 
 export type ChangeOperation =
-  | { type: "modify"; filePath: string; content: string; isNewFile: boolean }
-  | { type: "rewrite"; filePath: string; content: string; isNewFile: boolean }
-  | { type: "delete"; filePath: string }
-  | { type: "move"; fromPath: string; toPath: string };
+  | { type: 'modify'; filePath: string; content: string; isNewFile: boolean }
+  | { type: 'rewrite'; filePath: string; content: string; isNewFile: boolean }
+  | { type: 'delete'; filePath: string }
+  | { type: 'move'; fromPath: string; toPath: string };
 
 export interface ReviewChange {
   id: string;
@@ -24,23 +24,25 @@ export interface ReviewChange {
   status: ReviewStatus;
 }
 
-export const createReviewChange = (operation: ChangeOperation): ReviewChange => ({
+export const createReviewChange = (
+  operation: ChangeOperation
+): ReviewChange => ({
   id: uuidv4(),
   operation,
-  status: "pending",
+  status: 'pending',
 });
 
-export type PromptType = "meta" | "magic";
-export type MagicPromptType = "file-tree" | "git-diff" | "terminal-command";
+export type PromptType = 'meta' | 'magic';
+export type MagicPromptType = 'file-tree' | 'git-diff' | 'terminal-command';
 
 export interface FileTreeConfig {
-  scope: "all" | "selected";
+  scope: 'all' | 'selected';
   maxFilesPerDirectory: number | null;
   ignorePatterns: string;
 }
 
 export interface GitDiffConfig {
-  type: "staged" | "unstaged" | "commit";
+  type: 'staged' | 'unstaged' | 'commit';
   hash: string | null;
 }
 
@@ -84,13 +86,13 @@ export interface Commit {
 }
 
 export type CommandStreamEvent =
-  | { type: "stdout"; data: number[] }
-  | { type: "stderr"; data: number[] }
-  | { type: "error"; data: string }
-  | { type: "finish"; data: string };
+  | { type: 'stdout'; data: number[] }
+  | { type: 'stderr'; data: number[] }
+  | { type: 'error'; data: string }
+  | { type: 'finish'; data: string };
 
 export interface CliStatusResult {
-  status: "installed" | "not_installed" | "error" | "checking";
+  status: 'installed' | 'not_installed' | 'error' | 'checking';
   error?: string;
 }
 

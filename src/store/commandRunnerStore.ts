@@ -1,7 +1,7 @@
-import { create } from "zustand";
-import { killPty } from "../services/tauriApi";
+import { create } from 'zustand';
+import { killPty } from '../services/tauriApi';
 
-const COMMAND_RUNNER_CANCELLED = "COMMAND_RUNNER_CANCELLED";
+const COMMAND_RUNNER_CANCELLED = 'COMMAND_RUNNER_CANCELLED';
 
 interface CommandRunnerState {
   isVisible: boolean;
@@ -13,14 +13,14 @@ interface CommandRunnerState {
   _setState: (partial: Partial<CommandRunnerState>) => void;
 }
 
-const useCommandRunnerStore = create<CommandRunnerState>((set) => ({
+const useCommandRunnerStore = create<CommandRunnerState>(set => ({
   isVisible: false,
   initialCommand: null,
   isFinished: false,
   _resolve: null,
   _reject: null,
   setFinished: () => set({ isFinished: true }),
-  _setState: (partial) => set(partial),
+  _setState: partial => set(partial),
 }));
 
 export const openCommandRunner = (

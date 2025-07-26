@@ -1,24 +1,24 @@
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion } from 'motion/react';
 import {
   useCommandRunnerStore,
   closeCommandRunner,
   captureCommandRunnerOutput,
-} from "../../store/commandRunnerStore";
+} from '../../store/commandRunnerStore';
 import {
   resizePty,
   writeToPty,
   startPtySession,
-} from "../../services/tauriApi";
-import { X, Check } from "lucide-react";
-import { useEffect, useRef, useCallback } from "react";
-import { Terminal } from "@xterm/xterm";
-import { FitAddon } from "@xterm/addon-fit";
-import { CanvasAddon } from "@xterm/addon-canvas";
-import "@xterm/xterm/css/xterm.css";
-import { useWorkspaceStore } from "../../store/workspaceStore";
-import { Channel } from "@tauri-apps/api/core";
-import type { CommandStreamEvent } from "../../types";
-import { Button } from "./Button";
+} from '../../services/tauriApi';
+import { X, Check } from 'lucide-react';
+import { useEffect, useRef, useCallback } from 'react';
+import { Terminal } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
+import { CanvasAddon } from '@xterm/addon-canvas';
+import '@xterm/xterm/css/xterm.css';
+import { useWorkspaceStore } from '../../store/workspaceStore';
+import { Channel } from '@tauri-apps/api/core';
+import type { CommandStreamEvent } from '../../types';
+import { Button } from './Button';
 
 export function CommandRunnerModal() {
   const { isVisible, initialCommand, isFinished, setFinished } =
@@ -44,7 +44,7 @@ export function CommandRunnerModal() {
         lines.push(line.translateToString());
       }
     }
-    const output = lines.join("\n");
+    const output = lines.join('\n');
     captureCommandRunnerOutput(output);
   };
 
@@ -56,7 +56,7 @@ export function CommandRunnerModal() {
         resizePty(term.rows, term.cols);
       }
     } catch (e) {
-      console.error("Error fitting/resizing terminal:", e);
+      console.error('Error fitting/resizing terminal:', e);
     }
   }, []);
 
@@ -66,17 +66,17 @@ export function CommandRunnerModal() {
       if (!term) return;
 
       switch (event.type) {
-        case "stdout":
+        case 'stdout':
           term.write(new Uint8Array(event.data));
           break;
-        case "stderr":
+        case 'stderr':
           term.write(new Uint8Array(event.data));
           break;
-        case "finish":
+        case 'finish':
           term.writeln(`\r\n\x1b[32m${event.data}\x1b[0m`);
           setFinished();
           break;
-        case "error":
+        case 'error':
           term.writeln(`\r\n\x1b[31mError: ${event.data}\x1b[0m`);
           setFinished();
           break;
@@ -90,14 +90,14 @@ export function CommandRunnerModal() {
       if (!termRef.current) {
         const term = new Terminal({
           cursorBlink: true,
-          fontFamily: "monospace",
+          fontFamily: 'monospace',
           fontSize: 13,
           theme: {
-            background: "#1f2937", // bg-gray-800
-            foreground: "#d1d5db", // text-gray-300
-            cursor: "#facc15", // yellow-400
-            selectionBackground: "#374151", // bg-gray-700
-            selectionForeground: "#f9fafb", // text-gray-50
+            background: '#1f2937', // bg-gray-800
+            foreground: '#d1d5db', // text-gray-300
+            cursor: '#facc15', // yellow-400
+            selectionBackground: '#374151', // bg-gray-700
+            selectionForeground: '#f9fafb', // text-gray-50
           },
         });
         const fitAddon = new FitAddon();
@@ -114,7 +114,7 @@ export function CommandRunnerModal() {
           resizePty(rows, cols);
         });
 
-        term.onData((data) => {
+        term.onData(data => {
           writeToPty(data);
         });
       } else {
@@ -131,9 +131,9 @@ export function CommandRunnerModal() {
 
   useEffect(() => {
     if (!isVisible) return;
-    window.addEventListener("resize", fitAndResizePty);
+    window.addEventListener('resize', fitAndResizePty);
     return () => {
-      window.removeEventListener("resize", fitAndResizePty);
+      window.removeEventListener('resize', fitAndResizePty);
     };
   }, [isVisible, fitAndResizePty]);
 
@@ -154,7 +154,7 @@ export function CommandRunnerModal() {
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2 }}
             className="bg-gray-900 text-white rounded-lg shadow-xl w-full max-w-4xl h-[70vh] flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             onAnimationComplete={fitAndResizePty}
           >
             <header className="flex-shrink-0 bg-gray-800 p-2 pl-4 flex items-center justify-between">
@@ -187,7 +187,7 @@ export function CommandRunnerModal() {
               ref={termContainerRef}
               className="flex-grow p-2"
               style={{
-                backgroundColor: "#1f2937",
+                backgroundColor: '#1f2937',
               }}
             />
           </motion.div>

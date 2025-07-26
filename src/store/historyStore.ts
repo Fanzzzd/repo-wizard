@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import type { PromptHistoryEntry } from "../types";
-import { useSettingsStore } from "./settingsStore";
+import { create } from 'zustand';
+import type { PromptHistoryEntry } from '../types';
+import { useSettingsStore } from './settingsStore';
 
 interface HistoryState {
   promptHistory: PromptHistoryEntry[];
@@ -15,26 +15,26 @@ interface HistoryState {
 
 const initialState: Omit<
   HistoryState,
-  | "addPromptToHistory"
-  | "clearPromptHistory"
-  | "updatePromptHistoryEntry"
-  | "_load"
-  | "_reset"
+  | 'addPromptToHistory'
+  | 'clearPromptHistory'
+  | 'updatePromptHistoryEntry'
+  | '_load'
+  | '_reset'
 > = {
   promptHistory: [],
 };
 
-export const useHistoryStore = create<HistoryState>((set) => ({
+export const useHistoryStore = create<HistoryState>(set => ({
   ...initialState,
   addPromptToHistory: (instructions: string) => {
     if (!instructions.trim()) return;
 
     const { promptHistoryLimit } = useSettingsStore.getState();
 
-    set((state) => {
+    set(state => {
       const history = [...state.promptHistory];
       const existingIndex = history.findIndex(
-        (p) => p.instructions === instructions
+        p => p.instructions === instructions
       );
 
       if (existingIndex > -1) {
@@ -56,13 +56,13 @@ export const useHistoryStore = create<HistoryState>((set) => ({
   },
   clearPromptHistory: () => set({ promptHistory: [] }),
   updatePromptHistoryEntry: (id, newInstructions) => {
-    set((state) => ({
-      promptHistory: state.promptHistory.map((entry) =>
+    set(state => ({
+      promptHistory: state.promptHistory.map(entry =>
         entry.id === id ? { ...entry, instructions: newInstructions } : entry
       ),
     }));
   },
 
-  _load: (state) => set(state),
+  _load: state => set(state),
   _reset: () => set(initialState),
 }));

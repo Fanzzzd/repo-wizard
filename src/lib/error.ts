@@ -3,7 +3,7 @@ export class AppError extends Error {
 
   constructor(message: string, originalError?: unknown) {
     super(message);
-    this.name = "AppError";
+    this.name = 'AppError';
     this.originalError = originalError;
 
     if (Error.captureStackTrace) {
@@ -24,7 +24,7 @@ export function isFileNotFoundError(error: unknown): boolean {
     error instanceof AppError ? error.originalError : error
   ).toLowerCase();
   return (
-    errorMessage.includes("no such file or directory") ||
-    errorMessage.includes("the system cannot find the file specified")
+    errorMessage.includes('no such file or directory') ||
+    errorMessage.includes('the system cannot find the file specified')
   );
 }

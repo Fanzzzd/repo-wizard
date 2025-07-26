@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import type { LucideIcon } from "lucide-react";
+import { create } from 'zustand';
+import type { LucideIcon } from 'lucide-react';
 
 export type ContextMenuItem =
   | {
@@ -22,7 +22,7 @@ interface ContextMenuState {
   close: () => void;
 }
 
-export const useContextMenuStore = create<ContextMenuState>((set) => ({
+export const useContextMenuStore = create<ContextMenuState>(set => ({
   isOpen: false,
   position: { x: 0, y: 0 },
   items: [],
@@ -30,7 +30,7 @@ export const useContextMenuStore = create<ContextMenuState>((set) => ({
     // This prevents the native context menu from appearing.
     // We add it with `once: true` so it cleans itself up.
     const preventNativeMenu = (e: MouseEvent) => e.preventDefault();
-    document.addEventListener("contextmenu", preventNativeMenu, { once: true });
+    document.addEventListener('contextmenu', preventNativeMenu, { once: true });
     set({ isOpen: true, position: { x, y }, items });
   },
   close: () => set({ isOpen: false, items: [] }),

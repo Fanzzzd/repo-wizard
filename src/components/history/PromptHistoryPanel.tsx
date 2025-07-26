@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useHistoryStore } from "../../store/historyStore";
-import { useComposerStore } from "../../store/composerStore";
-import { useDialogStore } from "../../store/dialogStore";
+import { useState } from 'react';
+import { useHistoryStore } from '../../store/historyStore';
+import { useComposerStore } from '../../store/composerStore';
+import { useDialogStore } from '../../store/dialogStore';
 import {
   History,
   Trash2,
@@ -10,22 +10,22 @@ import {
   Check,
   RefreshCw,
   Edit,
-} from "lucide-react";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
-import { Button } from "../common/Button";
-import type { PromptHistoryEntry } from "../../types";
-import { usePromptGenerator } from "../../hooks/usePromptGenerator";
-import { PromptHistoryDetailModal } from "./PromptHistoryDetailModal";
+} from 'lucide-react';
+import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+import { Button } from '../common/Button';
+import type { PromptHistoryEntry } from '../../types';
+import { usePromptGenerator } from '../../hooks/usePromptGenerator';
+import { PromptHistoryDetailModal } from './PromptHistoryDetailModal';
 
 const instructionPreview = (
   instructions: string,
   lineLimit = 3,
   charLimit = 200
 ) => {
-  const lines = instructions.split("\n");
+  const lines = instructions.split('\n');
   const hasMoreLines = lines.length > lineLimit;
 
-  let preview = lines.slice(0, lineLimit).join("\n");
+  let preview = lines.slice(0, lineLimit).join('\n');
   const hasMoreChars = preview.length > charLimit;
 
   if (hasMoreChars) {
@@ -51,8 +51,9 @@ export function PromptHistoryPanel() {
   );
 
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [selectedEntry, setSelectedEntry] =
-    useState<PromptHistoryEntry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<PromptHistoryEntry | null>(
+    null
+  );
 
   const handleOpenDetailModal = (entry: PromptHistoryEntry) => {
     setSelectedEntry(entry);
@@ -61,11 +62,11 @@ export function PromptHistoryPanel() {
 
   const handleClearHistory = async () => {
     const confirmed = await openDialog({
-      title: "Confirm Clear Prompt History",
+      title: 'Confirm Clear Prompt History',
       content:
-        "Are you sure you want to clear all prompts for this project? This cannot be undone.",
-      type: "confirm",
-      status: "warning",
+        'Are you sure you want to clear all prompts for this project? This cannot be undone.',
+      type: 'confirm',
+      status: 'warning',
     });
 
     if (confirmed) {
@@ -114,21 +115,19 @@ export function PromptHistoryPanel() {
             </div>
           ) : (
             <div className="space-y-3">
-              {promptHistory.map((entry) => {
+              {promptHistory.map(entry => {
                 const isCurrentlyGenerating = generatingPromptId === entry.id;
                 const isCopied = copiedPromptId === entry.id;
 
                 let buttonIcon = <Clipboard size={14} />;
-                let buttonText = "Generate & Copy";
+                let buttonText = 'Generate & Copy';
 
                 if (isCurrentlyGenerating) {
-                  buttonIcon = (
-                    <RefreshCw size={14} className="animate-spin" />
-                  );
-                  buttonText = "Generating...";
+                  buttonIcon = <RefreshCw size={14} className="animate-spin" />;
+                  buttonText = 'Generating...';
                 } else if (isCopied) {
                   buttonIcon = <Check size={14} />;
-                  buttonText = "Copied!";
+                  buttonText = 'Copied!';
                 }
 
                 return (

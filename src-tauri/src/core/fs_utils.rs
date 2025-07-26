@@ -1,13 +1,12 @@
 use crate::types::{FileNode, IgnoreSettings};
 use anyhow::{anyhow, Result};
-use crossbeam_channel::unbounded;
+use ignore::{DirEntry, WalkBuilder};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock};
+use std::sync::mpsc;
 use tokio::fs;
 use tokio::io::AsyncReadExt;
 use uuid::Uuid;
-use xvc_walker::{walk_parallel, IgnoreRules, PathMetadata, SharedIgnoreRules, WalkOptions};
 
 fn normalize_path_str(p: &Path) -> String {
     p.to_string_lossy().replace('\\', "/")
@@ -23,52 +22,45 @@ pub async fn list_directory_recursive(
 
     tokio::task::spawn_blocking(move || {
         let root_path = &root_path_owned;
-        let ignore_filename = if respect_gitignore {
-            Some(".gitignore".to_string())
-        } else {
-            None
-        };
 
-        // Initialize with global patterns. `walk_parallel` will discover and add rules from ignore files.
-        let ignore_rules = IgnoreRules::from_global_patterns(
-            root_path,
-            ignore_filename.as_deref(),
-            &custom_ignore_patterns,
-        );
-        let shared_ignore_rules: SharedIgnoreRules = Arc::new(RwLock::new(ignore_rules));
+        let mut builder = WalkBuilder::new(root_path);
+        builder.hidden(false).git_ignore(respect_gitignore);
 
-        let walk_options = WalkOptions {
-            ignore_filename,
-            include_dirs: true,
-        };
+        if !custom_ignore_patterns.is_empty() {
+            builder.add_custom_ignore_patterns(&custom_ignore_patterns)?;
+        }
 
-        let (path_sender, path_receiver) = unbounded();
+        let walker = builder.build_parallel();
 
-        // `walk_parallel` is a blocking call that will fill the channel with paths.
-        // It takes ownership of the sender and drops it when done, closing the channel.
-        walk_parallel(
-            shared_ignore_rules,
-            root_path,
-            walk_options,
-            path_sender,
-        )
-        .map_err(|e| anyhow!("Failed to walk directory in parallel: {}", e))?;
-
-        let all_paths: Vec<PathMetadata> = path_receiver.iter().filter_map(Result::ok).collect();
+        let (tx, rx) = mpsc::channel::<DirEntry>();
+        walker.run(|| {
+            let tx = tx.clone();
+            Box::new(move |result| {
+                if let Ok(entry) = result {
+                    if tx.send(entry).is_err() {
+                        return ignore::WalkState::Quit;
+                    }
+                }
+                ignore::WalkState::Continue
+            })
+        });
+        drop(tx);
+        let all_paths: Vec<DirEntry> = rx.iter().collect();
 
         let mut parent_map: HashMap<PathBuf, Vec<PathBuf>> = HashMap::new();
         let mut is_dir_map: HashMap<PathBuf, bool> = HashMap::new();
         is_dir_map.insert(root_path.to_path_buf(), true);
 
         for pm in all_paths {
-            let is_dir = pm.metadata.is_dir();
-            is_dir_map.insert(pm.path.clone(), is_dir);
+            let is_dir = pm.file_type().is_some_and(|ft| ft.is_dir());
+            let path = pm.into_path();
+            is_dir_map.insert(path.clone(), is_dir);
 
-            if let Some(parent) = pm.path.parent() {
+            if let Some(parent) = path.parent() {
                 parent_map
                     .entry(parent.to_path_buf())
                     .or_default()
-                    .push(pm.path.clone());
+                    .push(path);
             }
         }
 

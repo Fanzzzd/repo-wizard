@@ -1,49 +1,45 @@
-import { useDialogStore } from "../../store/dialogStore";
-import { useReviewStore } from "../../store/reviewStore";
-import { useWorkspaceStore } from "../../store/workspaceStore";
-import { FileTypeIcon } from "../workspace/FileTypeIcon";
+import { useDialogStore } from '../../store/dialogStore';
+import { useReviewStore } from '../../store/reviewStore';
+import { useWorkspaceStore } from '../../store/workspaceStore';
+import { FileTypeIcon } from '../workspace/FileTypeIcon';
 import {
   Check,
   CircleDot,
   AlertTriangle,
   CheckCheck,
   Undo,
-} from "lucide-react";
-import type { ReviewChange } from "../../types";
-import { Button } from "../common/Button";
-import { ShortenedPath } from "../common/ShortenedPath";
-import { useReviewSession } from "../../hooks/useReviewSession";
+} from 'lucide-react';
+import type { ReviewChange } from '../../types';
+import { Button } from '../common/Button';
+import { ShortenedPath } from '../common/ShortenedPath';
+import { useReviewSession } from '../../hooks/useReviewSession';
 
-const ChangeTypeBadge = ({
-  type,
-}: {
-  type: "A" | "M" | "W" | "D" | "R";
-}) => {
+const ChangeTypeBadge = ({ type }: { type: 'A' | 'M' | 'W' | 'D' | 'R' }) => {
   const typeMap = {
     A: {
-      char: "A",
-      className: "bg-green-500 text-white",
-      title: "Added",
+      char: 'A',
+      className: 'bg-green-500 text-white',
+      title: 'Added',
     },
     M: {
-      char: "M",
-      className: "bg-blue-500 text-white",
-      title: "Modified",
+      char: 'M',
+      className: 'bg-blue-500 text-white',
+      title: 'Modified',
     },
     W: {
-      char: "W",
-      className: "bg-purple-500 text-white",
-      title: "Rewritten",
+      char: 'W',
+      className: 'bg-purple-500 text-white',
+      title: 'Rewritten',
     },
     D: {
-      char: "D",
-      className: "bg-red-500 text-white",
-      title: "Deleted",
+      char: 'D',
+      className: 'bg-red-500 text-white',
+      title: 'Deleted',
     },
     R: {
-      char: "R",
-      className: "bg-orange-500 text-white",
-      title: "Moved / Renamed",
+      char: 'R',
+      className: 'bg-orange-500 text-white',
+      title: 'Moved / Renamed',
     },
   };
 
@@ -60,51 +56,56 @@ const ChangeTypeBadge = ({
 };
 
 const ChangeItem = ({ change }: { change: ReviewChange }) => {
-  const { activeChangeId, setActiveChangeId, applyChange, revertChange, errors } =
-    useReviewStore();
-  const openDialog = useDialogStore((s) => s.open);
+  const {
+    activeChangeId,
+    setActiveChangeId,
+    applyChange,
+    revertChange,
+    errors,
+  } = useReviewStore();
+  const openDialog = useDialogStore(s => s.open);
   const isActive = change.id === activeChangeId;
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (change.status === "pending") {
+    if (change.status === 'pending') {
       applyChange(change.id);
-    } else if (change.status === "applied") {
+    } else if (change.status === 'applied') {
       revertChange(change.id);
-    } else if (change.status === "error") {
+    } else if (change.status === 'error') {
       openDialog({
-        title: "Application Error",
-        content: errors[change.id] || "An unknown error occurred.",
-        status: "error",
+        title: 'Application Error',
+        content: errors[change.id] || 'An unknown error occurred.',
+        status: 'error',
       });
     }
   };
 
   const getStatusProps = () => {
     switch (change.status) {
-      case "applied":
+      case 'applied':
         return {
           icon: <Check size={14} />,
-          text: "Applied",
-          style: "bg-green-100 text-green-800 hover:bg-green-200",
+          text: 'Applied',
+          style: 'bg-green-100 text-green-800 hover:bg-green-200',
         };
-      case "identical":
+      case 'identical':
         return {
           icon: <Check size={14} />,
-          text: "Identical",
-          style: "bg-green-100 text-green-800",
+          text: 'Identical',
+          style: 'bg-green-100 text-green-800',
         };
-      case "error":
+      case 'error':
         return {
           icon: <AlertTriangle size={14} />,
-          text: "Error",
-          style: "bg-red-100 text-red-800 hover:bg-red-200",
+          text: 'Error',
+          style: 'bg-red-100 text-red-800 hover:bg-red-200',
         };
       default: // pending
         return {
           icon: <CircleDot size={14} />,
-          text: "Pending",
-          style: "bg-gray-100 text-gray-600 hover:bg-gray-200",
+          text: 'Pending',
+          style: 'bg-gray-100 text-gray-600 hover:bg-gray-200',
         };
     }
   };
@@ -114,10 +115,10 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
   const renderChangeDetails = () => {
     const { operation } = change;
     switch (operation.type) {
-      case "modify":
+      case 'modify':
         return (
           <>
-            <ChangeTypeBadge type={operation.isNewFile ? "A" : "M"} />
+            <ChangeTypeBadge type={operation.isNewFile ? 'A' : 'M'} />
             <FileTypeIcon filename={operation.filePath} isDirectory={false} />
             <ShortenedPath
               path={operation.filePath}
@@ -125,10 +126,10 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
             />
           </>
         );
-      case "rewrite":
+      case 'rewrite':
         return (
           <>
-            <ChangeTypeBadge type={operation.isNewFile ? "A" : "W"} />
+            <ChangeTypeBadge type={operation.isNewFile ? 'A' : 'W'} />
             <FileTypeIcon filename={operation.filePath} isDirectory={false} />
             <ShortenedPath
               path={operation.filePath}
@@ -136,7 +137,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
             />
           </>
         );
-      case "delete":
+      case 'delete':
         return (
           <>
             <ChangeTypeBadge type="D" />
@@ -147,7 +148,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
             />
           </>
         );
-      case "move":
+      case 'move':
         return (
           <>
             <ChangeTypeBadge type="R" />
@@ -170,8 +171,8 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
       onClick={() => setActiveChangeId(change.id)}
       className={`flex items-center justify-between gap-2 px-2 py-1 rounded text-sm cursor-default ${
         isActive
-          ? "bg-blue-100 text-blue-900"
-          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+          ? 'bg-blue-100 text-blue-900'
+          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
       }`}
     >
       <div className="flex items-center gap-2 overflow-hidden">
@@ -180,7 +181,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
       <div className="flex items-center gap-1.5 flex-shrink-0">
         <button
           onClick={handleClick}
-          disabled={change.status === "identical"}
+          disabled={change.status === 'identical'}
           title="Cycle Status (Pending -> Applied)"
           className={`flex items-center justify-center w-24 gap-1.5 py-1 text-xs font-medium rounded-full transition-colors ${style} disabled:cursor-default`}
         >
@@ -197,7 +198,7 @@ export function ChangeList() {
   const { triggerFileTreeRefresh } = useWorkspaceStore();
   const { endReview, applyAll, revertAll } = useReviewSession();
 
-  const appliedChanges = changes.filter((c) => c.status === "applied");
+  const appliedChanges = changes.filter(c => c.status === 'applied');
 
   const handleFinishReview = () => {
     endReview();
@@ -235,7 +236,7 @@ export function ChangeList() {
       </div>
       <div className="flex-grow overflow-y-auto pr-1 min-h-0">
         <div className="flex flex-col gap-1">
-          {changes.map((change) => (
+          {changes.map(change => (
             <ChangeItem key={change.id} change={change} />
           ))}
         </div>

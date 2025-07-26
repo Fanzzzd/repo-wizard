@@ -228,7 +228,8 @@ impl<'a> MarkdownParser<'a> {
                         if i == 0 {
                             is_new_file = search_block.trim().is_empty();
                         }
-                        search_replace_blocks.push((search_block.to_string(), replace_block.to_string()));
+                        search_replace_blocks
+                            .push((search_block.to_string(), replace_block.to_string()));
                     }
                 } else {
                     return None;

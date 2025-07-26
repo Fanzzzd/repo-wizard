@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import { useSettingsStore } from "../../store/settingsStore";
-import { useDialogStore } from "../../store/dialogStore";
-import { AnimatePresence, motion } from "motion/react";
-import { Textarea } from "./Textarea";
-import { Checkbox } from "./Checkbox";
-import { Button } from "./Button";
-import { getCliStatus, installCliShim } from "../../services/tauriApi";
-import type { CliStatusResult } from "../../types";
-import { showErrorDialog } from "../../lib/errorHandler";
-import { Input } from "./Input";
+import { useState, useEffect } from 'react';
+import { useSettingsStore } from '../../store/settingsStore';
+import { useDialogStore } from '../../store/dialogStore';
+import { AnimatePresence, motion } from 'motion/react';
+import { Textarea } from './Textarea';
+import { Checkbox } from './Checkbox';
+import { Button } from './Button';
+import { getCliStatus, installCliShim } from '../../services/tauriApi';
+import type { CliStatusResult } from '../../types';
+import { showErrorDialog } from '../../lib/errorHandler';
+import { Input } from './Input';
 import {
   X,
   RefreshCw,
@@ -18,7 +18,7 @@ import {
   Settings,
   FolderTree,
   MessageSquare,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -27,7 +27,7 @@ interface SettingsModalProps {
 
 function CliSettings() {
   const [cliStatus, setCliStatus] = useState<CliStatusResult>({
-    status: "checking",
+    status: 'checking',
   });
   const { open: openDialog } = useDialogStore();
 
@@ -37,7 +37,7 @@ function CliSettings() {
       setCliStatus(result);
     } catch (e) {
       setCliStatus({
-        status: "error",
+        status: 'error',
         error: e instanceof Error ? e.message : String(e),
       });
     }
@@ -51,9 +51,9 @@ function CliSettings() {
     try {
       const result = await installCliShim();
       await openDialog({
-        title: "CLI Setup",
+        title: 'CLI Setup',
         content: result.message,
-        status: "success",
+        status: 'success',
       });
       await checkCli();
     } catch (e) {
@@ -64,7 +64,7 @@ function CliSettings() {
 
   const renderStatus = () => {
     switch (cliStatus.status) {
-      case "checking":
+      case 'checking':
         return (
           <Button
             variant="ghost"
@@ -75,14 +75,14 @@ function CliSettings() {
             Checking...
           </Button>
         );
-      case "installed":
+      case 'installed':
         return (
           <div className="flex items-center gap-2 text-sm text-green-700 p-2 bg-green-50 rounded-md">
             <BadgeCheck size={16} />
             <span className="font-medium">CLI is installed.</span>
           </div>
         );
-      case "not_installed":
+      case 'not_installed':
         return (
           <Button
             variant="secondary"
@@ -93,7 +93,7 @@ function CliSettings() {
             Setup CLI
           </Button>
         );
-      case "error":
+      case 'error':
         return (
           <div
             className="flex items-center gap-2 text-sm text-red-700 p-2 bg-red-50 rounded-md"
@@ -120,7 +120,7 @@ function CliSettings() {
 }
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const [activeCategory, setActiveCategory] = useState("general");
+  const [activeCategory, setActiveCategory] = useState('general');
 
   const {
     respectGitignore,
@@ -136,15 +136,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   } = useSettingsStore();
 
   const categories = [
-    { id: "general", label: "General", icon: Settings },
-    { id: "fileTree", label: "File Tree", icon: FolderTree },
-    { id: "prompting", label: "Prompting", icon: MessageSquare },
-    { id: "cli", label: "Command Line", icon: Terminal },
+    { id: 'general', label: 'General', icon: Settings },
+    { id: 'fileTree', label: 'File Tree', icon: FolderTree },
+    { id: 'prompting', label: 'Prompting', icon: MessageSquare },
+    { id: 'cli', label: 'Command Line', icon: Terminal },
   ];
 
   useEffect(() => {
     if (isOpen) {
-      setActiveCategory("general");
+      setActiveCategory('general');
     }
   }, [isOpen]);
 
@@ -171,7 +171,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <header className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
               <h2 className="text-lg font-bold text-gray-900">Settings</h2>
@@ -186,22 +186,22 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <main className="flex-grow flex min-h-0 bg-gray-50">
               <div className="w-1/3 border-r border-gray-200 flex flex-col bg-white">
                 <div className="p-2 space-y-1">
-                  {categories.map((cat) => (
+                  {categories.map(cat => (
                     <button
                       key={cat.id}
                       onClick={() => setActiveCategory(cat.id)}
                       className={`w-full flex items-center gap-3 p-2 text-sm rounded-md text-left transition-colors ${
                         activeCategory === cat.id
-                          ? "bg-blue-100 text-blue-800 font-semibold"
-                          : "text-gray-700 hover:bg-gray-100"
+                          ? 'bg-blue-100 text-blue-800 font-semibold'
+                          : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
                       <cat.icon
                         size={16}
                         className={
                           activeCategory === cat.id
-                            ? "text-blue-600"
-                            : "text-gray-500"
+                            ? 'text-blue-600'
+                            : 'text-gray-500'
                         }
                       />
                       <span>{cat.label}</span>
@@ -210,14 +210,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </div>
               </div>
               <div className="w-2/3 p-6 overflow-y-auto thin-scrollbar">
-                {activeCategory === "general" && (
+                {activeCategory === 'general' && (
                   <div className="space-y-4">
                     <h3 className="text-base font-semibold text-gray-800">
                       General
                     </h3>
                     <Checkbox
                       checked={autoReviewOnPaste}
-                      onChange={(e) => setAutoReviewOnPaste(e.target.checked)}
+                      onChange={e => setAutoReviewOnPaste(e.target.checked)}
                     >
                       Auto-review on paste
                     </Checkbox>
@@ -231,7 +231,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         max="200"
                         className="w-24"
                         value={promptHistoryLimit}
-                        onChange={(e) => {
+                        onChange={e => {
                           const value = parseInt(e.target.value, 10);
                           if (!isNaN(value)) {
                             setPromptHistoryLimit(Math.max(1, value));
@@ -245,14 +245,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </div>
                 )}
 
-                {activeCategory === "fileTree" && (
+                {activeCategory === 'fileTree' && (
                   <div className="space-y-4">
                     <h3 className="text-base font-semibold text-gray-800">
                       File Tree
                     </h3>
                     <Checkbox
                       checked={respectGitignore}
-                      onChange={(e) => setRespectGitignore(e.target.checked)}
+                      onChange={e => setRespectGitignore(e.target.checked)}
                     >
                       Respect .gitignore
                     </Checkbox>
@@ -264,18 +264,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         rows={6}
                         className="text-xs"
                         placeholder={
-                          "# .gitignore syntax\nnode_modules\ndist/\n*.log"
+                          '# .gitignore syntax\nnode_modules\ndist/\n*.log'
                         }
                         value={customIgnorePatterns}
-                        onChange={(e) =>
-                          setCustomIgnorePatterns(e.target.value)
-                        }
+                        onChange={e => setCustomIgnorePatterns(e.target.value)}
                       />
                     </div>
                   </div>
                 )}
 
-                {activeCategory === "prompting" && (
+                {activeCategory === 'prompting' && (
                   <div>
                     <h3 className="text-base font-semibold text-gray-800 mb-2">
                       Prompting
@@ -288,12 +286,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       className="text-xs"
                       placeholder="Enter your custom system prompt..."
                       value={customSystemPrompt}
-                      onChange={(e) => setCustomSystemPrompt(e.target.value)}
+                      onChange={e => setCustomSystemPrompt(e.target.value)}
                     />
                   </div>
                 )}
 
-                {activeCategory === "cli" && <CliSettings />}
+                {activeCategory === 'cli' && <CliSettings />}
               </div>
             </main>
 
