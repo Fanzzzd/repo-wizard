@@ -1,23 +1,24 @@
-import React from "react";
-import { useTooltipStore } from "../../store/tooltipStore";
+import React from 'react';
+import { useTooltipStore } from '../../store/tooltipStore';
 
 interface ShortenedPathProps {
   path: string;
   className?: string;
-  mode?: "truncate-path" | "filename-only";
+  mode?: 'truncate-path' | 'filename-only';
 }
 
 export const ShortenedPath = React.forwardRef<
   HTMLSpanElement,
   ShortenedPathProps
->(({ path, className, mode = "filename-only" }, ref) => {
+>(({ path, className, mode = 'filename-only' }, ref) => {
   const { showTooltip, hideTooltip, updatePosition } = useTooltipStore();
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLSpanElement>) => {
     // For filename-only mode, always show the full path in tooltip.
     // For truncate-path mode, show only if text is actually truncated.
-    const isTruncated = e.currentTarget.offsetWidth < e.currentTarget.scrollWidth;
-    if (mode === "filename-only" || isTruncated) {
+    const isTruncated =
+      e.currentTarget.offsetWidth < e.currentTarget.scrollWidth;
+    if (mode === 'filename-only' || isTruncated) {
       showTooltip(path, { x: e.clientX, y: e.clientY });
     }
   };
@@ -31,12 +32,10 @@ export const ShortenedPath = React.forwardRef<
   };
 
   const displayText =
-    mode === "filename-only" ? path.split(/[\\/]/).pop() || path : path;
-  
+    mode === 'filename-only' ? path.split(/[\\/]/).pop() || path : path;
+
   const style: React.CSSProperties =
-    mode === "truncate-path"
-      ? { direction: "rtl", textAlign: "left" }
-      : {};
+    mode === 'truncate-path' ? { direction: 'rtl', textAlign: 'left' } : {};
 
   return (
     <span
@@ -51,4 +50,4 @@ export const ShortenedPath = React.forwardRef<
     </span>
   );
 });
-ShortenedPath.displayName = "ShortenedPath";
+ShortenedPath.displayName = 'ShortenedPath';

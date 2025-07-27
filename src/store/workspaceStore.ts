@@ -1,21 +1,21 @@
-import { create } from "zustand";
-import { Store as TauriStore } from "@tauri-apps/plugin-store";
-import type { FileNode } from "../types";
-import { useSettingsStore } from "./settingsStore";
-import { useComposerStore } from "./composerStore";
-import { useHistoryStore } from "./historyStore";
-import { useReviewStore } from "./reviewStore";
-import * as projectService from "../services/projectService";
-import { showErrorDialog } from "../lib/errorHandler";
-import { listen } from "@tauri-apps/api/event";
-import { startWatching, stopWatching } from "../services/tauriApi";
-import { AppError } from "../lib/error";
+import { create } from 'zustand';
+import { Store as TauriStore } from '@tauri-apps/plugin-store';
+import type { FileNode } from '../types';
+import { useSettingsStore } from './settingsStore';
+import { useComposerStore } from './composerStore';
+import { useHistoryStore } from './historyStore';
+import { useReviewStore } from './reviewStore';
+import * as projectService from '../services/projectService';
+import { showErrorDialog } from '../lib/errorHandler';
+import { listen } from '@tauri-apps/api/event';
+import { startWatching, stopWatching } from '../services/tauriApi';
+import { AppError } from '../lib/error';
 
 const getProjectStoreKey = (projectPath: string) => {
   try {
     return `project-${btoa(projectPath)}.json`;
   } catch (e) {
-    return `project-${projectPath.replace(/[^a-zA-Z0-9]/g, "_")}.json`;
+    return `project-${projectPath.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
   }
 };
 
@@ -39,7 +39,18 @@ interface WorkspaceState {
   triggerFileTreeRefresh: () => void;
 }
 
-const initialState: Omit<WorkspaceState, "setRootPath" | "closeProject" | "loadFileTree" | "setFileTree" | "setActiveFilePath" | "setSelectedFilePaths" | "addSelectedFilePath" | "removeSelectedFilePath" | "triggerFileTreeRefresh"> = {
+const initialState: Omit<
+  WorkspaceState,
+  | 'setRootPath'
+  | 'closeProject'
+  | 'loadFileTree'
+  | 'setFileTree'
+  | 'setActiveFilePath'
+  | 'setSelectedFilePaths'
+  | 'addSelectedFilePath'
+  | 'removeSelectedFilePath'
+  | 'triggerFileTreeRefresh'
+> = {
   rootPath: null,
   isInitialized: false,
   fileTree: null,
@@ -59,10 +70,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     const oldState = get();
     if (oldState.isInitialized) {
       const { lastReview, sessionBaseBackupId } = useReviewStore.getState();
-      if (lastReview?.sessionBaseBackupId) { projectService.cleanupBackup(lastReview.sessionBaseBackupId); }
-      if (sessionBaseBackupId) { projectService.cleanupBackup(sessionBaseBackupId); }
+      if (lastReview?.sessionBaseBackupId) {
+        projectService.cleanupBackup(lastReview.sessionBaseBackupId);
+      }
+      if (sessionBaseBackupId) {
+        projectService.cleanupBackup(sessionBaseBackupId);
+      }
       if (persistenceUnsubscribe) persistenceUnsubscribe();
-      
+
       if (tauriFileWatcherUnlisten) {
         tauriFileWatcherUnlisten();
         tauriFileWatcherUnlisten = null;
@@ -78,7 +93,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
     const storeKey = getProjectStoreKey(rootPath);
     const projectTauriStore = await TauriStore.load(storeKey);
-    const savedState = (await projectTauriStore.get<any>("state")) || {};
+    const savedState = (await projectTauriStore.get<any>('state')) || {};
 
     set({
       ...initialState,
@@ -90,13 +105,15 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
     useComposerStore.getState()._load(savedState);
     useHistoryStore.getState()._load(savedState);
+
     useSettingsStore.getState().addRecentProject(rootPath);
 
-    persistenceUnsubscribe = useWorkspaceStore.subscribe((state) => {
+    persistenceUnsubscribe = useWorkspaceStore.subscribe(state => {
       if (!state.isInitialized) return;
       if (saveTimeout) clearTimeout(saveTimeout);
       saveTimeout = setTimeout(async () => {
-        const { composerMode, instructions, enabledMetaPromptIds } = useComposerStore.getState();
+        const { composerMode, instructions, enabledMetaPromptIds } =
+          useComposerStore.getState();
         const { promptHistory } = useHistoryStore.getState();
         const stateToSave = {
           activeFilePath: state.activeFilePath,
@@ -106,18 +123,19 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
           enabledMetaPromptIds,
           promptHistory,
         };
-        await projectTauriStore.set("state", stateToSave);
+        await projectTauriStore.set('state', stateToSave);
         await projectTauriStore.save();
       }, 1000);
     });
 
     try {
-      const { respectGitignore, customIgnorePatterns } = useSettingsStore.getState();
+      const { respectGitignore, customIgnorePatterns } =
+        useSettingsStore.getState();
       const settings = { respectGitignore, customIgnorePatterns };
       await startWatching(rootPath, settings);
       tauriFileWatcherUnlisten = await listen<string>(
-        "file-change-event",
-        (event) => {
+        'file-change-event',
+        event => {
           if (event.payload === get().rootPath) {
             get().triggerFileTreeRefresh();
           }
@@ -136,8 +154,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     const oldState = get();
     if (oldState.isInitialized) {
       const { lastReview, sessionBaseBackupId } = useReviewStore.getState();
-      if (lastReview?.sessionBaseBackupId) { projectService.cleanupBackup(lastReview.sessionBaseBackupId); }
-      if (sessionBaseBackupId) { projectService.cleanupBackup(sessionBaseBackupId); }
+      if (lastReview?.sessionBaseBackupId) {
+        projectService.cleanupBackup(lastReview.sessionBaseBackupId);
+      }
+      if (sessionBaseBackupId) {
+        projectService.cleanupBackup(sessionBaseBackupId);
+      }
       if (persistenceUnsubscribe) {
         persistenceUnsubscribe();
         persistenceUnsubscribe = null;
@@ -162,8 +184,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       set({ fileTree: null });
       return;
     }
+
     try {
-      const { respectGitignore, customIgnorePatterns } = useSettingsStore.getState();
+      const { respectGitignore, customIgnorePatterns } =
+        useSettingsStore.getState();
       const settings = { respectGitignore, customIgnorePatterns };
       const fileTree = await projectService.loadFileTree(rootPath, settings);
       set({ fileTree });
@@ -173,13 +197,17 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     }
   },
 
-  setFileTree: (fileTree) => set({ fileTree }),
-  setActiveFilePath: (path) => set({ activeFilePath: path }),
-  setSelectedFilePaths: (paths) => set({ selectedFilePaths: paths }),
-  addSelectedFilePath: (path) =>
-    set((state) => ({ selectedFilePaths: [...new Set([...state.selectedFilePaths, path])] })),
-  removeSelectedFilePath: (path) =>
-    set((state) => ({ selectedFilePaths: state.selectedFilePaths.filter((p) => p !== path) })),
+  setFileTree: fileTree => set({ fileTree }),
+  setActiveFilePath: path => set({ activeFilePath: path }),
+  setSelectedFilePaths: paths => set({ selectedFilePaths: paths }),
+  addSelectedFilePath: path =>
+    set(state => ({
+      selectedFilePaths: [...new Set([...state.selectedFilePaths, path])],
+    })),
+  removeSelectedFilePath: path =>
+    set(state => ({
+      selectedFilePaths: state.selectedFilePaths.filter(p => p !== path),
+    })),
   triggerFileTreeRefresh: () =>
-    set((state) => ({ refreshCounter: state.refreshCounter + 1 })),
+    set(state => ({ refreshCounter: state.refreshCounter + 1 })),
 }));

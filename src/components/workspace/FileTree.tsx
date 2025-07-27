@@ -1,15 +1,15 @@
-import { ChevronRight, ChevronDown, X, FolderOpen, Folder } from "lucide-react";
-import { useWorkspaceStore } from "../../store/workspaceStore";
-import { useSettingsStore } from "../../store/settingsStore";
-import { useEffect, useState, useMemo, useRef } from "react";
-import { open } from "@tauri-apps/plugin-dialog";
-import type { FileNode } from "../../types";
-import { FileTypeIcon } from "./FileTypeIcon";
-import { AnimatePresence, motion } from "motion/react";
-import { Checkbox } from "../common/Checkbox";
-import { Button } from "../common/Button";
-import { RecentProjectsModal } from "./RecentProjectsModal";
-import { showErrorDialog } from "../../lib/errorHandler";
+import { ChevronRight, ChevronDown, X, FolderOpen, Folder } from 'lucide-react';
+import { useWorkspaceStore } from '../../store/workspaceStore';
+import { useSettingsStore } from '../../store/settingsStore';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import { open } from '@tauri-apps/plugin-dialog';
+import type { FileNode } from '../../types';
+import { FileTypeIcon } from './FileTypeIcon';
+import { AnimatePresence, motion } from 'motion/react';
+import { Checkbox } from '../common/Checkbox';
+import { Button } from '../common/Button';
+import { RecentProjectsModal } from './RecentProjectsModal';
+import { showErrorDialog } from '../../lib/errorHandler';
 
 function collectFilePaths(node: FileNode): string[] {
   if (!node.isDirectory) {
@@ -54,7 +54,7 @@ function FileNodeComponent({
   const selectedDescendantCount = useMemo(() => {
     if (descendantFilePaths.length === 0) return 0;
     const descendantSet = new Set(descendantFilePaths);
-    return selectedFilePaths.filter((p) => descendantSet.has(p)).length;
+    return selectedFilePaths.filter(p => descendantSet.has(p)).length;
   }, [descendantFilePaths, selectedFilePaths]);
 
   const isSelected = !isDirectory
@@ -72,7 +72,7 @@ function FileNodeComponent({
 
     if (isDirectory) {
       const descendantSet = new Set(descendantFilePaths);
-      const otherPaths = selectedFilePaths.filter((p) => !descendantSet.has(p));
+      const otherPaths = selectedFilePaths.filter(p => !descendantSet.has(p));
       if (isChecked) {
         setSelectedFilePaths([...otherPaths, ...descendantFilePaths]);
       } else {
@@ -100,15 +100,15 @@ function FileNodeComponent({
       <div
         className={`flex items-center rounded text-sm group select-none ${
           isActive
-            ? "bg-blue-100 text-blue-900"
-            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            ? 'bg-blue-100 text-blue-900'
+            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
         }`}
         title={node.path}
       >
         <div
           style={{ paddingLeft: `${level * 1.25}rem` }}
           className="flex items-center self-stretch p-1 cursor-pointer"
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             if (isDirectory) {
               setIsOpen(!isOpen);
@@ -125,7 +125,7 @@ function FileNodeComponent({
 
         <div
           className="p-1 flex items-center cursor-pointer"
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             checkboxRef.current?.click();
           }}
@@ -142,7 +142,7 @@ function FileNodeComponent({
 
         <div
           className="flex items-center gap-2 flex-grow overflow-hidden p-1 cursor-pointer"
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             if (isDirectory) {
               setIsOpen(!isOpen);
@@ -163,12 +163,12 @@ function FileNodeComponent({
         {isDirectory && isOpen && node.children && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
+            animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            style={{ overflow: "hidden" }}
+            style={{ overflow: 'hidden' }}
           >
-            {node.children.map((child) => (
+            {node.children.map(child => (
               <FileNodeComponent
                 key={child.path}
                 node={child}
@@ -206,7 +206,7 @@ export function FileTree() {
 
   const handleOpenFolder = async () => {
     const selected = await open({ directory: true, multiple: false });
-    if (typeof selected === "string") {
+    if (typeof selected === 'string') {
       await setRootPath(selected);
     }
   };
@@ -231,7 +231,7 @@ export function FileTree() {
             </h3>
             <div className="flex-grow overflow-y-auto thin-scrollbar pr-1">
               <ul className="space-y-1">
-                {recentProjects.map((path) => (
+                {recentProjects.map(path => (
                   <li key={path}>
                     <div
                       onClick={() => setRootPath(path)}
@@ -253,7 +253,7 @@ export function FileTree() {
                         </div>
                       </div>
                       <button
-                        onClick={(e) => {
+                        onClick={e => {
                           e.stopPropagation();
                           removeRecentProject(path);
                         }}
@@ -288,7 +288,7 @@ export function FileTree() {
           <RecentProjectsModal
             isOpen={isRecentProjectsModalOpen}
             onClose={() => setIsRecentProjectsModalOpen(false)}
-            onSelectProject={async (path) => {
+            onSelectProject={async path => {
               await setRootPath(path);
               setIsRecentProjectsModalOpen(false);
             }}

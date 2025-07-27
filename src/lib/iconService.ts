@@ -2,8 +2,8 @@ import {
   generateManifest,
   ManifestConfig,
   type Manifest,
-} from "material-icon-theme";
-import { iconManifestConfig } from "./iconManifestConfig";
+} from 'material-icon-theme';
+import { iconManifestConfig } from './iconManifestConfig';
 
 class IconService {
   private manifest: Manifest;
@@ -13,7 +13,7 @@ class IconService {
   }
 
   private stripSVGExtension(iconPath: string): string {
-    return iconPath.replace(/\.svg$/, "");
+    return iconPath.replace(/\.svg$/, '');
   }
 
   private getAssociation(
@@ -43,10 +43,10 @@ class IconService {
   }
 
   public getIconNameForFile(filename: string): string {
-    if (!this.manifest) return "file";
+    if (!this.manifest) return 'file';
 
     const lowerFilename = filename.toLowerCase();
-    const fileExtension = lowerFilename.split(".").pop() ?? "";
+    const fileExtension = lowerFilename.split('.').pop() ?? '';
 
     const identifier =
       this.getAssociation(this.manifest.light?.fileNames, lowerFilename) ??
@@ -58,16 +58,16 @@ class IconService {
     if (resolvedIcon) return resolvedIcon;
 
     const defaultIdentifier = this.manifest.light?.file ?? this.manifest.file;
-    return this.resolveIcon(defaultIdentifier) ?? "file";
+    return this.resolveIcon(defaultIdentifier) ?? 'file';
   }
 
   public getIconNameForFolder(folderName: string, isOpen: boolean): string {
-    if (!this.manifest) return isOpen ? "folder-open" : "folder";
+    if (!this.manifest) return isOpen ? 'folder-open' : 'folder';
 
     const lowerFolderName = folderName.toLowerCase();
 
-    const primaryAssoc = isOpen ? "folderNamesExpanded" : "folderNames";
-    const secondaryAssoc = isOpen ? "folderNames" : "folderNamesExpanded";
+    const primaryAssoc = isOpen ? 'folderNamesExpanded' : 'folderNames';
+    const secondaryAssoc = isOpen ? 'folderNames' : 'folderNamesExpanded';
 
     const identifier =
       this.getAssociation(
@@ -85,10 +85,12 @@ class IconService {
     if (resolvedIcon) return resolvedIcon;
 
     const defaultIdentifier = isOpen
-      ? this.manifest.light?.folderExpanded ?? this.manifest.folderExpanded
-      : this.manifest.light?.folder ?? this.manifest.folder;
+      ? (this.manifest.light?.folderExpanded ?? this.manifest.folderExpanded)
+      : (this.manifest.light?.folder ?? this.manifest.folder);
 
-    return this.resolveIcon(defaultIdentifier) ?? (isOpen ? "folder-open" : "folder");
+    return (
+      this.resolveIcon(defaultIdentifier) ?? (isOpen ? 'folder-open' : 'folder')
+    );
   }
 }
 

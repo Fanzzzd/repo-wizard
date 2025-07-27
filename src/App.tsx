@@ -1,33 +1,36 @@
-import { useEffect, useCallback, useState, useMemo } from "react";
-import { open } from "@tauri-apps/plugin-dialog";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { useEffect, useCallback, useState, useMemo } from 'react';
+import { open } from '@tauri-apps/plugin-dialog';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import {
   Menu,
   Submenu,
   MenuItem,
   PredefinedMenuItem,
-} from "@tauri-apps/api/menu";
-import { platform } from "@tauri-apps/plugin-os";
-import { getMatches } from "@tauri-apps/plugin-cli";
+} from '@tauri-apps/api/menu';
+import { platform } from '@tauri-apps/plugin-os';
+import { getMatches } from '@tauri-apps/plugin-cli';
 
-import { Layout } from "./components/Layout";
-import { MainPanel } from "./components/MainPanel";
-import { ChangeList } from "./components/review/ChangeList";
-import { PromptComposer } from "./components/prompt/PromptComposer";
-import { TabbedPanel } from "./components/TabbedPanel";
-import { Header } from "./components/Header";
-import { PromptHistoryPanel } from "./components/history/PromptHistoryPanel";
-import { WorkspaceSidebar } from "./components/workspace/WorkspaceSidebar";
-import { ModalDialog } from "./components/common/ModalDialog";
-import { Tooltip } from "./components/common/Tooltip";
-import { ContextMenu } from "./components/common/ContextMenu";
-import { useWorkspaceStore } from "./store/workspaceStore";
-import { useReviewStore } from "./store/reviewStore";
-import { useDialogStore } from "./store/dialogStore";
-import { useUpdateStore } from "./store/updateStore";
-import { useSettingsStore } from "./store/settingsStore";
-import { CommandRunnerModal } from "./components/common/CommandRunnerModal";
+import { Layout } from './components/Layout';
+import { MainPanel } from './components/MainPanel';
+import { ChangeList } from './components/review/ChangeList';
+import { PromptComposer } from './components/prompt/PromptComposer';
+import { TabbedPanel } from './components/TabbedPanel';
+import { Header } from './components/Header';
+import { PromptHistoryPanel } from './components/history/PromptHistoryPanel';
+import { WorkspaceSidebar } from './components/workspace/WorkspaceSidebar';
+import { ModalDialog } from './components/common/ModalDialog';
+import { Tooltip } from './components/common/Tooltip';
+import { ContextMenu } from './components/common/ContextMenu';
+import { useWorkspaceStore } from './store/workspaceStore';
+import { useReviewStore } from './store/reviewStore';
+import { useDialogStore } from './store/dialogStore';
+import { useUpdateStore } from './store/updateStore';
+import { useSettingsStore } from './store/settingsStore';
+import { CommandRunnerModal } from './components/common/CommandRunnerModal';
+import { FileSearchModal } from './components/workspace/FileSearchModal';
+import { useFileSearchStore } from './store/fileSearchStore';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 declare global {
   interface Window {
@@ -41,11 +44,12 @@ interface SingleInstancePayload {
 }
 
 function App() {
-  const { setRootPath } = useWorkspaceStore();
+  const { setRootPath, rootPath } = useWorkspaceStore();
   const { isReviewing } = useReviewStore();
   const { open: openDialog } = useDialogStore();
   const { status, updateInfo, install } = useUpdateStore();
   const { recentProjects } = useSettingsStore();
+  const { openModal: openFileSearchModal } = useFileSearchStore();
   const [fontSize, setFontSize] = useState(14);
   const [isInputFocused, setIsInputFocused] = useState(false);
 
@@ -54,61 +58,58 @@ function App() {
       const el = document.activeElement;
       let isFocused = false;
       if (el) {
-        const isEditor = el.closest(".monaco-editor");
+        const isEditor = el.closest('.monaco-editor');
         const elTag = el.tagName.toUpperCase();
-        if (elTag === "INPUT" || elTag === "TEXTAREA" || isEditor) {
+        if (elTag === 'INPUT' || elTag === 'TEXTAREA' || isEditor) {
           isFocused = true;
         }
       }
       setIsInputFocused(isFocused);
     };
 
-    document.addEventListener("focusin", handleFocusChange, true);
-    document.addEventListener("focusout", handleFocusChange, true);
+    document.addEventListener('focusin', handleFocusChange, true);
+    document.addEventListener('focusout', handleFocusChange, true);
     handleFocusChange();
 
     return () => {
-      document.removeEventListener("focusin", handleFocusChange, true);
-      document.removeEventListener("focusout", handleFocusChange, true);
+      document.removeEventListener('focusin', handleFocusChange, true);
+      document.removeEventListener('focusout', handleFocusChange, true);
     };
   }, []);
 
   useEffect(() => {
-    const unlisten = listen<SingleInstancePayload>(
-      "single-instance",
-      (event) => {
-        const { args: argv, cwd } = event.payload;
-        if (argv.length > 1 && argv[1]) {
-          invoke<string>("resolve_path", { path: argv[1], cwd })
-            .then((absolutePath) => {
-              invoke("open_project_window", { rootPath: absolutePath });
-            })
-            .catch((e) => {
-              console.warn("Could not process single-instance CLI argument:", e);
-            });
-        }
+    const unlisten = listen<SingleInstancePayload>('single-instance', event => {
+      const { args: argv, cwd } = event.payload;
+      if (argv.length > 1 && argv[1]) {
+        invoke<string>('resolve_path', { path: argv[1], cwd })
+          .then(absolutePath => {
+            invoke('open_project_window', { rootPath: absolutePath });
+          })
+          .catch(e => {
+            console.warn('Could not process single-instance CLI argument:', e);
+          });
       }
-    );
+    });
 
     return () => {
-      unlisten.then((f) => f());
+      unlisten.then(f => f());
     };
   }, []);
 
   useEffect(() => {
     const handleZoom = (e: CustomEvent) => {
-      if (e.detail === "in") {
-        setFontSize((s) => Math.min(20, s + 1));
-      } else if (e.detail === "out") {
-        setFontSize((s) => Math.max(10, s - 1));
-      } else if (e.detail === "reset") {
+      if (e.detail === 'in') {
+        setFontSize(s => Math.min(20, s + 1));
+      } else if (e.detail === 'out') {
+        setFontSize(s => Math.max(10, s - 1));
+      } else if (e.detail === 'reset') {
         setFontSize(14);
       }
     };
 
-    window.addEventListener("zoom", handleZoom as EventListener);
+    window.addEventListener('zoom', handleZoom as EventListener);
     return () => {
-      window.removeEventListener("zoom", handleZoom as EventListener);
+      window.removeEventListener('zoom', handleZoom as EventListener);
     };
   }, []);
 
@@ -123,13 +124,13 @@ function App() {
       recentProjects.length > 0
         ? [
             await Submenu.new({
-              text: "Open Recent",
+              text: 'Open Recent',
               items: await Promise.all(
-                recentProjects.map((path) =>
+                recentProjects.map(path =>
                   MenuItem.new({
                     text: path,
                     action: () =>
-                      invoke("open_project_window", { rootPath: path }),
+                      invoke('open_project_window', { rootPath: path }),
                   })
                 )
               ),
@@ -139,35 +140,35 @@ function App() {
 
     const allMenuItems: (Submenu | MenuItem | PredefinedMenuItem)[] = [];
 
-    if (osType === "macos") {
+    if (osType === 'macos') {
       const appMenu = await Submenu.new({
-        text: "Repo Wizard",
+        text: 'Repo Wizard',
         items: [
           await MenuItem.new({
-            text: "About Repo Wizard",
+            text: 'About Repo Wizard',
             action: () => {
               openDialog({
                 title: `About Repo Wizard v${__APP_VERSION__}`,
                 content:
-                  "A code refactoring staging area to safely and efficiently apply LLM-suggested code changes.",
-                status: "info",
-                type: "alert",
+                  'A code refactoring staging area to safely and efficiently apply LLM-suggested code changes.',
+                status: 'info',
+                type: 'alert',
               });
             },
           }),
-          await PredefinedMenuItem.new({ item: "Separator" }),
-          await PredefinedMenuItem.new({ item: "Services" }),
-          await PredefinedMenuItem.new({ item: "Separator" }),
+          await PredefinedMenuItem.new({ item: 'Separator' }),
+          await PredefinedMenuItem.new({ item: 'Services' }),
+          await PredefinedMenuItem.new({ item: 'Separator' }),
           await PredefinedMenuItem.new({
-            item: "Hide",
-            text: "Hide Repo Wizard",
+            item: 'Hide',
+            text: 'Hide Repo Wizard',
           }),
-          await PredefinedMenuItem.new({ item: "HideOthers" }),
-          await PredefinedMenuItem.new({ item: "ShowAll" }),
-          await PredefinedMenuItem.new({ item: "Separator" }),
+          await PredefinedMenuItem.new({ item: 'HideOthers' }),
+          await PredefinedMenuItem.new({ item: 'ShowAll' }),
+          await PredefinedMenuItem.new({ item: 'Separator' }),
           await PredefinedMenuItem.new({
-            item: "Quit",
-            text: "Quit Repo Wizard",
+            item: 'Quit',
+            text: 'Quit Repo Wizard',
           }),
         ],
       });
@@ -175,93 +176,103 @@ function App() {
     }
 
     const fileMenu = await Submenu.new({
-      text: "File",
+      text: 'File',
       items: [
         await MenuItem.new({
-          text: "New Window",
-          accelerator: "CmdOrCtrl+N",
-          action: () => invoke("create_new_window"),
+          text: 'New Window',
+          accelerator: 'CmdOrCtrl+N',
+          action: () => invoke('create_new_window'),
         }),
         await MenuItem.new({
-          text: "Open...",
-          accelerator: "CmdOrCtrl+O",
+          text: 'Open...',
+          accelerator: 'CmdOrCtrl+O',
           action: async () => {
             const selected = await open({ directory: true });
-            if (typeof selected === "string") {
+            if (typeof selected === 'string') {
               await useWorkspaceStore.getState().setRootPath(selected);
             }
           },
         }),
+        await MenuItem.new({
+          text: 'Search Files...',
+          accelerator: 'CmdOrCtrl+P',
+          enabled: !!rootPath,
+          action: () => {
+            if (rootPath) {
+              useFileSearchStore.getState().openModal();
+            }
+          },
+        }),
         ...openRecentSubmenu,
-        await PredefinedMenuItem.new({ item: "Separator" }),
+        await PredefinedMenuItem.new({ item: 'Separator' }),
         await PredefinedMenuItem.new({
-          item: "CloseWindow",
-          text: "Close Window",
+          item: 'CloseWindow',
+          text: 'Close Window',
         }),
       ],
     });
     allMenuItems.push(fileMenu);
 
     const editMenuItems: (MenuItem | PredefinedMenuItem)[] = [
-      await PredefinedMenuItem.new({ item: "Undo" }),
-      await PredefinedMenuItem.new({ item: "Redo" }),
-      await PredefinedMenuItem.new({ item: "Separator" }),
-      await PredefinedMenuItem.new({ item: "Cut" }),
-      await PredefinedMenuItem.new({ item: "Copy" }),
-      await PredefinedMenuItem.new({ item: "Paste" }),
+      await PredefinedMenuItem.new({ item: 'Undo' }),
+      await PredefinedMenuItem.new({ item: 'Redo' }),
+      await PredefinedMenuItem.new({ item: 'Separator' }),
+      await PredefinedMenuItem.new({ item: 'Cut' }),
+      await PredefinedMenuItem.new({ item: 'Copy' }),
+      await PredefinedMenuItem.new({ item: 'Paste' }),
     ];
 
     if (isInputFocused) {
-      editMenuItems.push(await PredefinedMenuItem.new({ item: "SelectAll" }));
+      editMenuItems.push(await PredefinedMenuItem.new({ item: 'SelectAll' }));
     } else {
       editMenuItems.push(
         await MenuItem.new({
-          text: "Select All",
-          accelerator: "CmdOrCtrl+A",
+          text: 'Select All',
+          accelerator: 'CmdOrCtrl+A',
           enabled: false,
         })
       );
     }
 
     const editMenu = await Submenu.new({
-      text: "Edit",
+      text: 'Edit',
       items: editMenuItems,
     });
     allMenuItems.push(editMenu);
 
     const viewMenu = await Submenu.new({
-      text: "View",
+      text: 'View',
       items: [
         await MenuItem.new({
-          text: "Zoom In",
-          accelerator: "CmdOrCtrl+=",
+          text: 'Zoom In',
+          accelerator: 'CmdOrCtrl+=',
           action: () =>
-            window.dispatchEvent(new CustomEvent("zoom", { detail: "in" })),
+            window.dispatchEvent(new CustomEvent('zoom', { detail: 'in' })),
         }),
         await MenuItem.new({
-          text: "Zoom Out",
-          accelerator: "CmdOrCtrl+-",
+          text: 'Zoom Out',
+          accelerator: 'CmdOrCtrl+-',
           action: () =>
-            window.dispatchEvent(new CustomEvent("zoom", { detail: "out" })),
+            window.dispatchEvent(new CustomEvent('zoom', { detail: 'out' })),
         }),
         await MenuItem.new({
-          text: "Reset Zoom",
-          accelerator: "CmdOrCtrl+0",
+          text: 'Reset Zoom',
+          accelerator: 'CmdOrCtrl+0',
           action: () =>
-            window.dispatchEvent(new CustomEvent("zoom", { detail: "reset" })),
+            window.dispatchEvent(new CustomEvent('zoom', { detail: 'reset' })),
         }),
       ],
     });
     allMenuItems.push(viewMenu);
 
     const windowMenu = await Submenu.new({
-      text: "Window",
+      text: 'Window',
       items: [
-        await PredefinedMenuItem.new({ item: "Minimize" }),
-        await PredefinedMenuItem.new({ item: "CloseWindow" }),
-        await PredefinedMenuItem.new({ item: "Separator" }),
-        await PredefinedMenuItem.new({ item: "Maximize" }),
-        await PredefinedMenuItem.new({ item: "Fullscreen" }),
+        await PredefinedMenuItem.new({ item: 'Minimize' }),
+        await PredefinedMenuItem.new({ item: 'CloseWindow' }),
+        await PredefinedMenuItem.new({ item: 'Separator' }),
+        await PredefinedMenuItem.new({ item: 'Maximize' }),
+        await PredefinedMenuItem.new({ item: 'Fullscreen' }),
       ],
     });
     allMenuItems.push(windowMenu);
@@ -270,7 +281,7 @@ function App() {
       items: allMenuItems,
     });
     await menu.setAsAppMenu();
-  }, [recentProjects, openDialog, isInputFocused]);
+  }, [recentProjects, openDialog, isInputFocused, rootPath]);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -282,14 +293,14 @@ function App() {
       try {
         const matches = await getMatches();
         const pathArg = matches.args.path?.value;
-        if (pathArg && typeof pathArg === "string") {
-          const absolutePath = await invoke<string>("resolve_path", {
+        if (pathArg && typeof pathArg === 'string') {
+          const absolutePath = await invoke<string>('resolve_path', {
             path: pathArg,
           });
           await setRootPath(absolutePath);
         }
       } catch (e) {
-        console.warn("Could not process CLI arguments:", e);
+        console.warn('Could not process CLI arguments:', e);
       }
     };
     initializeApp();
@@ -301,20 +312,20 @@ function App() {
 
   useEffect(() => {
     const showUpdateDialog = async () => {
-      if (status === "ready" && updateInfo) {
-        const isDev = __APP_VERSION__.includes("-");
+      if (status === 'ready' && updateInfo) {
+        const isDev = __APP_VERSION__.includes('-');
         const confirmed = await openDialog({
-          title: isDev ? "Update Available" : "Update Ready",
+          title: isDev ? 'Update Available' : 'Update Ready',
           content: (
             <div>
               <p>
-                A new version ({updateInfo.version}) is available. You are using{" "}
+                A new version ({updateInfo.version}) is available. You are using{' '}
                 {__APP_VERSION__}.
               </p>
               <p className="mt-2 text-sm text-gray-500">Release Notes:</p>
               <div className="mt-1 max-h-40 overflow-y-auto rounded-md border bg-gray-50 p-2 text-sm thin-scrollbar">
                 <pre className="whitespace-pre-wrap font-sans">
-                  {updateInfo.body || "No release notes available."}
+                  {updateInfo.body || 'No release notes available.'}
                 </pre>
               </div>
               {!isDev && (
@@ -324,9 +335,9 @@ function App() {
               )}
             </div>
           ),
-          type: isDev ? "alert" : "confirm",
-          status: "info",
-          confirmText: "Relaunch Now",
+          type: isDev ? 'alert' : 'confirm',
+          status: 'info',
+          confirmText: 'Relaunch Now',
         });
 
         if (confirmed && !isDev) {
@@ -341,13 +352,42 @@ function App() {
     () => (
       <TabbedPanel
         tabs={{
-          "Compose & Review": <PromptComposer />,
-          "Prompt History": <PromptHistoryPanel />,
+          'Compose & Review': <PromptComposer />,
+          'Prompt History': <PromptHistoryPanel />,
         }}
       />
     ),
     []
   );
+
+  // Set up global keyboard shortcuts
+  useKeyboardShortcuts(
+    [
+      {
+        key: 'p',
+        metaKey: true, // Cmd on Mac
+        ctrlKey: false,
+        action: () => {
+          if (rootPath && !isInputFocused) {
+            openFileSearchModal();
+          }
+        },
+        description: 'Open file search',
+      },
+      {
+        key: 'p',
+        ctrlKey: true, // Ctrl on Windows/Linux
+        metaKey: false,
+        action: () => {
+          if (rootPath && !isInputFocused) {
+            openFileSearchModal();
+          }
+        },
+        description: 'Open file search',
+      },
+    ],
+    !isInputFocused
+  ); // Only enable when not in input fields
 
   const leftPanel = isReviewing ? <ChangeList /> : <WorkspaceSidebar />;
 
@@ -366,6 +406,7 @@ function App() {
       <Tooltip />
       <ContextMenu />
       <CommandRunnerModal />
+      <FileSearchModal />
     </div>
   );
 }

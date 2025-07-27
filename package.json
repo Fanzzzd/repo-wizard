@@ -1,7 +1,7 @@
 {
   "name": "repo-wizard",
   "private": true,
-  "version": "1.6.1",
+  "version": "1.7.0-next.3",
   "type": "module",
   "scripts": {
     "dev": "cross-env RUST_BACKTRACE=1 tauri dev --config src-tauri/tauri.dev.conf.json",
@@ -13,6 +13,10 @@
     "check": "pnpm check:web || true && pnpm check:rust",
     "check:web": "tsc --noEmit",
     "check:rust": "cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings",
+    "fmt": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\" && cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "fmt:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\" && cargo fmt --manifest-path src-tauri/Cargo.toml --check",
+    "fmt:web": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "fmt:rust": "cargo fmt --manifest-path src-tauri/Cargo.toml",
     "semantic-release": "semantic-release"
   },
   "dependencies": {
@@ -63,6 +67,7 @@
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.7.0",
     "cross-env": "^7.0.3",
+    "prettier": "^3.3.3",
     "semantic-release": "^24.2.7",
     "typescript": "~5.5.4",
     "vite": "^5.4.19"

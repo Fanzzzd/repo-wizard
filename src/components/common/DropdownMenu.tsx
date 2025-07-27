@@ -7,9 +7,9 @@ import React, {
   useLayoutEffect,
   useMemo,
   PropsWithChildren,
-} from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { ChevronRight } from "lucide-react";
+} from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { ChevronRight } from 'lucide-react';
 
 // --- Contexts ---
 
@@ -26,7 +26,7 @@ const DropdownMenuContext = createContext<DropdownMenuContextProps | null>(
 const useDropdownMenu = () => {
   const context = useContext(DropdownMenuContext);
   if (!context) {
-    throw new Error("useDropdownMenu must be used within a DropdownMenu");
+    throw new Error('useDropdownMenu must be used within a DropdownMenu');
   }
   return context;
 };
@@ -35,15 +35,12 @@ interface DropdownSubMenuContextProps {
   isSubMenuOpen: boolean;
   triggerRef: React.RefObject<HTMLDivElement>;
 }
-const DropdownSubMenuContext = createContext<DropdownSubMenuContextProps | null>(
-  null
-);
+const DropdownSubMenuContext =
+  createContext<DropdownSubMenuContextProps | null>(null);
 const useDropdownSubMenu = () => {
   const context = useContext(DropdownSubMenuContext);
   if (!context) {
-    throw new Error(
-      "useDropdownSubMenu must be used within a DropdownMenuSub"
-    );
+    throw new Error('useDropdownSubMenu must be used within a DropdownMenuSub');
   }
   return context;
 };
@@ -75,7 +72,7 @@ export function DropdownMenuTrigger({
     ref: triggerRef,
     onClick: (e: React.MouseEvent) => {
       e.preventDefault();
-      setIsOpen((prev) => !prev);
+      setIsOpen(prev => !prev);
       children.props.onClick?.(e);
     },
   });
@@ -112,7 +109,7 @@ export function DropdownMenuContent({ children }: PropsWithChildren<{}>) {
 
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         setIsOpen(false);
       }
     };
@@ -128,12 +125,12 @@ export function DropdownMenuContent({ children }: PropsWithChildren<{}>) {
       }
     };
     if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("keydown", handleKeydown);
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeydown);
     }
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeydown);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeydown);
     };
   }, [isOpen, setIsOpen, triggerRef]);
 
@@ -183,8 +180,8 @@ export function DropdownMenuItem({
       className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-left transition-colors
         ${
           isDanger
-            ? "text-red-600 hover:bg-red-50"
-            : "text-gray-700 hover:bg-gray-100"
+            ? 'text-red-600 hover:bg-red-50'
+            : 'text-gray-700 hover:bg-gray-100'
         }
         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
     >
@@ -272,8 +269,8 @@ export function DropdownMenuSubTrigger({
 
 export function DropdownMenuSubContent({
   children,
-  align = "start",
-}: PropsWithChildren<{ align?: "start" | "center" | "end" }>) {
+  align = 'start',
+}: PropsWithChildren<{ align?: 'start' | 'center' | 'end' }>) {
   const { isSubMenuOpen, triggerRef } = useDropdownSubMenu();
   const contentRef = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState<React.CSSProperties>({});
@@ -297,14 +294,14 @@ export function DropdownMenuSubContent({
 
       let top: number;
       switch (align) {
-        case "end":
+        case 'end':
           top = triggerRect.bottom - contentRect.height;
           break;
-        case "center":
+        case 'center':
           top =
             triggerRect.top + triggerRect.height / 2 - contentRect.height / 2;
           break;
-        case "start":
+        case 'start':
         default:
           top = triggerRect.top;
           break;

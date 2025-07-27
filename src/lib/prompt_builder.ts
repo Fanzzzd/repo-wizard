@@ -4,8 +4,8 @@ import type {
   MetaPrompt,
   FileNode,
   FileTreeConfig,
-} from "../types";
-import { getGitDiff } from "../services/tauriApi";
+} from '../types';
+import { getGitDiff } from '../services/tauriApi';
 
 interface File {
   path: string;
@@ -95,17 +95,20 @@ const formattingRulesMap = {
 };
 
 const parseIgnorePatterns = (patternsStr: string) => {
-  const patterns = patternsStr.split(",").map((p) => p.trim()).filter(Boolean);
+  const patterns = patternsStr
+    .split(',')
+    .map(p => p.trim())
+    .filter(Boolean);
   const filePatterns: ((name: string) => boolean)[] = [];
   const dirPatterns: ((name: string) => boolean)[] = [];
 
-  patterns.forEach((pattern) => {
-    if (pattern.endsWith("/")) {
+  patterns.forEach(pattern => {
+    if (pattern.endsWith('/')) {
       const dirName = pattern.slice(0, -1);
-      dirPatterns.push((name) => name === dirName);
-    } else if (pattern.startsWith("*.")) {
+      dirPatterns.push(name => name === dirName);
+    } else if (pattern.startsWith('*.')) {
       const extension = pattern.slice(1);
-      filePatterns.push((name) => name.endsWith(extension));
+      filePatterns.push(name => name.endsWith(extension));
     } else {
       const matchFn = (name: string) => name === pattern;
       filePatterns.push(matchFn);
@@ -115,7 +118,7 @@ const parseIgnorePatterns = (patternsStr: string) => {
 
   return (node: FileNode) => {
     const patternsToCheck = node.isDirectory ? dirPatterns : filePatterns;
-    return patternsToCheck.some((p) => p(node.name));
+    return patternsToCheck.some(p => p(node.name));
   };
 };
 
@@ -126,18 +129,18 @@ const formatFileTree = (node: FileNode, config?: FileTreeConfig): string => {
     : () => false;
 
   const buildTree = (children: FileNode[], prefix: string) => {
-    let childrenToDisplay = children.filter((child) => !isIgnoredFn(child));
+    let childrenToDisplay = children.filter(child => !isIgnoredFn(child));
 
     const maxFiles = config?.maxFilesPerDirectory;
     if (
-      typeof maxFiles === "number" &&
+      typeof maxFiles === 'number' &&
       maxFiles >= 0 &&
       childrenToDisplay.length > maxFiles
     ) {
       const truncated = childrenToDisplay.slice(0, maxFiles);
       const ellipsisNode: FileNode = {
-        name: "...",
-        path: "",
+        name: '...',
+        path: '',
         isDirectory: false,
         children: [],
       };
@@ -146,15 +149,15 @@ const formatFileTree = (node: FileNode, config?: FileTreeConfig): string => {
 
     childrenToDisplay.forEach((child, index) => {
       const isLast = index === childrenToDisplay.length - 1;
-      result += `${prefix}${isLast ? "└── " : "├── "}${child.name}\n`;
-      if (child.children && child.name !== "...") {
-        buildTree(child.children, `${prefix}${isLast ? "    " : "│   "}`);
+      result += `${prefix}${isLast ? '└── ' : '├── '}${child.name}\n`;
+      if (child.children && child.name !== '...') {
+        buildTree(child.children, `${prefix}${isLast ? '    ' : '│   '}`);
       }
     });
   };
 
   if (node.children) {
-    buildTree(node.children, "");
+    buildTree(node.children, '');
   }
   return result;
 };
@@ -165,8 +168,8 @@ const filterFileTreeBySelection = (
   rootPath: string
 ): FileNode | null => {
   const nodeRelativePath = node.path.startsWith(rootPath)
-    ? node.path.substring(rootPath.length + 1).replace(/\\/g, "/")
-    : node.path.replace(/\\/g, "/");
+    ? node.path.substring(rootPath.length + 1).replace(/\\/g, '/')
+    : node.path.replace(/\\/g, '/');
 
   if (selectedPaths.has(nodeRelativePath)) {
     return { ...node, children: undefined };
@@ -174,7 +177,7 @@ const filterFileTreeBySelection = (
 
   if (node.isDirectory && node.children) {
     const newChildren = node.children
-      .map((child) => filterFileTreeBySelection(child, selectedPaths, rootPath))
+      .map(child => filterFileTreeBySelection(child, selectedPaths, rootPath))
       .filter((c): c is FileNode => c !== null);
 
     if (newChildren.length > 0) {
@@ -197,7 +200,7 @@ export const buildPrompt = async ({
   options: _options,
 }: BuildPromptArgs): Promise<BuildPromptResult> => {
   const options = { dryRun: false, ..._options };
-  let prompt = "";
+  let prompt = '';
   let terminalCommandToRun: string | null = null;
 
   if (customSystemPrompt) {
@@ -207,28 +210,25 @@ export const buildPrompt = async ({
   }
 
   const enabledMetaPrompts = metaPrompts.filter(
-    (p) => p.enabled && (p.mode === composerMode || p.mode === "universal")
+    p => p.enabled && (p.mode === composerMode || p.mode === 'universal')
   );
 
   if (enabledMetaPrompts.length > 0) {
     prompt +=
-      "In addition to my instructions, you must also follow the rules in these blocks:\n\n";
+      'In addition to my instructions, you must also follow the rules in these blocks:\n\n';
 
     for (const metaPrompt of enabledMetaPrompts) {
       let content = metaPrompt.content;
 
-      if (metaPrompt.promptType === "magic" && rootPath) {
-        if (
-          metaPrompt.magicType === "file-tree" &&
-          metaPrompt.fileTreeConfig
-        ) {
+      if (metaPrompt.promptType === 'magic' && rootPath) {
+        if (metaPrompt.magicType === 'file-tree' && metaPrompt.fileTreeConfig) {
           let treeToRender = fileTree;
           if (
-            metaPrompt.fileTreeConfig?.scope === "selected" &&
+            metaPrompt.fileTreeConfig?.scope === 'selected' &&
             rootPath &&
             fileTree
           ) {
-            const selectedRelativePaths = new Set(files.map((f) => f.path));
+            const selectedRelativePaths = new Set(files.map(f => f.path));
             treeToRender = filterFileTreeBySelection(
               fileTree,
               selectedRelativePaths,
@@ -237,51 +237,51 @@ export const buildPrompt = async ({
           }
           const fileTreeString = treeToRender
             ? formatFileTree(treeToRender, metaPrompt.fileTreeConfig)
-            : "No project is open or no files selected.";
-          content = content.replace("{FILE_TREE_CONTENT}", fileTreeString);
+            : 'No project is open or no files selected.';
+          content = content.replace('{FILE_TREE_CONTENT}', fileTreeString);
         } else if (
-          metaPrompt.magicType === "git-diff" &&
+          metaPrompt.magicType === 'git-diff' &&
           metaPrompt.gitDiffConfig
         ) {
           if (!options.dryRun) {
             try {
               const diff = await getGitDiff(rootPath, metaPrompt.gitDiffConfig);
               content = content.replace(
-                "{GIT_DIFF_CONTENT}",
-                diff || "No changes found."
+                '{GIT_DIFF_CONTENT}',
+                diff || 'No changes found.'
               );
             } catch (e) {
               content = content.replace(
-                "{GIT_DIFF_CONTENT}",
+                '{GIT_DIFF_CONTENT}',
                 `Error getting git diff: ${e}`
               );
             }
           } else {
             content = content.replace(
-              "{GIT_DIFF_CONTENT}",
-              "[Git diff output will be included here during prompt generation]"
+              '{GIT_DIFF_CONTENT}',
+              '[Git diff output will be included here during prompt generation]'
             );
           }
         } else if (
-          metaPrompt.magicType === "terminal-command" &&
+          metaPrompt.magicType === 'terminal-command' &&
           metaPrompt.terminalCommandConfig
         ) {
           const commandToRun = metaPrompt.terminalCommandConfig.command;
           if (commandToRun) {
-             if (options.dryRun) {
-                 content = content.replace(
-                    "{TERMINAL_COMMAND_OUTPUT}",
-                    `[Output of '${commandToRun}' will be captured from an interactive terminal and inserted here.]`
-                  );
+            if (options.dryRun) {
+              content = content.replace(
+                '{TERMINAL_COMMAND_OUTPUT}',
+                `[Output of '${commandToRun}' will be captured from an interactive terminal and inserted here.]`
+              );
             } else {
-                terminalCommandToRun = commandToRun;
-                // Leave the placeholder in place, it will be filled in by the caller
-                // after the terminal interaction is complete.
+              terminalCommandToRun = commandToRun;
+              // Leave the placeholder in place, it will be filled in by the caller
+              // after the terminal interaction is complete.
             }
           } else {
             content = content.replace(
-              "{TERMINAL_COMMAND_OUTPUT}",
-              "No command specified in meta-prompt configuration."
+              '{TERMINAL_COMMAND_OUTPUT}',
+              'No command specified in meta-prompt configuration.'
             );
           }
         }
@@ -293,24 +293,24 @@ export const buildPrompt = async ({
     }
   }
 
-  if (composerMode === "edit") {
+  if (composerMode === 'edit') {
     prompt += `--- BEGIN File Editing Rules ---\n`;
     prompt += formattingRulesMap[editFormat];
     prompt += `\n--- END File Editing Rules ---\n\n`;
   }
 
-  prompt += "--- BEGIN SELECTED CODE ---\n";
-  prompt += "Here are the files to work with:\n\n";
+  prompt += '--- BEGIN SELECTED CODE ---\n';
+  prompt += 'Here are the files to work with:\n\n';
 
   for (const file of files) {
     prompt += `${file.path}\n\`\`\`\n${file.content}\n\`\`\`\n\n`;
   }
 
-  prompt += "--- END SELECTED CODE ---\n\n";
+  prompt += '--- END SELECTED CODE ---\n\n';
 
   prompt += `My instructions are:\n\n${instructions}`;
 
-  if (composerMode === "edit") {
+  if (composerMode === 'edit') {
     prompt += `\n\n**IMPORTANT** IF MAKING FILE CHANGES, YOU MUST USE THE FILE EDITING FORMATS PROVIDED ABOVE – IT IS THE ONLY WAY FOR YOUR CHANGES TO BE APPLIED.`;
   }
 

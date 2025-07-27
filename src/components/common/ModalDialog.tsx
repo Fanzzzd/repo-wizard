@@ -1,13 +1,13 @@
-import { AnimatePresence, motion } from "motion/react";
-import { useDialogStore } from "../../store/dialogStore";
-import { CheckCircle, AlertTriangle, XCircle, Info, X } from "lucide-react";
-import { Button } from "./Button";
+import { AnimatePresence, motion } from 'motion/react';
+import { useDialogStore } from '../../store/dialogStore';
+import { CheckCircle, AlertTriangle, XCircle, Info, X } from 'lucide-react';
+import { Button } from './Button';
 
 const statusIcons = {
-    success: <CheckCircle className="text-green-500" size={24} />,
-    warning: <AlertTriangle className="text-yellow-500" size={24} />,
-    error: <XCircle className="text-red-500" size={24} />,
-    info: <Info className="text-blue-500" size={24} />,
+  success: <CheckCircle className="text-green-500" size={24} />,
+  warning: <AlertTriangle className="text-yellow-500" size={24} />,
+  error: <XCircle className="text-red-500" size={24} />,
+  info: <Info className="text-blue-500" size={24} />,
 };
 
 export function ModalDialog() {
@@ -44,37 +44,47 @@ export function ModalDialog() {
             <div className="p-6">
               <div className="flex items-start gap-4">
                 <div className="mt-1">
-                    {statusIcons[options.status ?? 'info']}
+                  {statusIcons[options.status ?? 'info']}
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-900">{options.title}</h3>
-                    <div className="mt-2 text-sm text-gray-600">
-                        {typeof options.content === 'string' ? <p>{options.content}</p> : options.content}
-                    </div>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {options.title}
+                  </h3>
+                  <div className="mt-2 text-sm text-gray-600">
+                    {typeof options.content === 'string' ? (
+                      <p>{options.content}</p>
+                    ) : (
+                      options.content
+                    )}
+                  </div>
                 </div>
-                <button onClick={() => handleClose(false)} className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100">
-                    <X size={20} />
+                <button
+                  onClick={() => handleClose(false)}
+                  className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100"
+                >
+                  <X size={20} />
                 </button>
               </div>
             </div>
-            
+
             <div className="bg-gray-50 px-6 py-3 flex flex-row-reverse gap-3">
-                {options.type === 'confirm' && (
-                    <Button
-                        onClick={() => handleClose(true)}
-                        variant="primary"
-                        size="md"
-                    >
-                        {options.confirmText ?? 'Confirm'}
-                    </Button>
-                )}
-                 <Button
-                    onClick={() => handleClose(false)}
-                    variant="secondary"
-                    size="md"
+              {options.type === 'confirm' && (
+                <Button
+                  onClick={() => handleClose(true)}
+                  variant="primary"
+                  size="md"
                 >
-                    {options.cancelText ?? (options.type === 'confirm' ? 'Cancel' : 'Close')}
+                  {options.confirmText ?? 'Confirm'}
                 </Button>
+              )}
+              <Button
+                onClick={() => handleClose(false)}
+                variant="secondary"
+                size="md"
+              >
+                {options.cancelText ??
+                  (options.type === 'confirm' ? 'Cancel' : 'Close')}
+              </Button>
             </div>
           </motion.div>
         </motion.div>

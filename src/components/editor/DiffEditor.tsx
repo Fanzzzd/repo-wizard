@@ -1,26 +1,26 @@
-import { DiffEditor as MonacoDiffEditor } from "@monaco-editor/react";
-import { useWorkspaceStore } from "../../store/workspaceStore";
-import { useReviewStore } from "../../store/reviewStore";
-import { useEffect, useState } from "react";
-import { readFileContent } from "../../services/tauriApi";
-import { getLanguageForFilePath } from "../../lib/language_service";
-import { showErrorDialog } from "../../lib/errorHandler";
+import { DiffEditor as MonacoDiffEditor } from '@monaco-editor/react';
+import { useWorkspaceStore } from '../../store/workspaceStore';
+import { useReviewStore } from '../../store/reviewStore';
+import { useEffect, useState } from 'react';
+import { readFileContent } from '../../services/tauriApi';
+import { getLanguageForFilePath } from '../../lib/language_service';
+import { showErrorDialog } from '../../lib/errorHandler';
 
 export function DiffEditor() {
   const { rootPath } = useWorkspaceStore();
   const { changes, activeChangeId } = useReviewStore();
 
-  const [originalContent, setOriginalContent] = useState("");
-  const [modifiedContent, setModifiedContent] = useState("");
+  const [originalContent, setOriginalContent] = useState('');
+  const [modifiedContent, setModifiedContent] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [language, setLanguage] = useState<string | undefined>(undefined);
 
-  const activeChange = changes.find((c) => c.id === activeChangeId);
+  const activeChange = changes.find(c => c.id === activeChangeId);
 
   useEffect(() => {
     setMessage(null);
-    setOriginalContent("");
-    setModifiedContent("");
+    setOriginalContent('');
+    setModifiedContent('');
     setLanguage(undefined);
 
     if (!activeChange || !rootPath) return;
@@ -29,12 +29,12 @@ export function DiffEditor() {
 
     let filePathForLanguage: string | undefined;
     switch (operation.type) {
-      case "modify":
-      case "rewrite":
-      case "delete":
+      case 'modify':
+      case 'rewrite':
+      case 'delete':
         filePathForLanguage = operation.filePath;
         break;
-      case "move":
+      case 'move':
         filePathForLanguage = operation.toPath;
         break;
     }
@@ -45,22 +45,24 @@ export function DiffEditor() {
 
     if (operation.type === 'delete' || operation.type === 'move') {
       let msg = `This change is a ${operation.type} operation.`;
-      if(operation.type === 'delete') msg += `\nFile to be deleted: ${operation.filePath}`;
-      if(operation.type === 'move') msg += `\nMoving from: ${operation.fromPath}\nMoving to: ${operation.toPath}`;
+      if (operation.type === 'delete')
+        msg += `\nFile to be deleted: ${operation.filePath}`;
+      if (operation.type === 'move')
+        msg += `\nMoving from: ${operation.fromPath}\nMoving to: ${operation.toPath}`;
       setMessage(msg);
       return;
     }
-    
+
     const absolutePath = `${rootPath}/${operation.filePath}`;
-    
+
     setModifiedContent(operation.content);
 
     if (operation.isNewFile) {
-      setOriginalContent("");
+      setOriginalContent('');
     } else {
-       readFileContent(absolutePath)
+      readFileContent(absolutePath)
         .then(setOriginalContent)
-        .catch((err) => {
+        .catch(err => {
           showErrorDialog(err);
           const errorMessage = `// Could not load file: ${absolutePath}`;
           setOriginalContent(errorMessage);
@@ -77,7 +79,7 @@ export function DiffEditor() {
   }
 
   if (message) {
-     return (
+    return (
       <div className="flex items-center justify-center h-full text-gray-400 p-4 whitespace-pre-wrap">
         {message}
       </div>
@@ -97,7 +99,7 @@ export function DiffEditor() {
         minimap: { enabled: false },
         renderSideBySideInlineBreakpoint: 200,
         showUnused: false,
-        diffAlgorithm: "advanced"
+        diffAlgorithm: 'advanced',
       }}
     />
   );

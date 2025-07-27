@@ -17,14 +17,8 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
-            app.emit(
-                "single-instance",
-                SingleInstancePayload {
-                    args: argv,
-                    cwd,
-                },
-            )
-            .unwrap();
+            app.emit("single-instance", SingleInstancePayload { args: argv, cwd })
+                .unwrap();
         }))
         .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_os::init())
@@ -73,7 +67,8 @@ pub fn run() {
             commands::get_cli_status,
             commands::install_cli_shim,
             commands::start_watching,
-            commands::stop_watching
+            commands::stop_watching,
+            commands::search_files
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

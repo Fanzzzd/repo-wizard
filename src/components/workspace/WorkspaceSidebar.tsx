@@ -1,11 +1,7 @@
-import {
-  Panel,
-  PanelGroup,
-  PanelResizeHandle,
-} from "react-resizable-panels";
-import { FileTree } from "./FileTree";
-import { SelectedFilesPanel } from "./SelectedFilesPanel";
-import { useWorkspaceStore } from "../../store/workspaceStore";
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { FileTree } from './FileTree';
+import { SelectedFilesPanel } from './SelectedFilesPanel';
+import { useWorkspaceStore } from '../../store/workspaceStore';
 
 export function WorkspaceSidebar() {
   const { rootPath } = useWorkspaceStore();

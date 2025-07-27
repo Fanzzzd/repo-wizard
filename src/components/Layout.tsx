@@ -3,9 +3,9 @@ import {
   PanelGroup,
   PanelResizeHandle,
   type ImperativePanelHandle,
-} from "react-resizable-panels";
-import { useReviewStore } from "../store/reviewStore";
-import { useRef, useEffect } from "react";
+} from 'react-resizable-panels';
+import { useReviewStore } from '../store/reviewStore';
+import { useRef, useEffect } from 'react';
 
 interface LayoutProps {
   leftPanel: React.ReactNode;
@@ -41,11 +41,16 @@ export function Layout({ leftPanel, mainPanel, rightPanel }: LayoutProps) {
       <Panel minSize={40}>{mainPanel}</Panel>
       <PanelResizeHandle
         className={`w-px bg-gray-200 hover:bg-blue-500 transition-colors data-[resize-handle-state=drag]:bg-blue-500 ${
-          isReviewing ? "hidden" : ""
+          isReviewing ? 'hidden' : ''
         }`}
       />
-      <Panel ref={rightPanelRef} defaultSize={30} minSize={20} collapsible={true}>
-        <div className={isReviewing ? "hidden" : "h-full flex flex-col"}>
+      <Panel
+        ref={rightPanelRef}
+        defaultSize={30}
+        minSize={20}
+        collapsible={true}
+      >
+        <div className={isReviewing ? 'hidden' : 'h-full flex flex-col'}>
           {rightPanel}
         </div>
       </Panel>
