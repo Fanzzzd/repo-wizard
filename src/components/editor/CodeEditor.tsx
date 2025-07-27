@@ -31,13 +31,15 @@ export function CodeEditor({ forceShowPath }: { forceShowPath?: string }) {
   }
 
   return (
-    <Editor
-      height="100%"
-      path={pathToShow}
-      value={content}
-      language={getLanguageForFilePath(pathToShow)}
-      theme="vs"
-      options={{ readOnly: true, automaticLayout: true }}
-    />
+    <div className="h-full w-full select-text">
+      <Editor
+        height="100%"
+        path={pathToShow}
+        value={content}
+        language={getLanguageForFilePath(pathToShow)}
+        theme="vs"
+        options={{ readOnly: true, automaticLayout: true }}
+      />
+    </div>
   );
 }

@@ -80,27 +80,29 @@ export function DiffEditor() {
 
   if (message) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400 p-4 whitespace-pre-wrap">
+      <div className="flex items-center justify-center h-full text-gray-400 p-4 whitespace-pre-wrap select-text">
         {message}
       </div>
     );
   }
 
   return (
-    <MonacoDiffEditor
-      height="100%"
-      language={language}
-      original={originalContent}
-      modified={modifiedContent}
-      theme="vs"
-      options={{
-        readOnly: true,
-        renderSideBySide: true,
-        minimap: { enabled: false },
-        renderSideBySideInlineBreakpoint: 200,
-        showUnused: false,
-        diffAlgorithm: 'advanced',
-      }}
-    />
+    <div className="h-full w-full select-text">
+      <MonacoDiffEditor
+        height="100%"
+        language={language}
+        original={originalContent}
+        modified={modifiedContent}
+        theme="vs"
+        options={{
+          readOnly: true,
+          renderSideBySide: true,
+          minimap: { enabled: false },
+          renderSideBySideInlineBreakpoint: 200,
+          showUnused: false,
+          diffAlgorithm: 'advanced',
+        }}
+      />
+    </div>
   );
 }

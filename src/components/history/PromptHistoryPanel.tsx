@@ -140,7 +140,7 @@ export function PromptHistoryPanel() {
                     </p>
                     <p
                       onClick={() => handleOpenDetailModal(entry)}
-                      className="text-sm text-gray-700 whitespace-pre-wrap font-mono bg-gray-50 p-2 rounded-md mb-3 cursor-pointer hover:bg-gray-100"
+                      className="text-sm text-gray-700 whitespace-pre-wrap font-mono bg-gray-50 p-2 rounded-md mb-3 cursor-pointer hover:bg-gray-100 select-text"
                       title="Click to view/edit full prompt"
                     >
                       {instructionPreview(entry.instructions)}

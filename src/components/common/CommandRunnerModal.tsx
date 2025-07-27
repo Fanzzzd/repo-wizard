@@ -185,7 +185,7 @@ export function CommandRunnerModal() {
             </header>
             <div
               ref={termContainerRef}
-              className="flex-grow p-2"
+              className="flex-grow p-2 select-text"
               style={{
                 backgroundColor: '#1f2937',
               }}

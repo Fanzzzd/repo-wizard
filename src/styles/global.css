@@ -1,8 +1,14 @@
 @import 'tailwindcss';
 
+@layer base {
+  body {
+    @apply select-none;
+  }
+}
+
 @layer components {
   .form-input-base {
-    @apply w-full p-2 text-sm text-gray-900 placeholder-gray-400 bg-white rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors;
+    @apply w-full p-2 text-sm text-gray-900 placeholder-gray-400 bg-white rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors select-text;
   }
 }
 
@@ -35,7 +41,6 @@ body {
   min-width: 320px;
 }
 
-/* Thin scrollbar utility */
 .thin-scrollbar::-webkit-scrollbar {
   height: 6px;
   width: 6px;
@@ -51,11 +56,10 @@ body {
   background-color: theme('colors.gray.400');
 }
 
-/* Hide scrollbar utility */
 .hide-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 .hide-scrollbar::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
+  display: none;
 }

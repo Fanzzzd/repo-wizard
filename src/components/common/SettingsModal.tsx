@@ -209,7 +209,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   ))}
                 </div>
               </div>
-              <div className="w-2/3 p-6 overflow-y-auto thin-scrollbar">
+              <div className="w-2/3 p-6 overflow-y-auto thin-scrollbar select-text">
                 {activeCategory === 'general' && (
                   <div className="space-y-4">
                     <h3 className="text-base font-semibold text-gray-800">

@@ -50,7 +50,7 @@ export function ModalDialog() {
                   <h3 className="text-lg font-bold text-gray-900">
                     {options.title}
                   </h3>
-                  <div className="mt-2 text-sm text-gray-600">
+                  <div className="mt-2 text-sm text-gray-600 select-text">
                     {typeof options.content === 'string' ? (
                       <p>{options.content}</p>
                     ) : (
