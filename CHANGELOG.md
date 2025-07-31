@@ -1,3 +1,16 @@
+# [1.8.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.7.0...app-v1.8.0-next.1) (2025-07-31)
+
+
+### Bug Fixes
+
+* **cli:** detach from terminal when launching from cli shim ([ef834b1](https://github.com/Fanzzzd/repo-wizard/commit/ef834b1c9e0b27e397e23aee4906129623942c1b))
+* **HorizontalScroller:** add horizontal scrolling support with wheel event handling ([25890d0](https://github.com/Fanzzzd/repo-wizard/commit/25890d001a929216d7310403336e852cc25fb61f))
+
+
+### Features
+
+* **ui:** make text unselectable by default ([7cbe6eb](https://github.com/Fanzzzd/repo-wizard/commit/7cbe6ebff4acc7d67df723c8d1b4c551d9c67970))
+
 # [1.7.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.1...app-v1.7.0) (2025-07-27)
 
 
