@@ -148,14 +148,14 @@ pub async fn install_cli_shim() -> Result<CliInstallResult> {
     #[cfg(windows)]
     let script_content = format!(
         r#"@echo off
-"{}" %*"#,
+start "" "{}" %*"#,
         exe_path_str
     );
 
     #[cfg(unix)]
     let script_content = format!(
         r#"#!/bin/sh
-exec "{}" "$@""#,
+"{}" "$@" >/dev/null 2>&1 &"#,
         exe_path_str
     );
 
