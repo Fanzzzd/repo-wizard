@@ -148,15 +148,13 @@ pub async fn install_cli_shim() -> Result<CliInstallResult> {
     #[cfg(windows)]
     let script_content = format!(
         r#"@echo off
-start "" "{}" %*"#,
-        exe_path_str
+start "" "{exe_path_str}" %*"#
     );
 
     #[cfg(unix)]
     let script_content = format!(
         r#"#!/bin/sh
-"{}" "$@" >/dev/null 2>&1 &"#,
-        exe_path_str
+"{exe_path_str}" "$@" >/dev/null 2>&1 &"#
     );
 
     fs::write(&shim_path, &script_content).await?;

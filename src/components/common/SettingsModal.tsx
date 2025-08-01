@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useDialogStore } from '../../store/dialogStore';
 import { AnimatePresence, motion } from 'motion/react';
@@ -108,9 +108,6 @@ function CliSettings() {
 
   return (
     <div>
-      <h3 className="text-base font-semibold text-gray-800 mb-4">
-        Command Line Tool
-      </h3>
       <div className="flex items-center gap-2">{renderStatus()}</div>
       <p className="text-xs text-gray-500 mt-2">
         Install the `repowizard` command to open projects from your terminal.
@@ -121,6 +118,9 @@ function CliSettings() {
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeCategory, setActiveCategory] = useState('general');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+  const isScrollingToSection = useRef(false);
 
   const {
     respectGitignore,
@@ -139,18 +139,93 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setShowPasteResponseArea,
   } = useSettingsStore();
 
-  const categories = [
-    { id: 'general', label: 'General', icon: Settings },
-    { id: 'fileTree', label: 'File Tree', icon: FolderTree },
-    { id: 'prompting', label: 'Prompting', icon: MessageSquare },
-    { id: 'cli', label: 'Command Line', icon: Terminal },
-  ];
+  const categories = useMemo(
+    () => [
+      { id: 'general', label: 'General', icon: Settings },
+      { id: 'fileTree', label: 'File Tree', icon: FolderTree },
+      { id: 'prompting', label: 'Prompting & Review', icon: MessageSquare },
+      { id: 'cli', label: 'Command Line', icon: Terminal },
+    ],
+    []
+  );
+
+  const handleCategoryClick = (id: string) => {
+    const element = sectionRefs.current[id];
+    const container = scrollContainerRef.current;
+    if (element && container) {
+      isScrollingToSection.current = true;
+      setActiveCategory(id);
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+
+      const offset = elementRect.top - containerRect.top;
+      const topPadding = 18; // Corresponds to p-6 styling
+      const desiredScrollTop = container.scrollTop + offset - topPadding;
+
+      container.scrollTo({
+        top: desiredScrollTop,
+        behavior: 'smooth',
+      });
+      setTimeout(() => {
+        isScrollingToSection.current = false;
+      }, 1000);
+    }
+  };
 
   useEffect(() => {
-    if (isOpen) {
-      setActiveCategory('general');
-    }
-  }, [isOpen]);
+    if (!isOpen) return;
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const intersectingStatus = new Map<string, boolean>();
+    categories.forEach(c => intersectingStatus.set(c.id, false));
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (isScrollingToSection.current) return;
+
+        entries.forEach(entry => {
+          intersectingStatus.set(entry.target.id, entry.isIntersecting);
+        });
+
+        const { scrollTop, scrollHeight, clientHeight } = container;
+        if (scrollHeight - scrollTop - clientHeight < 1) {
+          setActiveCategory(categories[categories.length - 1].id);
+          return;
+        }
+
+        let topEntry: { id: string; top: number } | null = null;
+        for (const cat of categories) {
+          if (intersectingStatus.get(cat.id)) {
+            const el = sectionRefs.current[cat.id];
+            if (el) {
+              const rect = el.getBoundingClientRect();
+              if (topEntry === null || rect.top < topEntry.top) {
+                topEntry = { id: cat.id, top: rect.top };
+              }
+            }
+          }
+        }
+
+        if (topEntry) {
+          setActiveCategory(topEntry.id);
+        }
+      },
+      {
+        root: container,
+        rootMargin: '0px 0px -80% 0px',
+        threshold: 0,
+      }
+    );
+
+    categories.forEach(cat => {
+      const el = sectionRefs.current[cat.id];
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [isOpen, categories]);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -197,7 +272,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   {categories.map(cat => (
                     <button
                       key={cat.id}
-                      onClick={() => setActiveCategory(cat.id)}
+                      onClick={() => handleCategoryClick(cat.id)}
                       className={`w-full flex items-center gap-3 p-2 text-sm rounded-md text-left transition-colors ${
                         activeCategory === cat.id
                           ? 'bg-blue-100 text-blue-800 font-semibold'
@@ -217,120 +292,177 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   ))}
                 </div>
               </div>
-              <div className="w-2/3 p-6 overflow-y-auto thin-scrollbar select-text">
-                {activeCategory === 'general' && (
-                  <div className="space-y-4">
-                    <h3 className="text-base font-semibold text-gray-800">
-                      General
-                    </h3>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Prompt History Limit
-                      </label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="200"
-                        className="w-24"
-                        value={promptHistoryLimit}
-                        onChange={e => {
-                          const value = parseInt(e.target.value, 10);
-                          if (!isNaN(value)) {
-                            setPromptHistoryLimit(Math.max(1, value));
-                          }
-                        }}
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Max prompts to keep per project (1-200).
+              <div
+                ref={scrollContainerRef}
+                className="w-2/3 p-6 bg-gray-100 overflow-y-auto thin-scrollbar"
+              >
+                <div className="max-w-3xl mx-auto space-y-6">
+                  <section
+                    id="general"
+                    ref={el => (sectionRefs.current['general'] = el)}
+                    className="bg-white rounded-lg shadow-sm border border-gray-200"
+                  >
+                    <div className="p-6 border-b border-gray-200">
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-3">
+                        <Settings size={20} /> General
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Configure core application behavior and preferences.
                       </p>
                     </div>
-                  </div>
-                )}
-
-                {activeCategory === 'fileTree' && (
-                  <div className="space-y-4">
-                    <h3 className="text-base font-semibold text-gray-800">
-                      File Tree
-                    </h3>
-                    <Checkbox
-                      checked={respectGitignore}
-                      onChange={e => setRespectGitignore(e.target.checked)}
-                    >
-                      Respect .gitignore
-                    </Checkbox>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Custom Ignore Patterns
-                      </label>
-                      <Textarea
-                        rows={6}
-                        className="text-xs"
-                        placeholder={
-                          '# .gitignore syntax\nnode_modules\ndist/\n*.log'
-                        }
-                        value={customIgnorePatterns}
-                        onChange={e => setCustomIgnorePatterns(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {activeCategory === 'prompting' && (
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-base font-semibold text-gray-800 mb-2">
-                        Review Workflow
-                      </h3>
-                      <div className="space-y-2 pl-2 border-l-2 border-gray-200">
-                        <Checkbox
-                          checked={autoReviewOnPaste}
-                          onChange={e => setAutoReviewOnPaste(e.target.checked)}
-                        >
-                          Auto-start review on paste
-                        </Checkbox>
-                        <Checkbox
-                          checked={enableClipboardReview}
-                          onChange={e =>
-                            setEnableClipboardReview(e.target.checked)
-                          }
-                          disabled={!clipboardReviewIsDisablable}
-                          title={
-                            !clipboardReviewIsDisablable ? disableReason : ''
-                          }
-                        >
-                          Show "Review from Clipboard" button
-                        </Checkbox>
-                        <Checkbox
-                          checked={showPasteResponseArea}
-                          onChange={e =>
-                            setShowPasteResponseArea(e.target.checked)
-                          }
-                          disabled={!pasteAreaIsDisablable}
-                          title={!pasteAreaIsDisablable ? disableReason : ''}
-                        >
-                          Show manual paste area for responses
-                        </Checkbox>
+                    <div className="p-6 space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Prompt History Limit
+                        </label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="200"
+                          className="w-24"
+                          value={promptHistoryLimit}
+                          onChange={e => {
+                            const value = parseInt(e.target.value, 10);
+                            if (!isNaN(value)) {
+                              setPromptHistoryLimit(Math.max(1, value));
+                            }
+                          }}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Max prompts to keep per project (1-200).
+                        </p>
                       </div>
                     </div>
-                    <div>
-                      <h3 className="text-base font-semibold text-gray-800 mb-2">
-                        Prompt Content
-                      </h3>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Custom System Prompt
-                      </label>
-                      <Textarea
-                        rows={12}
-                        className="text-xs"
-                        placeholder="Enter your custom system prompt..."
-                        value={customSystemPrompt}
-                        onChange={e => setCustomSystemPrompt(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
+                  </section>
 
-                {activeCategory === 'cli' && <CliSettings />}
+                  <section
+                    id="fileTree"
+                    ref={el => (sectionRefs.current['fileTree'] = el)}
+                    className="bg-white rounded-lg shadow-sm border border-gray-200"
+                  >
+                    <div className="p-6 border-b border-gray-200">
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-3">
+                        <FolderTree size={20} /> File Tree
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Customize how files and directories are displayed and
+                        ignored.
+                      </p>
+                    </div>
+                    <div className="p-6 space-y-6">
+                      <Checkbox
+                        checked={respectGitignore}
+                        onChange={e => setRespectGitignore(e.target.checked)}
+                      >
+                        Respect .gitignore
+                      </Checkbox>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Custom Ignore Patterns
+                        </label>
+                        <Textarea
+                          rows={6}
+                          className="text-xs"
+                          placeholder={
+                            '# .gitignore syntax\nnode_modules\ndist/\n*.log'
+                          }
+                          value={customIgnorePatterns}
+                          onChange={e =>
+                            setCustomIgnorePatterns(e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                  </section>
+
+                  <section
+                    id="prompting"
+                    ref={el => (sectionRefs.current['prompting'] = el)}
+                    className="bg-white rounded-lg shadow-sm border border-gray-200"
+                  >
+                    <div className="p-6 border-b border-gray-200">
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-3">
+                        <MessageSquare size={20} /> Prompting & Review
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Control how prompts are generated and how AI responses
+                        are handled.
+                      </p>
+                    </div>
+                    <div className="p-6 space-y-8">
+                      <div>
+                        <h4 className="text-base font-semibold text-gray-800 mb-3">
+                          Review Workflow
+                        </h4>
+                        <div className="space-y-3 pl-2">
+                          <Checkbox
+                            checked={autoReviewOnPaste}
+                            onChange={e =>
+                              setAutoReviewOnPaste(e.target.checked)
+                            }
+                          >
+                            Auto-start review on paste
+                          </Checkbox>
+                          <Checkbox
+                            checked={enableClipboardReview}
+                            onChange={e =>
+                              setEnableClipboardReview(e.target.checked)
+                            }
+                            disabled={!clipboardReviewIsDisablable}
+                            title={
+                              !clipboardReviewIsDisablable ? disableReason : ''
+                            }
+                          >
+                            Show "Review from Clipboard" button
+                          </Checkbox>
+                          <Checkbox
+                            checked={showPasteResponseArea}
+                            onChange={e =>
+                              setShowPasteResponseArea(e.target.checked)
+                            }
+                            disabled={!pasteAreaIsDisablable}
+                            title={!pasteAreaIsDisablable ? disableReason : ''}
+                          >
+                            Show manual paste area for responses
+                          </Checkbox>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-base font-semibold text-gray-800 mb-3">
+                          Prompt Content
+                        </h4>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Custom System Prompt
+                        </label>
+                        <Textarea
+                          rows={12}
+                          className="text-xs"
+                          placeholder="Enter your custom system prompt..."
+                          value={customSystemPrompt}
+                          onChange={e => setCustomSystemPrompt(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </section>
+
+                  <section
+                    id="cli"
+                    ref={el => (sectionRefs.current.cli = el)}
+                    className="bg-white rounded-lg shadow-sm border border-gray-200"
+                  >
+                    <div className="p-6 border-b border-gray-200">
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-3">
+                        <Terminal size={20} /> Command Line
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Integrate Repo Wizard with your terminal.
+                      </p>
+                    </div>
+                    <div className="p-6">
+                      <CliSettings />
+                    </div>
+                  </section>
+                </div>
               </div>
             </main>
 
