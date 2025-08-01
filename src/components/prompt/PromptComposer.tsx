@@ -6,6 +6,8 @@ import { useReviewStore } from '../../store/reviewStore';
 import { usePromptGenerator } from '../../hooks/usePromptGenerator';
 import { useReviewSession } from '../../hooks/useReviewSession';
 import { useUndo } from '../../hooks/useUndo';
+import { readText } from '@tauri-apps/plugin-clipboard-manager';
+import { showErrorDialog } from '../../lib/errorHandler';
 import {
   Clipboard,
   Check,
@@ -13,6 +15,7 @@ import {
   History,
   FileSearch2,
   RefreshCw,
+  ClipboardCheck,
 } from 'lucide-react';
 import type { ComposerMode, EditFormat } from '../../types';
 import { MetaPromptsManagerModal } from './MetaPromptsManagerModal';
@@ -21,6 +24,7 @@ import { Button } from '../common/Button';
 import { Textarea } from '../common/Textarea';
 import { MetaPromptSelector } from './MetaPromptSelector';
 import { SegmentedControl } from '../common/SegmentedControl';
+import { ResponsiveButtonGroup } from '../common/ResponsiveButtonGroup';
 
 const editFormatOptions: { value: EditFormat; label: string }[] = [
   { value: 'whole', label: 'Whole File' },
@@ -40,14 +44,22 @@ export function PromptComposer() {
     setMarkdownResponse: setStoreMarkdownResponse,
     composerMode,
     setComposerMode,
+    markMarkdownAsProcessed,
   } = useComposerStore();
   const { selectedFilePaths } = useWorkspaceStore();
-  const { clearReviewSession } = useReviewStore();
+  const { clearReviewSession, startReview: startReviewInStore } =
+    useReviewStore();
 
   const [isMetaPromptsManagerOpen, setIsMetaPromptsManagerOpen] =
     useState(false);
 
-  const { editFormat, setEditFormat, autoReviewOnPaste } = useSettingsStore();
+  const {
+    editFormat,
+    setEditFormat,
+    autoReviewOnPaste,
+    enableClipboardReview,
+    showPasteResponseArea,
+  } = useSettingsStore();
 
   const { estimatedTokens, generateAndCopyPrompt, isCopied, isGenerating } =
     usePromptGenerator();
@@ -78,14 +90,12 @@ export function PromptComposer() {
     },
   ] = useUndo(storeMarkdownResponse);
 
-  // Sync local -> global
   useEffect(() => {
     if (storeInstructions !== instructions) {
       setStoreInstructions(instructions);
     }
   }, [instructions, storeInstructions, setStoreInstructions]);
 
-  // Sync global -> local
   useEffect(() => {
     if (storeInstructions !== instructions) {
       resetInstructions(storeInstructions);
@@ -93,20 +103,31 @@ export function PromptComposer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeInstructions]);
 
-  // Sync local -> global
   useEffect(() => {
     if (storeMarkdownResponse !== markdownResponse) {
       setStoreMarkdownResponse(markdownResponse);
     }
   }, [markdownResponse, storeMarkdownResponse, setStoreMarkdownResponse]);
 
-  // Sync global -> local
   useEffect(() => {
     if (storeMarkdownResponse !== markdownResponse) {
       resetMarkdownResponse(storeMarkdownResponse);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeMarkdownResponse]);
+
+  const handlePasteAndReview = async () => {
+    try {
+      const clipboardText = await readText();
+      if (clipboardText?.trim()) {
+        setMarkdownResponse(clipboardText);
+        await startReviewInStore(clipboardText);
+        markMarkdownAsProcessed();
+      }
+    } catch (e) {
+      showErrorDialog(e);
+    }
+  };
 
   const responsePlaceholder =
     composerMode === 'edit' && autoReviewOnPaste
@@ -118,48 +139,114 @@ export function PromptComposer() {
     clearReviewSession();
   };
 
-  const renderReviewButton = () => {
+  const renderReviewButton = (
+    size: 'sm' | 'md' = 'md',
+    isFlex: boolean = true
+  ) => {
+    const flexClass = isFlex ? 'flex-1' : '';
+    const iconSize = size === 'sm' ? 14 : 16;
+
+    let props: {
+      onClick: () => void;
+      className: string;
+      title: string;
+      leftIcon: React.ReactNode;
+      children: string;
+      disabled?: boolean;
+    };
+
     if (hasUnprocessedResponse) {
-      return (
-        <Button
-          onClick={startReview}
-          size="sm"
-          variant="ghost"
-          className="bg-green-100 text-green-800 hover:bg-green-200"
-          title="Start review"
-          leftIcon={<FileSearch2 size={14} />}
-        >
-          Review
-        </Button>
-      );
+      props = {
+        onClick: startReview,
+        className: 'bg-green-100 text-green-800 hover:bg-green-200',
+        title: 'Start review',
+        leftIcon: <FileSearch2 size={iconSize} />,
+        children: 'Review',
+      };
+    } else if (canReenterReview) {
+      props = {
+        onClick: reenterReview,
+        className: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
+        title: 'Go back to last review',
+        leftIcon: <History size={iconSize} />,
+        children: 'Review',
+      };
+    } else {
+      props = {
+        onClick: startReview,
+        className: 'bg-gray-200 text-gray-800',
+        title: 'Start a new review',
+        leftIcon: <FileSearch2 size={iconSize} />,
+        children: 'Review',
+        disabled: !markdownResponse.trim(),
+      };
     }
-    if (canReenterReview) {
-      return (
-        <Button
-          onClick={reenterReview}
-          size="sm"
-          variant="ghost"
-          className="bg-blue-100 text-blue-800 hover:bg-blue-200"
-          title="Go back to last review"
-          leftIcon={<History size={14} />}
-        >
-          Review
-        </Button>
-      );
-    }
+
     return (
       <Button
-        onClick={startReview}
-        disabled={!markdownResponse.trim()}
-        size="sm"
+        onClick={props.onClick}
+        size={size}
         variant="ghost"
-        className="bg-gray-200 text-gray-800"
-        title="Start a new review"
-        leftIcon={<FileSearch2 size={14} />}
+        className={`${flexClass} ${props.className}`}
+        title={props.title}
+        leftIcon={props.leftIcon}
+        disabled={props.disabled}
       >
-        Review
+        {props.children}
       </Button>
     );
+  };
+
+  const getReviewButtonProps = () => {
+    const iconSize = 16;
+    let props: {
+      onClick: () => void;
+      className: string;
+      title: string;
+      icon: React.ReactNode;
+      text: string;
+      disabled?: boolean;
+    };
+
+    if (hasUnprocessedResponse) {
+      props = {
+        onClick: startReview,
+        className: 'bg-green-100 text-green-800 hover:bg-green-200',
+        title: 'Start review',
+        icon: <FileSearch2 size={iconSize} />,
+        text: 'Review',
+      };
+    } else if (canReenterReview) {
+      props = {
+        onClick: reenterReview,
+        className: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
+        title: 'Go back to last review',
+        icon: <History size={iconSize} />,
+        text: 'Review',
+      };
+    } else {
+      props = {
+        onClick: startReview,
+        className: 'bg-gray-200 text-gray-800',
+        title: 'Start a new review',
+        icon: <FileSearch2 size={iconSize} />,
+        text: 'Review',
+        disabled: !markdownResponse.trim(),
+      };
+    }
+
+    const { text, icon, ...rest } = props;
+    return { text, icon, ...rest, variant: 'ghost' as const };
+  };
+
+  const reviewButtonProps = getReviewButtonProps();
+  const pasteButtonProps = {
+    onClick: handlePasteAndReview,
+    variant: 'ghost' as const,
+    className: 'text-purple-700 bg-purple-100 hover:bg-purple-200',
+    icon: <ClipboardCheck size={16} />,
+    text: 'From Clipboard',
+    title: 'Paste from clipboard and start review',
   };
 
   const renderGenerateButtonContent = () => {
@@ -176,6 +263,8 @@ export function PromptComposer() {
   };
   const { icon: generateIcon, text: generateText } =
     renderGenerateButtonContent();
+
+  const shouldShowReviewSection = composerMode === 'edit';
 
   return (
     <div className="p-4 flex flex-col h-full bg-gray-50 text-gray-800 overflow-y-auto">
@@ -270,20 +359,73 @@ export function PromptComposer() {
         </Button>
       </div>
 
-      {composerMode === 'edit' && (
-        <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="font-bold">Paste Response & Review</h2>
-            {renderReviewButton()}
-          </div>
-          <Textarea
-            className="h-24 mb-2"
-            placeholder={responsePlaceholder}
-            value={markdownResponse}
-            onChange={handleResponseChange}
-            onUndo={undoMarkdownResponse}
-            onRedo={redoMarkdownResponse}
-          />
+      {shouldShowReviewSection && (
+        <div
+          className={`flex flex-col space-y-2 ${
+            showPasteResponseArea
+              ? 'mt-4 pt-4 border-t border-gray-200'
+              : 'mt-4'
+          }`}
+        >
+          {showPasteResponseArea ? (
+            <>
+              {enableClipboardReview ? (
+                <>
+                  <h2 className="font-bold">Review Response</h2>
+                  <Textarea
+                    className="h-24"
+                    placeholder={responsePlaceholder}
+                    value={markdownResponse}
+                    onChange={handleResponseChange}
+                    onUndo={undoMarkdownResponse}
+                    onRedo={redoMarkdownResponse}
+                  />
+                  <ResponsiveButtonGroup
+                    button1={pasteButtonProps}
+                    button2={reviewButtonProps}
+                  />
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <h2 className="font-bold">Review Response</h2>
+                    {renderReviewButton('sm', false)}
+                  </div>
+                  <Textarea
+                    className="h-24"
+                    placeholder={responsePlaceholder}
+                    value={markdownResponse}
+                    onChange={handleResponseChange}
+                    onUndo={undoMarkdownResponse}
+                    onRedo={redoMarkdownResponse}
+                  />
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <Button
+                onClick={handlePasteAndReview}
+                variant="primary"
+                size="md"
+                className="w-full bg-purple-600 hover:bg-purple-500"
+                leftIcon={<ClipboardCheck size={16} />}
+              >
+                Paste & Review from Clipboard
+              </Button>
+              {canReenterReview && (
+                <Button
+                  onClick={reenterReview}
+                  size="md"
+                  variant="secondary"
+                  className="w-full"
+                  leftIcon={<History size={16} />}
+                >
+                  Re-enter Last Review
+                </Button>
+              )}
+            </>
+          )}
         </div>
       )}
       <MetaPromptsManagerModal

@@ -26,7 +26,7 @@ pub async fn open_project_window(app: tauri::AppHandle, root_path: String) -> Re
     }
 
     let root_path_json = serde_json::to_string(&root_path)?;
-    let init_script = format!("window.__RPO_WIZ_PROJECT_ROOT__ = {};", root_path_json);
+    let init_script = format!("window.__RPO_WIZ_PROJECT_ROOT__ = {root_path_json};");
 
     tauri::WebviewWindowBuilder::new(
         &app,

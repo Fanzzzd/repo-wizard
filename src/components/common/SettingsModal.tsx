@@ -128,11 +128,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     autoReviewOnPaste,
     customSystemPrompt,
     promptHistoryLimit,
+    enableClipboardReview,
+    showPasteResponseArea,
     setRespectGitignore,
     setCustomIgnorePatterns,
     setAutoReviewOnPaste,
     setCustomSystemPrompt,
     setPromptHistoryLimit,
+    setEnableClipboardReview,
+    setShowPasteResponseArea,
   } = useSettingsStore();
 
   const categories = [
@@ -153,6 +157,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       onClose();
     }
   };
+
+  const clipboardReviewIsDisablable = showPasteResponseArea;
+  const pasteAreaIsDisablable = enableClipboardReview;
+  const disableReason = 'At least one review input method must be enabled.';
 
   return (
     <AnimatePresence>
@@ -215,12 +223,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     <h3 className="text-base font-semibold text-gray-800">
                       General
                     </h3>
-                    <Checkbox
-                      checked={autoReviewOnPaste}
-                      onChange={e => setAutoReviewOnPaste(e.target.checked)}
-                    >
-                      Auto-review on paste
-                    </Checkbox>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Prompt History Limit
@@ -274,20 +276,57 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 )}
 
                 {activeCategory === 'prompting' && (
-                  <div>
-                    <h3 className="text-base font-semibold text-gray-800 mb-2">
-                      Prompting
-                    </h3>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Custom System Prompt
-                    </label>
-                    <Textarea
-                      rows={12}
-                      className="text-xs"
-                      placeholder="Enter your custom system prompt..."
-                      value={customSystemPrompt}
-                      onChange={e => setCustomSystemPrompt(e.target.value)}
-                    />
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-800 mb-2">
+                        Review Workflow
+                      </h3>
+                      <div className="space-y-2 pl-2 border-l-2 border-gray-200">
+                        <Checkbox
+                          checked={autoReviewOnPaste}
+                          onChange={e => setAutoReviewOnPaste(e.target.checked)}
+                        >
+                          Auto-start review on paste
+                        </Checkbox>
+                        <Checkbox
+                          checked={enableClipboardReview}
+                          onChange={e =>
+                            setEnableClipboardReview(e.target.checked)
+                          }
+                          disabled={!clipboardReviewIsDisablable}
+                          title={
+                            !clipboardReviewIsDisablable ? disableReason : ''
+                          }
+                        >
+                          Show "Review from Clipboard" button
+                        </Checkbox>
+                        <Checkbox
+                          checked={showPasteResponseArea}
+                          onChange={e =>
+                            setShowPasteResponseArea(e.target.checked)
+                          }
+                          disabled={!pasteAreaIsDisablable}
+                          title={!pasteAreaIsDisablable ? disableReason : ''}
+                        >
+                          Show manual paste area for responses
+                        </Checkbox>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-800 mb-2">
+                        Prompt Content
+                      </h3>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Custom System Prompt
+                      </label>
+                      <Textarea
+                        rows={12}
+                        className="text-xs"
+                        placeholder="Enter your custom system prompt..."
+                        value={customSystemPrompt}
+                        onChange={e => setCustomSystemPrompt(e.target.value)}
+                      />
+                    </div>
                   </div>
                 )}
 

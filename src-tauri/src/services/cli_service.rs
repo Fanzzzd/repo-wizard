@@ -52,7 +52,7 @@ async fn add_shim_dir_to_path(shim_dir: &Path) -> Result<()> {
 
     if shell.contains("fish") {
         profile_file_name = PathBuf::from(".config/fish/config.fish");
-        export_line = format!("\nfish_add_path \"{}\"\n", shim_dir_str);
+        export_line = format!("\nfish_add_path \"{shim_dir_str}\"\n");
     } else {
         profile_file_name = if shell.contains("zsh") {
             PathBuf::from(".zshrc")
@@ -61,7 +61,7 @@ async fn add_shim_dir_to_path(shim_dir: &Path) -> Result<()> {
         } else {
             PathBuf::from(".profile")
         };
-        export_line = format!("\nexport PATH=\"{}:$PATH\"\n", shim_dir_str);
+        export_line = format!("\nexport PATH=\"{shim_dir_str}:$PATH\"\n");
     };
 
     let profile_path = home.join(profile_file_name);
