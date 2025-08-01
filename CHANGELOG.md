@@ -1,3 +1,11 @@
+# [1.8.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.8.0-next.1...app-v1.8.0-next.2) (2025-08-01)
+
+
+### Features
+
+* **review:** introduce configurable review workflow UI ([2d1956a](https://github.com/Fanzzzd/repo-wizard/commit/2d1956ab137b93f76e76104b626aafde85ba2d45))
+* **settings:** redesign settings modal with scroll-spy navigation ([2189f01](https://github.com/Fanzzzd/repo-wizard/commit/2189f0101421462486112dd0e266287c29fb7f7f))
+
 # [1.8.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.7.0...app-v1.8.0-next.1) (2025-07-31)
 
 
