@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.7.0...app-v1.8.0) (2025-08-01)
+
+
+### Features
+
+* **review:** add configurable review workflow ([ca8d797](https://github.com/Fanzzzd/repo-wizard/commit/ca8d79775845f4c57d7feb97192191fb68c7cd45))
+
 # [1.7.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.1...app-v1.7.0) (2025-07-27)
 
 
