@@ -87,7 +87,7 @@ pub async fn start_pty_session(
     if let Some(command_to_run) = command {
         sleep(Duration::from_millis(100)).await;
         if let Some(session) = &mut *PTY_SESSION.lock().unwrap() {
-            writeln!(session.writer, "{}", command_to_run)?;
+            writeln!(session.writer, "{command_to_run}")?;
         }
     }
 

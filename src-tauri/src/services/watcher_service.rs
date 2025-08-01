@@ -51,7 +51,7 @@ pub fn start_watching(
                         if let Err(e) = builder.add_custom_ignore_patterns(
                             &event_handler_settings.custom_ignore_patterns,
                         ) {
-                            log::error!("Failed to apply custom ignore patterns: {}", e);
+                            log::error!("Failed to apply custom ignore patterns: {e}");
                         }
                     }
 
@@ -63,7 +63,7 @@ pub fn start_watching(
                 if let Err(e) = event_handler_app_handle
                     .emit("file-change-event", event_handler_path_str.clone())
                 {
-                    log::error!("Failed to emit file-change-event: {}", e);
+                    log::error!("Failed to emit file-change-event: {e}");
                 }
             }
         }

@@ -22,6 +22,8 @@ interface SettingsState {
   autoReviewOnPaste: boolean;
   recentProjects: string[];
   promptHistoryLimit: number;
+  enableClipboardReview: boolean;
+  showPasteResponseArea: boolean;
 
   // Actions
   setRespectGitignore: (value: boolean) => void;
@@ -33,6 +35,8 @@ interface SettingsState {
   addRecentProject: (path: string) => void;
   removeRecentProject: (path: string) => void;
   setPromptHistoryLimit: (limit: number) => void;
+  setEnableClipboardReview: (value: boolean) => void;
+  setShowPasteResponseArea: (value: boolean) => void;
 
   // Internal
   _isInitialized: boolean;
@@ -58,6 +62,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     autoReviewOnPaste: true,
     recentProjects: [] as string[],
     promptHistoryLimit: 50,
+    enableClipboardReview: true,
+    showPasteResponseArea: true,
   };
 
   let saveTimeout: NodeJS.Timeout | null = null;
@@ -109,6 +115,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setMetaPrompts: prompts => set({ metaPrompts: prompts }),
     setAutoReviewOnPaste: value => set({ autoReviewOnPaste: value }),
     setPromptHistoryLimit: limit => set({ promptHistoryLimit: limit }),
+    setEnableClipboardReview: value => set({ enableClipboardReview: value }),
+    setShowPasteResponseArea: value => set({ showPasteResponseArea: value }),
     addRecentProject: path =>
       set(state => {
         const otherProjects = state.recentProjects.filter(p => p !== path);
