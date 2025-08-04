@@ -143,7 +143,7 @@ export function DropdownMenuContent({ children }: PropsWithChildren<{}>) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
           transition={{ duration: 0.15 }}
-          className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-30 p-1"
+          className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-30 p-1"
           style={style}
         >
           {children}
@@ -180,13 +180,13 @@ export function DropdownMenuItem({
       className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-left transition-colors
         ${
           isDanger
-            ? 'text-red-600 hover:bg-red-50'
-            : 'text-gray-700 hover:bg-gray-100'
+            ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10'
+            : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
         }
         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
     >
       {leftIcon && (
-        <div className="w-4 h-4 flex items-center justify-center text-gray-500">
+        <div className="w-4 h-4 flex items-center justify-center text-gray-500 dark:text-gray-400">
           {leftIcon}
         </div>
       )}
@@ -196,12 +196,12 @@ export function DropdownMenuItem({
 }
 
 export function DropdownMenuSeparator() {
-  return <div className="h-px bg-gray-200 my-1 -mx-1" />;
+  return <div className="h-px bg-gray-200 dark:bg-gray-700 my-1 -mx-1" />;
 }
 
 export function DropdownMenuLabel({ children }: PropsWithChildren<{}>) {
   return (
-    <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider select-none">
+    <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider select-none">
       {children}
     </div>
   );
@@ -254,15 +254,15 @@ export function DropdownMenuSubTrigger({
     <button
       disabled={disabled}
       aria-haspopup="menu"
-      className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-left transition-colors text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
+      className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-left transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
     >
       {leftIcon && (
-        <div className="w-4 h-4 flex items-center justify-center text-gray-500">
+        <div className="w-4 h-4 flex items-center justify-center text-gray-500 dark:text-gray-400">
           {leftIcon}
         </div>
       )}
       <span className="flex-grow">{children}</span>
-      <ChevronRight size={16} className="text-gray-500" />
+      <ChevronRight size={16} className="text-gray-500 dark:text-gray-400" />
     </button>
   );
 }
@@ -337,7 +337,7 @@ export function DropdownMenuSubContent({
             scale: 0.98,
           }}
           transition={{ duration: 0.1 }}
-          className="fixed min-w-[220px] w-max origin-left bg-white border border-gray-200 rounded-lg shadow-xl z-40 p-1"
+          className="fixed min-w-[220px] w-max origin-left bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-40 p-1"
           style={style}
         >
           {children}

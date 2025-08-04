@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Store as TauriStore } from '@tauri-apps/plugin-store';
-import type { EditFormat, MetaPromptDefinition } from '../types';
+import type { EditFormat, MetaPromptDefinition, Theme } from '../types';
 
 const SETTINGS_FILE = 'app-settings.json';
 
@@ -14,6 +14,7 @@ If the request is ambiguous, ask questions.
 
 interface SettingsState {
   // Store state
+  theme: Theme;
   respectGitignore: boolean;
   customIgnorePatterns: string;
   customSystemPrompt: string;
@@ -26,6 +27,8 @@ interface SettingsState {
   showPasteResponseArea: boolean;
 
   // Actions
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
   setRespectGitignore: (value: boolean) => void;
   setCustomIgnorePatterns: (value: string) => void;
   setCustomSystemPrompt: (prompt: string) => void;
@@ -54,6 +57,7 @@ const getTauriStore = async (): Promise<TauriStore> => {
 
 export const useSettingsStore = create<SettingsState>((set, get) => {
   const initialState = {
+    theme: 'system' as Theme,
     respectGitignore: true,
     customIgnorePatterns: '.git',
     customSystemPrompt: defaultSystemPrompt,
@@ -108,6 +112,17 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       });
     },
 
+    setTheme: theme => set({ theme }),
+    toggleTheme: () =>
+      set(state => {
+        const newTheme: Theme =
+          state.theme === 'system'
+            ? 'light'
+            : state.theme === 'light'
+            ? 'dark'
+            : 'system';
+        return { theme: newTheme };
+      }),
     setRespectGitignore: value => set({ respectGitignore: value }),
     setCustomIgnorePatterns: value => set({ customIgnorePatterns: value }),
     setCustomSystemPrompt: prompt => set({ customSystemPrompt: prompt }),

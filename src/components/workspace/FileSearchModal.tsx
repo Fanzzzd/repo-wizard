@@ -54,8 +54,8 @@ function SearchResultItem({
       ref={itemRef}
       className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors ${
         isSelected
-          ? 'bg-blue-100 text-blue-900'
-          : 'hover:bg-gray-50 text-gray-700'
+          ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/50 dark:text-blue-100'
+          : 'hover:bg-gray-50 text-gray-700 dark:hover:bg-gray-700 dark:text-gray-300'
       }`}
       onClick={handleClick}
       title={result.relativePath}
@@ -71,8 +71,10 @@ function SearchResultItem({
           <span className="font-medium truncate">{result.name}</span>
           {result.parentDir && (
             <>
-              <span className="text-gray-400 text-sm">in</span>
-              <span className="text-gray-500 text-sm truncate">
+              <span className="text-gray-400 dark:text-gray-500 text-sm">
+                in
+              </span>
+              <span className="text-gray-500 dark:text-gray-400 text-sm truncate">
                 {result.parentDir || '/'}
               </span>
             </>
@@ -85,7 +87,7 @@ function SearchResultItem({
         className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-colors ${
           isFileSelected
             ? 'bg-blue-500 border-blue-500 text-white'
-            : 'border-gray-300 hover:border-blue-400'
+            : 'border-gray-300 hover:border-blue-400 dark:border-gray-500 dark:hover:border-blue-500'
         }`}
         onClick={handleToggleClick}
       >
@@ -205,19 +207,22 @@ export function FileSearchModal() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: -20 }}
           transition={{ duration: 0.15 }}
-          className="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-200"
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-200 dark:border-gray-700"
           onClick={e => e.stopPropagation()}
         >
           {/* Search input */}
-          <div className="flex items-center gap-3 p-4 border-b border-gray-200">
-            <Search size={20} className="text-gray-400" />
+          <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-700">
+            <Search
+              size={20}
+              className="text-gray-400 dark:text-gray-500"
+            />
             <input
               ref={inputRef}
               type="text"
               value={query}
               onChange={handleInputChange}
               placeholder="Search files..."
-              className="flex-grow text-lg bg-transparent outline-none placeholder-gray-400"
+              className="flex-grow text-lg bg-transparent outline-none placeholder-gray-400 dark:placeholder-gray-500 dark:text-gray-100"
             />
             {isSearching && (
               <div className="flex-shrink-0">
@@ -229,13 +234,16 @@ export function FileSearchModal() {
           {/* Results */}
           <div className="max-h-96 overflow-y-auto">
             {query.trim() === '' ? (
-              <div className="p-8 text-center text-gray-500">
-                <File size={48} className="mx-auto mb-4 text-gray-300" />
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                <File
+                  size={48}
+                  className="mx-auto mb-4 text-gray-300 dark:text-gray-600"
+                />
                 <p className="text-lg font-medium">Search for files</p>
                 <p className="text-sm mt-1">
                   Type to search for files in your project
                 </p>
-                <div className="mt-4 text-xs text-gray-400 space-y-1">
+                <div className="mt-4 text-xs text-gray-400 dark:text-gray-500 space-y-1">
                   <div>• ↑↓ to navigate</div>
                   <div>• Enter to select and close</div>
                   <div>• Tab to add to selection</div>
@@ -243,8 +251,11 @@ export function FileSearchModal() {
                 </div>
               </div>
             ) : results.length === 0 && !isSearching ? (
-              <div className="p-8 text-center text-gray-500">
-                <Folder size={48} className="mx-auto mb-4 text-gray-300" />
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                <Folder
+                  size={48}
+                  className="mx-auto mb-4 text-gray-300 dark:text-gray-600"
+                />
                 <p className="text-lg font-medium">No files found</p>
                 <p className="text-sm mt-1">Try adjusting your search query</p>
               </div>
@@ -266,8 +277,8 @@ export function FileSearchModal() {
 
           {/* Footer */}
           {selectedFiles.size > 0 && (
-            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-              <span className="text-sm text-gray-600">
+            <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <span className="text-sm text-gray-600 dark:text-gray-300">
                 {selectedFiles.size} file{selectedFiles.size !== 1 ? 's' : ''}{' '}
                 selected
               </span>

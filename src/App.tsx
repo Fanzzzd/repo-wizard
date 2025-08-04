@@ -10,6 +10,7 @@ import {
 } from '@tauri-apps/api/menu';
 import { platform } from '@tauri-apps/plugin-os';
 import { getMatches } from '@tauri-apps/plugin-cli';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 import { Layout } from './components/Layout';
 import { MainPanel } from './components/MainPanel';
@@ -48,10 +49,52 @@ function App() {
   const { isReviewing } = useReviewStore();
   const { open: openDialog } = useDialogStore();
   const { status, updateInfo, install } = useUpdateStore();
-  const { recentProjects } = useSettingsStore();
+  const { theme, recentProjects } = useSettingsStore();
   const { openModal: openFileSearchModal } = useFileSearchStore();
   const [fontSize, setFontSize] = useState(14);
   const [isInputFocused, setIsInputFocused] = useState(false);
+
+  useEffect(() => {
+    const win = getCurrentWindow();
+
+    const syncTheme = async () => {
+      // This function syncs the native window theme and the webview's HTML class.
+      const selectedTheme = theme;
+
+      // 1. Persist to localStorage for instant FOUC prevention on next load.
+      //    This is read by a script in `index.html`.
+      localStorage.setItem('theme', selectedTheme);
+
+      try {
+        // 2. Set native window theme ('light', 'dark', or null for system).
+        //    This is the key to changing the title bar color.
+        const nativeTheme = selectedTheme === 'system' ? null : selectedTheme;
+        await win.setTheme(nativeTheme);
+
+        // 3. Set the 'dark' class on the <html> element for TailwindCSS.
+        const isDark =
+          selectedTheme === 'dark' ||
+          (selectedTheme === 'system' && (await win.theme()) === 'dark');
+        document.documentElement.classList.toggle('dark', isDark);
+      } catch (e) {
+        console.error('Failed to apply theme:', e);
+      }
+    };
+
+    syncTheme();
+
+    // When the app theme is set to 'system', we need to listen for OS-level
+    // theme changes to keep the webview in sync.
+    const unlistenPromise = win.onThemeChanged(({ payload: osTheme }) => {
+      if (useSettingsStore.getState().theme === 'system') {
+        document.documentElement.classList.toggle('dark', osTheme === 'dark');
+      }
+    });
+
+    return () => {
+      unlistenPromise.then(unlisten => unlisten());
+    };
+  }, [theme]);
 
   useEffect(() => {
     const handleFocusChange = () => {
@@ -360,12 +403,11 @@ function App() {
     []
   );
 
-  // Set up global keyboard shortcuts
   useKeyboardShortcuts(
     [
       {
         key: 'p',
-        metaKey: true, // Cmd on Mac
+        metaKey: true,
         ctrlKey: false,
         action: () => {
           if (rootPath && !isInputFocused) {
@@ -376,7 +418,7 @@ function App() {
       },
       {
         key: 'p',
-        ctrlKey: true, // Ctrl on Windows/Linux
+        ctrlKey: true,
         metaKey: false,
         action: () => {
           if (rootPath && !isInputFocused) {
@@ -387,12 +429,12 @@ function App() {
       },
     ],
     !isInputFocused
-  ); // Only enable when not in input fields
+  );
 
   const leftPanel = isReviewing ? <ChangeList /> : <WorkspaceSidebar />;
 
   return (
-    <div className="h-full w-full flex flex-col bg-gray-50">
+    <div className="h-full w-full flex flex-col">
       <Header />
       <div className="flex-grow min-h-0">
         <Layout

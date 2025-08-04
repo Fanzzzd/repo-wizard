@@ -18,7 +18,12 @@ import {
   Settings,
   FolderTree,
   MessageSquare,
+  Palette,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react';
+import { SegmentedControl } from './SegmentedControl';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -77,7 +82,7 @@ function CliSettings() {
         );
       case 'installed':
         return (
-          <div className="flex items-center gap-2 text-sm text-green-700 p-2 bg-green-50 rounded-md">
+          <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-300 p-2 bg-green-50 dark:bg-green-500/10 rounded-md">
             <BadgeCheck size={16} />
             <span className="font-medium">CLI is installed.</span>
           </div>
@@ -96,7 +101,7 @@ function CliSettings() {
       case 'error':
         return (
           <div
-            className="flex items-center gap-2 text-sm text-red-700 p-2 bg-red-50 rounded-md"
+            className="flex items-center gap-2 text-sm text-red-700 dark:text-red-300 p-2 bg-red-50 dark:bg-red-500/10 rounded-md"
             title={cliStatus.error}
           >
             <AlertTriangle size={16} />
@@ -109,7 +114,7 @@ function CliSettings() {
   return (
     <div>
       <div className="flex items-center gap-2">{renderStatus()}</div>
-      <p className="text-xs text-gray-500 mt-2">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
         Install the `repowizard` command to open projects from your terminal.
       </p>
     </div>
@@ -130,6 +135,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     promptHistoryLimit,
     enableClipboardReview,
     showPasteResponseArea,
+    theme,
+    setTheme,
     setRespectGitignore,
     setCustomIgnorePatterns,
     setAutoReviewOnPaste,
@@ -142,9 +149,40 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const categories = useMemo(
     () => [
       { id: 'general', label: 'General', icon: Settings },
+      { id: 'appearance', label: 'Appearance', icon: Palette },
       { id: 'fileTree', label: 'File Tree', icon: FolderTree },
       { id: 'prompting', label: 'Prompting & Review', icon: MessageSquare },
       { id: 'cli', label: 'Command Line', icon: Terminal },
+    ],
+    []
+  );
+
+  const themeOptions = useMemo(
+    () => [
+      {
+        value: 'light' as const,
+        label: (
+          <span className="flex items-center gap-2">
+            <Sun size={14} /> Light
+          </span>
+        ),
+      },
+      {
+        value: 'dark' as const,
+        label: (
+          <span className="flex items-center gap-2">
+            <Moon size={14} /> Dark
+          </span>
+        ),
+      },
+      {
+        value: 'system' as const,
+        label: (
+          <span className="flex items-center gap-2">
+            <Monitor size={14} /> System
+          </span>
+        ),
+      },
     ],
     []
   );
@@ -253,21 +291,23 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
-            <header className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-              <h2 className="text-lg font-bold text-gray-900">Settings</h2>
+            <header className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                Settings
+              </h2>
               <button
                 onClick={onClose}
-                className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100"
+                className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-200"
               >
                 <X size={20} />
               </button>
             </header>
 
-            <main className="flex-grow flex min-h-0 bg-gray-50">
-              <div className="w-1/3 border-r border-gray-200 flex flex-col bg-white">
+            <main className="flex-grow flex min-h-0 bg-gray-50 dark:bg-gray-900">
+              <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-800">
                 <div className="p-2 space-y-1">
                   {categories.map(cat => (
                     <button
@@ -275,16 +315,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       onClick={() => handleCategoryClick(cat.id)}
                       className={`w-full flex items-center gap-3 p-2 text-sm rounded-md text-left transition-colors ${
                         activeCategory === cat.id
-                          ? 'bg-blue-100 text-blue-800 font-semibold'
-                          : 'text-gray-700 hover:bg-gray-100'
+                          ? 'bg-blue-100 text-blue-800 font-semibold dark:bg-blue-900/50 dark:text-blue-200'
+                          : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
                       }`}
                     >
                       <cat.icon
                         size={16}
                         className={
                           activeCategory === cat.id
-                            ? 'text-blue-600'
-                            : 'text-gray-500'
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-gray-500 dark:text-gray-400'
                         }
                       />
                       <span>{cat.label}</span>
@@ -294,25 +334,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
               <div
                 ref={scrollContainerRef}
-                className="w-2/3 p-6 bg-gray-100 overflow-y-auto thin-scrollbar"
+                className="w-2/3 p-6 bg-gray-100 dark:bg-gray-900 overflow-y-auto thin-scrollbar"
               >
                 <div className="max-w-3xl mx-auto space-y-6">
                   <section
                     id="general"
                     ref={el => (sectionRefs.current['general'] = el)}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200"
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
-                    <div className="p-6 border-b border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-3">
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3">
                         <Settings size={20} /> General
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Configure core application behavior and preferences.
                       </p>
                     </div>
                     <div className="p-6 space-y-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Prompt History Limit
                         </label>
                         <Input
@@ -328,7 +368,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             }
                           }}
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           Max prompts to keep per project (1-200).
                         </p>
                       </div>
@@ -336,15 +376,43 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </section>
 
                   <section
+                    id="appearance"
+                    ref={el => (sectionRefs.current['appearance'] = el)}
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                  >
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+                        <Palette size={20} /> Appearance
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Customize the look and feel of the application.
+                      </p>
+                    </div>
+                    <div className="p-6 space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Theme
+                        </label>
+                        <SegmentedControl
+                          options={themeOptions}
+                          value={theme}
+                          onChange={setTheme}
+                          layoutId="theme-selector"
+                        />
+                      </div>
+                    </div>
+                  </section>
+
+                  <section
                     id="fileTree"
                     ref={el => (sectionRefs.current['fileTree'] = el)}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200"
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
-                    <div className="p-6 border-b border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-3">
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3">
                         <FolderTree size={20} /> File Tree
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Customize how files and directories are displayed and
                         ignored.
                       </p>
@@ -357,7 +425,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         Respect .gitignore
                       </Checkbox>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Custom Ignore Patterns
                         </label>
                         <Textarea
@@ -378,20 +446,20 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <section
                     id="prompting"
                     ref={el => (sectionRefs.current['prompting'] = el)}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200"
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
-                    <div className="p-6 border-b border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-3">
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3">
                         <MessageSquare size={20} /> Prompting & Review
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Control how prompts are generated and how AI responses
                         are handled.
                       </p>
                     </div>
                     <div className="p-6 space-y-8">
                       <div>
-                        <h4 className="text-base font-semibold text-gray-800 mb-3">
+                        <h4 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">
                           Review Workflow
                         </h4>
                         <div className="space-y-3 pl-2">
@@ -428,10 +496,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-base font-semibold text-gray-800 mb-3">
+                        <h4 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">
                           Prompt Content
                         </h4>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Custom System Prompt
                         </label>
                         <Textarea
@@ -448,13 +516,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <section
                     id="cli"
                     ref={el => (sectionRefs.current.cli = el)}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200"
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
-                    <div className="p-6 border-b border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-3">
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3">
                         <Terminal size={20} /> Command Line
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Integrate Repo Wizard with your terminal.
                       </p>
                     </div>
@@ -466,7 +534,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
             </main>
 
-            <footer className="bg-gray-100 px-4 py-3 flex justify-end gap-3 border-t border-gray-200 flex-shrink-0">
+            <footer className="bg-gray-100 dark:bg-gray-900/50 px-4 py-3 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
               <Button onClick={onClose} variant="primary" size="md">
                 Done
               </Button>

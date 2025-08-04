@@ -100,8 +100,8 @@ function FileNodeComponent({
       <div
         className={`flex items-center rounded text-sm group select-none ${
           isActive
-            ? 'bg-blue-100 text-blue-900'
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            ? 'bg-blue-100 text-blue-900 dark:bg-blue-500/30 dark:text-blue-100'
+            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50'
         }`}
         title={node.path}
       >
@@ -225,8 +225,8 @@ export function FileTree() {
     if (recentProjects.length > 0) {
       return (
         <>
-          <div className="flex flex-col h-full text-gray-800 p-4 bg-gray-50">
-            <h3 className="text-lg font-bold text-gray-800 mb-4 px-1">
+          <div className="flex flex-col h-full text-gray-800 dark:text-gray-200 p-4 bg-gray-50 dark:bg-gray-800">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 px-1">
               Recent Projects
             </h3>
             <div className="flex-grow overflow-y-auto thin-scrollbar pr-1">
@@ -235,7 +235,7 @@ export function FileTree() {
                   <li key={path}>
                     <div
                       onClick={() => setRootPath(path)}
-                      className="group w-full text-left p-2 rounded-md hover:bg-gray-200 text-gray-700 hover:text-gray-900 transition-colors flex items-center justify-between gap-2 cursor-pointer"
+                      className="group w-full text-left p-2 rounded-md hover:bg-gray-200 text-gray-700 hover:text-gray-900 dark:hover:bg-gray-700 dark:text-gray-300 dark:hover:text-gray-100 transition-colors flex items-center justify-between gap-2 cursor-pointer"
                       title={path}
                     >
                       <div className="flex items-center gap-2 flex-grow overflow-hidden">
@@ -247,7 +247,7 @@ export function FileTree() {
                           <div className="font-semibold text-sm truncate">
                             {path.split(/[\\/]/).pop()}
                           </div>
-                          <div className="text-xs text-gray-500 truncate">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                             {path}
                           </div>
                         </div>
@@ -257,7 +257,7 @@ export function FileTree() {
                           e.stopPropagation();
                           removeRecentProject(path);
                         }}
-                        className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 p-1 rounded-full flex-shrink-0"
+                        className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-500 p-1 rounded-full flex-shrink-0"
                         title="Remove from recent projects"
                       >
                         <X size={14} />
@@ -267,7 +267,7 @@ export function FileTree() {
                 ))}
               </ul>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-200 space-y-2 flex-shrink-0">
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2 flex-shrink-0">
               <Button
                 onClick={() => setIsRecentProjectsModalOpen(true)}
                 variant="secondary"
@@ -302,13 +302,15 @@ export function FileTree() {
     }
 
     return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4 bg-gray-50">
+      <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 p-4 bg-gray-50 dark:bg-gray-800">
         <div className="text-center">
-          <FolderOpen className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">
+          <FolderOpen
+            className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
+          />
+          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
             Open a project
           </h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Get started by opening a folder.
           </p>
           <div className="mt-6">
@@ -327,14 +329,14 @@ export function FileTree() {
 
   if (!fileTree) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4 bg-gray-50">
+      <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 p-4 bg-gray-50 dark:bg-gray-800">
         <p>Loading file tree...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-2 text-gray-800 overflow-auto h-full bg-gray-50">
+    <div className="p-2 text-gray-800 dark:text-gray-200 overflow-auto h-full bg-gray-50 dark:bg-gray-800">
       <div className="flex items-center justify-between gap-2 font-bold mb-2 p-1">
         <div className="flex items-center gap-2 truncate">
           <FileTypeIcon filename={fileTree.name} isDirectory={true} />
@@ -344,7 +346,7 @@ export function FileTree() {
         </div>
         <button
           onClick={handleCloseFolder}
-          className="p-1 rounded-full hover:bg-gray-200 text-gray-600 hover:text-gray-900 flex-shrink-0"
+          className="p-1 rounded-full hover:bg-gray-200 text-gray-600 hover:text-gray-900 dark:hover:bg-gray-700 dark:text-gray-400 dark:hover:text-gray-100 flex-shrink-0"
           title="Close Project"
         >
           <X size={16} />

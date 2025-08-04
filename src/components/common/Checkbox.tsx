@@ -12,7 +12,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
     return (
       <label
         title={title}
-        className={`flex items-center gap-2 text-sm text-gray-700 select-none ${
+        className={`flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 select-none ${
           className ?? ''
         }`}
       >
@@ -28,7 +28,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             ${
               checked || isIndeterminate
                 ? 'border-blue-400 bg-blue-400'
-                : 'border-gray-300 bg-white'
+                : 'border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800'
             }
             peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-blue-500
             peer-disabled:opacity-50

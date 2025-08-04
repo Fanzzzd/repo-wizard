@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   body {
     @apply select-none;
@@ -8,7 +10,7 @@
 
 @layer components {
   .form-input-base {
-    @apply w-full p-2 text-sm text-gray-900 placeholder-gray-400 bg-white rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors select-text;
+    @apply w-full p-2 text-sm text-gray-900 placeholder-gray-400 bg-white rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors select-text dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-500;
   }
 }
 
@@ -17,7 +19,7 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light;
+  color-scheme: light dark;
   color: #213547;
   background-color: #ffffff;
 
@@ -35,6 +37,7 @@ body,
   margin: 0;
   padding: 0;
   overflow: hidden;
+  @apply bg-gray-50 dark:bg-gray-800;
 }
 
 body {
@@ -54,6 +57,14 @@ body {
 }
 .thin-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: theme('colors.gray.400');
+}
+
+.dark .thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: theme('colors.gray.600');
+}
+
+.dark .thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: theme('colors.gray-500');
 }
 
 .hide-scrollbar {

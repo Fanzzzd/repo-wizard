@@ -15,7 +15,8 @@
         "title": "Repo Wizard",
         "label": "main",
         "width": 1200,
-        "height": 800
+        "height": 800,
+        "theme": null
       }
     ],
     "security": {
