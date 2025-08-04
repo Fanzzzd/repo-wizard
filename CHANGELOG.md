@@ -1,3 +1,10 @@
+# [1.8.0-next.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.8.0-next.2...app-v1.8.0-next.3) (2025-08-04)
+
+
+### Features
+
+* **ui:** add dark mode and theme switching ([271d78f](https://github.com/Fanzzzd/repo-wizard/commit/271d78f72c05fd215fe9161e6b4b0bc1850ae6ee))
+
 # [1.8.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.8.0-next.1...app-v1.8.0-next.2) (2025-08-01)
 
 
