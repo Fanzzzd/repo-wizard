@@ -187,7 +187,6 @@ export function FileTree() {
     rootPath,
     fileTree,
     refreshCounter,
-    setRootPath,
     closeProject,
     loadFileTree,
   } = useWorkspaceStore();
@@ -207,7 +206,7 @@ export function FileTree() {
   const handleOpenFolder = async () => {
     const selected = await open({ directory: true, multiple: false });
     if (typeof selected === 'string') {
-      await setRootPath(selected);
+      await useWorkspaceStore.getState().setRootPath(selected);
     }
   };
 
@@ -234,7 +233,7 @@ export function FileTree() {
                 {recentProjects.map(path => (
                   <li key={path}>
                     <div
-                      onClick={() => setRootPath(path)}
+                      onClick={() => useWorkspaceStore.getState().setRootPath(path)}
                       className="group w-full text-left p-2 rounded-md hover:bg-gray-200 text-gray-700 hover:text-gray-900 dark:hover:bg-gray-700 dark:text-gray-300 dark:hover:text-gray-100 transition-colors flex items-center justify-between gap-2 cursor-pointer"
                       title={path}
                     >
@@ -289,7 +288,7 @@ export function FileTree() {
             isOpen={isRecentProjectsModalOpen}
             onClose={() => setIsRecentProjectsModalOpen(false)}
             onSelectProject={async path => {
-              await setRootPath(path);
+              await useWorkspaceStore.getState().setRootPath(path);
               setIsRecentProjectsModalOpen(false);
             }}
             onOpenAnother={() => {

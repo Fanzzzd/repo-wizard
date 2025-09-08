@@ -647,12 +647,11 @@ export function MetaPromptsManagerModal({
                           size="md"
                           className="w-full"
                           leftIcon={<Plus size={16} />}
+                          rightIcon={
+                            <ChevronDown size={16} className="transition-transform" />
+                          }
                         >
                           Add Prompt
-                          <ChevronDown
-                            size={16}
-                            className="transition-transform ml-auto"
-                          />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>

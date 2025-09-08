@@ -4,6 +4,7 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -13,6 +14,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       variant = 'secondary',
       size = 'md',
       leftIcon,
+      rightIcon,
       children,
       ...props
     },
@@ -45,7 +47,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {leftIcon}
-        <span className="truncate">{children}</span>
+        {/* If children is a simple string/number, keep truncate wrapper; otherwise render as-is to allow complex layouts */}
+        {typeof children === 'string' || typeof children === 'number' ? (
+          <span className="truncate">{children}</span>
+        ) : (
+          children
+        )}
+        {rightIcon && <span className="ml-auto">{rightIcon}</span>}
       </button>
     );
   }
