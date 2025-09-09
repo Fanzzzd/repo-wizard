@@ -107,9 +107,12 @@ function PromptItemDisplay({ prompt }: { prompt: MetaPrompt }) {
   }, [prompt]);
 
   return (
-    <div className="w-full text-left flex items-center justify-between p-2 rounded-md text-sm shadow-xl border border-gray-200 select-none cursor-grabbing bg-white">
-      <div className="flex items-center gap-2 truncate text-gray-800">
-        <GripVertical size={16} className="flex-shrink-0 text-gray-600" />
+    <div className="w-full text-left flex items-center justify-between p-2 rounded-md text-sm shadow-xl border border-gray-200 dark:border-gray-700 select-none cursor-grabbing bg-white dark:bg-gray-800">
+      <div className="flex items-center gap-2 truncate text-gray-800 dark:text-gray-200">
+        <GripVertical
+          size={16}
+          className="flex-shrink-0 text-gray-600 dark:text-gray-400"
+        />
         {icon}
         <span className="truncate">{prompt.name}</span>
       </div>
@@ -147,32 +150,32 @@ function SortablePromptItem({
           magicIcon = (
             <FolderTree size={16} className="text-green-600 flex-shrink-0" />
           );
-          selectedBg = 'bg-green-100 text-green-800';
+          selectedBg = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200';
           break;
         case 'git-diff':
           magicIcon = (
             <GitBranch size={16} className="text-indigo-600 flex-shrink-0" />
           );
-          selectedBg = 'bg-indigo-100 text-indigo-800';
+          selectedBg = 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200';
           break;
         case 'terminal-command':
           magicIcon = (
             <Terminal size={16} className="text-yellow-600 flex-shrink-0" />
           );
-          selectedBg = 'bg-yellow-100 text-yellow-800';
+          selectedBg = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200';
           break;
         default:
           magicIcon = (
             <Wand2 size={16} className="text-gray-500 flex-shrink-0" />
           );
-          selectedBg = 'bg-gray-200 text-gray-800';
+          selectedBg = 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
       }
       return { selectedClasses: selectedBg, icon: magicIcon };
     }
 
     if (prompt.mode === 'universal') {
       return {
-        selectedClasses: 'bg-purple-100 text-purple-800',
+        selectedClasses: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200',
         icon: <Wand2 size={16} className="text-purple-500 flex-shrink-0" />,
       };
     }
@@ -183,14 +186,14 @@ function SortablePromptItem({
         <MessageSquare size={16} className="text-blue-500 flex-shrink-0" />
       );
     return {
-      selectedClasses: 'bg-blue-100 text-blue-800',
+      selectedClasses: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200',
       icon: iconEl,
     };
   }, [prompt]);
 
   const itemClasses = isSelected
     ? selectedClasses
-    : 'text-gray-700 hover:bg-gray-100';
+    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700';
 
   return (
     <SortableItem id={prompt.id}>
@@ -203,7 +206,7 @@ function SortablePromptItem({
           <DragHandle>
             <GripVertical
               size={16}
-              className="text-gray-400 group-hover:text-gray-600 flex-shrink-0"
+              className="text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300 flex-shrink-0"
             />
           </DragHandle>
           {icon}
@@ -248,7 +251,7 @@ function PromptListSection({
 
   return (
     <div ref={setNodeRef}>
-      <div className="px-2 py-1 mt-2 text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2 select-none cursor-default">
+      <div className="px-2 py-1 mt-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2 select-none cursor-default">
         {icon}
         {title}
       </div>
@@ -297,12 +300,12 @@ function FileTreeConfigEditor({
   ];
 
   return (
-    <div className="space-y-4 border-t border-gray-200 pt-4 mt-4">
-      <h3 className="text-base font-semibold text-gray-800">
+    <div className="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+      <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200">
         File Tree Configuration
       </h3>
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
           Scope
         </label>
         <SegmentedControl
@@ -311,14 +314,14 @@ function FileTreeConfigEditor({
           onChange={scope => handleConfigChange({ scope })}
           layoutId="filetree-scope-slider"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           {config.scope === 'all'
             ? 'The tree will include all files in the project.'
             : 'The tree will only include files currently selected in the workspace.'}
         </p>
       </div>
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
           Max items per directory
         </label>
         <Input
@@ -333,13 +336,13 @@ function FileTreeConfigEditor({
             })
           }
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           Leave blank for no limit. If exceeded, an ellipsis (...) will be
           shown.
         </p>
       </div>
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
           Exclude patterns
         </label>
         <Textarea
@@ -348,7 +351,7 @@ function FileTreeConfigEditor({
           value={config.ignorePatterns}
           onChange={e => handleConfigChange({ ignorePatterns: e.target.value })}
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           Comma-separated list. Use `*` for wildcards (e.g., `*.tmp`) and end
           with `/` for directories.
         </p>
@@ -410,7 +413,7 @@ function GitDiffConfigEditor({
 
   if (!isRepo) {
     return (
-      <div className="p-4 bg-yellow-50 text-yellow-800 rounded-md flex items-center gap-2">
+      <div className="p-4 bg-yellow-50 dark:bg-yellow-500/10 text-yellow-800 dark:text-yellow-200 rounded-md flex items-center gap-2">
         <AlertCircle size={20} />
         <div>
           The current project is not a Git repository, or Git is not installed.
@@ -420,12 +423,12 @@ function GitDiffConfigEditor({
   }
 
   return (
-    <div className="space-y-4 border-t border-gray-200 pt-4 mt-4">
-      <h3 className="text-base font-semibold text-gray-800">
+    <div className="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+      <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200">
         Git Diff Configuration
       </h3>
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
           Diff Type
         </label>
         <SegmentedControl
@@ -434,7 +437,7 @@ function GitDiffConfigEditor({
           onChange={type => handleConfigChange({ type, hash: null })}
           layoutId="gitdiff-type-slider"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           {config.type === 'unstaged' &&
             `Includes ${
               status?.hasUnstagedChanges ? '' : 'no'
@@ -446,7 +449,7 @@ function GitDiffConfigEditor({
       </div>
       {config.type === 'commit' && (
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-1 block">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
             Select Commit
           </label>
           {commits.length > 0 ? (
@@ -466,7 +469,9 @@ function GitDiffConfigEditor({
               ))}
             </select>
           ) : (
-            <p className="text-xs text-gray-500">No recent commits found.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              No recent commits found.
+            </p>
           )}
         </div>
       )}
@@ -488,12 +493,12 @@ function TerminalCommandConfigEditor({
   };
 
   return (
-    <div className="space-y-4 border-t border-gray-200 pt-4 mt-4">
-      <h3 className="text-base font-semibold text-gray-800">
+    <div className="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+      <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200">
         Terminal Command Configuration
       </h3>
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
           Command
         </label>
         <Input
@@ -502,7 +507,7 @@ function TerminalCommandConfigEditor({
           value={config.command}
           onChange={e => handleConfigChange({ command: e.target.value })}
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           The command will be executed in the project root. Output will be
           included in the prompt.
         </p>
@@ -592,22 +597,22 @@ export function MetaPromptsManagerModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
-            <header className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-              <h2 className="text-lg font-bold text-gray-900">
+            <header className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                 Manage Meta Prompts
               </h2>
               <button
                 onClick={onClose}
-                className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100"
+                className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-200"
               >
                 <X size={20} />
               </button>
             </header>
 
-            <main className="flex-grow flex min-h-0 bg-gray-50">
+            <main className="flex-grow flex min-h-0 bg-gray-50 dark:bg-gray-900">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCorners}
@@ -616,7 +621,7 @@ export function MetaPromptsManagerModal({
                 onDragEnd={handleDragEnd}
                 onDragCancel={handleDragCancel}
               >
-                <div className="w-1/3 border-r border-gray-200 flex flex-col bg-white">
+                <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-800">
                   <div className="flex-grow p-2 overflow-y-auto select-none">
                     {Object.entries(promptSections).map(
                       ([mode, { prompts, icon, title }]) => (
@@ -634,7 +639,7 @@ export function MetaPromptsManagerModal({
                       )
                     )}
                   </div>
-                  <div className="flex-shrink-0 p-2 border-t border-gray-200">
+                  <div className="flex-shrink-0 p-2 border-t border-gray-200 dark:border-gray-700">
                     <DropdownMenu>
                       <DropdownMenuTrigger>
                         <Button
@@ -642,12 +647,11 @@ export function MetaPromptsManagerModal({
                           size="md"
                           className="w-full"
                           leftIcon={<Plus size={16} />}
+                          rightIcon={
+                            <ChevronDown size={16} className="transition-transform" />
+                          }
                         >
                           Add Prompt
-                          <ChevronDown
-                            size={16}
-                            className="transition-transform ml-auto"
-                          />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
@@ -713,7 +717,7 @@ export function MetaPromptsManagerModal({
                 {selectedPrompt ? (
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                         Name
                       </label>
                       <Input
@@ -728,7 +732,7 @@ export function MetaPromptsManagerModal({
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                         Mode
                       </label>
                       <SegmentedControl
@@ -743,7 +747,7 @@ export function MetaPromptsManagerModal({
 
                     {selectedPrompt.promptType !== 'magic' && (
                       <div>
-                        <label className="text-sm font-medium text-gray-700 mb-1 block">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                           Content
                         </label>
                         <Textarea
@@ -760,7 +764,7 @@ export function MetaPromptsManagerModal({
                     )}
                     {selectedPrompt.promptType === 'magic' && (
                       <div>
-                        <label className="text-sm font-medium text-gray-700 mb-1 block">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                           Template
                         </label>
                         <Textarea
@@ -802,7 +806,7 @@ export function MetaPromptsManagerModal({
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-center text-gray-500">
+                  <div className="flex items-center justify-center h-full text-center text-gray-500 dark:text-gray-400">
                     <div>
                       <p>Select a prompt to edit or add a new one.</p>
                     </div>
@@ -811,7 +815,7 @@ export function MetaPromptsManagerModal({
               </div>
             </main>
 
-            <footer className="bg-gray-100 px-4 py-3 flex justify-end gap-3 border-t border-gray-200 flex-shrink-0">
+            <footer className="bg-gray-100 dark:bg-gray-900/50 px-4 py-3 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
               <Button onClick={onClose} variant="secondary" size="md">
                 Cancel
               </Button>

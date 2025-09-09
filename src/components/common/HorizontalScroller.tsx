@@ -108,6 +108,15 @@ export function HorizontalScroller({ children }: HorizontalScrollerProps) {
     const el = scrollContainerRef.current;
     if (!el) return;
 
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY === 0) return;
+      // Only prevent default and scroll if there is horizontal overflow
+      if (el.scrollWidth > el.clientWidth) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+
     const handleScrollAndResize = () => {
       requestShowIndicator();
       updateScrollState();
@@ -116,6 +125,7 @@ export function HorizontalScroller({ children }: HorizontalScrollerProps) {
 
     updateScrollState();
 
+    el.addEventListener('wheel', onWheel, { passive: false });
     el.addEventListener('scroll', handleScrollAndResize, { passive: true });
 
     const resizeObserver = new ResizeObserver(handleScrollAndResize);
@@ -125,6 +135,7 @@ export function HorizontalScroller({ children }: HorizontalScrollerProps) {
     mutationObserver.observe(el, { childList: true });
 
     return () => {
+      el.removeEventListener('wheel', onWheel);
       el.removeEventListener('scroll', handleScrollAndResize);
       resizeObserver.disconnect();
       mutationObserver.disconnect();

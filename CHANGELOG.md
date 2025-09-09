@@ -1,3 +1,31 @@
+# [1.8.0-next.3](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.8.0-next.2...app-v1.8.0-next.3) (2025-08-04)
+
+
+### Features
+
+* **ui:** add dark mode and theme switching ([271d78f](https://github.com/Fanzzzd/repo-wizard/commit/271d78f72c05fd215fe9161e6b4b0bc1850ae6ee))
+
+# [1.8.0-next.2](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.8.0-next.1...app-v1.8.0-next.2) (2025-08-01)
+
+
+### Features
+
+* **review:** introduce configurable review workflow UI ([2d1956a](https://github.com/Fanzzzd/repo-wizard/commit/2d1956ab137b93f76e76104b626aafde85ba2d45))
+* **settings:** redesign settings modal with scroll-spy navigation ([2189f01](https://github.com/Fanzzzd/repo-wizard/commit/2189f0101421462486112dd0e266287c29fb7f7f))
+
+# [1.8.0-next.1](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.7.0...app-v1.8.0-next.1) (2025-07-31)
+
+
+### Bug Fixes
+
+* **cli:** detach from terminal when launching from cli shim ([ef834b1](https://github.com/Fanzzzd/repo-wizard/commit/ef834b1c9e0b27e397e23aee4906129623942c1b))
+* **HorizontalScroller:** add horizontal scrolling support with wheel event handling ([25890d0](https://github.com/Fanzzzd/repo-wizard/commit/25890d001a929216d7310403336e852cc25fb61f))
+
+
+### Features
+
+* **ui:** make text unselectable by default ([7cbe6eb](https://github.com/Fanzzzd/repo-wizard/commit/7cbe6ebff4acc7d67df723c8d1b4c551d9c67970))
+
 # [1.7.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.6.1...app-v1.7.0) (2025-07-27)
 
 

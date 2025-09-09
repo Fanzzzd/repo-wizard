@@ -5,10 +5,12 @@ import { useEffect, useState } from 'react';
 import { readFileContent } from '../../services/tauriApi';
 import { getLanguageForFilePath } from '../../lib/language_service';
 import { showErrorDialog } from '../../lib/errorHandler';
+import { useSettingsStore } from '../../store/settingsStore';
 
 export function CodeEditor({ forceShowPath }: { forceShowPath?: string }) {
   const { activeFilePath } = useWorkspaceStore();
   const { isReviewing } = useReviewStore();
+  const { theme } = useSettingsStore();
   const [content, setContent] = useState('');
 
   const pathToShow = forceShowPath ?? activeFilePath;
@@ -24,20 +26,22 @@ export function CodeEditor({ forceShowPath }: { forceShowPath?: string }) {
 
   if (!shouldShow || !pathToShow) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
+      <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
         Select a file to view its content.
       </div>
     );
   }
 
   return (
-    <Editor
-      height="100%"
-      path={pathToShow}
-      value={content}
-      language={getLanguageForFilePath(pathToShow)}
-      theme="vs"
-      options={{ readOnly: true, automaticLayout: true }}
-    />
+    <div className="h-full w-full select-text">
+      <Editor
+        height="100%"
+        path={pathToShow}
+        value={content}
+        language={getLanguageForFilePath(pathToShow)}
+        theme={theme === 'dark' ? 'repo-wizard-dark' : 'vs'}
+        options={{ readOnly: true, automaticLayout: true }}
+      />
+    </div>
   );
 }

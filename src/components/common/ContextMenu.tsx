@@ -13,7 +13,9 @@ function MenuItem({
   close: () => void;
 }) {
   if (item.isSeparator) {
-    return <div className="h-px bg-gray-200 my-1 mx-[-4px]" />;
+    return (
+      <div className="h-px bg-gray-200 dark:bg-gray-700 my-1 mx-[-4px]" />
+    );
   }
 
   const Icon = item.icon;
@@ -28,12 +30,14 @@ function MenuItem({
       className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-left transition-colors
         ${
           item.isDanger
-            ? 'text-red-600 hover:bg-red-50'
-            : 'text-gray-700 hover:bg-gray-100'
+            ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10'
+            : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
         }
         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
     >
-      {Icon && <Icon size={16} className="text-gray-500" />}
+      {Icon && (
+        <Icon size={16} className="text-gray-500 dark:text-gray-400" />
+      )}
       <span className="flex-grow">{item.label}</span>
     </button>
   );
@@ -66,7 +70,7 @@ export function ContextMenu() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.1 }}
-          className="fixed bg-white rounded-lg shadow-xl z-[60] p-1 border border-gray-200 min-w-[180px]"
+          className="fixed bg-white dark:bg-gray-800 rounded-lg shadow-xl z-[60] p-1 border border-gray-200 dark:border-gray-700 min-w-[180px]"
           style={{
             top: position.y,
             left: position.x,

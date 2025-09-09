@@ -5,6 +5,21 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/src/styles/global.css" />
+    <script>
+      // Avoid FOUC by applying theme from localStorage
+      try {
+        const theme = localStorage.getItem('theme') || 'system';
+        if (
+          theme === 'dark' ||
+          (theme === 'system' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {
+        /* ignore */
+      }
+    </script>
     <title>Repo Wizard</title>
   </head>
 

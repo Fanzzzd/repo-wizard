@@ -52,7 +52,7 @@ async fn add_shim_dir_to_path(shim_dir: &Path) -> Result<()> {
 
     if shell.contains("fish") {
         profile_file_name = PathBuf::from(".config/fish/config.fish");
-        export_line = format!("\nfish_add_path \"{}\"\n", shim_dir_str);
+        export_line = format!("\nfish_add_path \"{shim_dir_str}\"\n");
     } else {
         profile_file_name = if shell.contains("zsh") {
             PathBuf::from(".zshrc")
@@ -61,7 +61,7 @@ async fn add_shim_dir_to_path(shim_dir: &Path) -> Result<()> {
         } else {
             PathBuf::from(".profile")
         };
-        export_line = format!("\nexport PATH=\"{}:$PATH\"\n", shim_dir_str);
+        export_line = format!("\nexport PATH=\"{shim_dir_str}:$PATH\"\n");
     };
 
     let profile_path = home.join(profile_file_name);
@@ -148,15 +148,13 @@ pub async fn install_cli_shim() -> Result<CliInstallResult> {
     #[cfg(windows)]
     let script_content = format!(
         r#"@echo off
-"{}" %*"#,
-        exe_path_str
+start "" "{exe_path_str}" %*"#
     );
 
     #[cfg(unix)]
     let script_content = format!(
         r#"#!/bin/sh
-exec "{}" "$@""#,
-        exe_path_str
+"{exe_path_str}" "$@" >/dev/null 2>&1 &"#
     );
 
     fs::write(&shim_path, &script_content).await?;

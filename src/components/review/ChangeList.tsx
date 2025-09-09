@@ -87,25 +87,28 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
         return {
           icon: <Check size={14} />,
           text: 'Applied',
-          style: 'bg-green-100 text-green-800 hover:bg-green-200',
+          style:
+            'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-500/20 dark:text-green-300 dark:hover:bg-green-500/30',
         };
       case 'identical':
         return {
           icon: <Check size={14} />,
           text: 'Identical',
-          style: 'bg-green-100 text-green-800',
+          style: 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-300',
         };
       case 'error':
         return {
           icon: <AlertTriangle size={14} />,
           text: 'Error',
-          style: 'bg-red-100 text-red-800 hover:bg-red-200',
+          style:
+            'bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-300 dark:hover:bg-red-500/30',
         };
       default: // pending
         return {
           icon: <CircleDot size={14} />,
           text: 'Pending',
-          style: 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+          style:
+            'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600',
         };
     }
   };
@@ -154,9 +157,9 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
             <ChangeTypeBadge type="R" />
             <ShortenedPath
               path={operation.fromPath}
-              className="truncate min-w-0 text-gray-500"
+              className="truncate min-w-0 text-gray-500 dark:text-gray-400"
             />
-            <span className="text-gray-500 flex-shrink-0">→</span>
+            <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">→</span>
             <ShortenedPath
               path={operation.toPath}
               className="truncate min-w-0"
@@ -171,8 +174,8 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
       onClick={() => setActiveChangeId(change.id)}
       className={`flex items-center justify-between gap-2 px-2 py-1 rounded text-sm cursor-default ${
         isActive
-          ? 'bg-blue-100 text-blue-900'
-          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+          ? 'bg-blue-100 text-blue-900 dark:bg-blue-500/30 dark:text-blue-100'
+          : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
       }`}
     >
       <div className="flex items-center gap-2 overflow-hidden">
@@ -208,7 +211,7 @@ export function ChangeList() {
   };
 
   return (
-    <div className="p-4 flex flex-col h-full bg-gray-50 text-gray-800">
+    <div className="p-4 flex flex-col h-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
       <div className="flex justify-between items-center mb-2 flex-shrink-0">
         <h2 className="font-bold text-base">Changes ({changes.length})</h2>
         <div className="flex items-center gap-1">
@@ -216,7 +219,7 @@ export function ChangeList() {
             onClick={applyAll}
             variant="ghost"
             size="sm"
-            className="text-green-600 hover:text-green-700 hover:bg-green-100"
+            className="text-green-600 hover:text-green-700 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-500/20"
             title="Apply all pending changes"
             leftIcon={<CheckCheck size={14} />}
           >
@@ -226,7 +229,7 @@ export function ChangeList() {
             onClick={revertAll}
             variant="ghost"
             size="sm"
-            className="text-gray-600 hover:text-gray-700 hover:bg-gray-200"
+            className="text-gray-600 hover:text-gray-700 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700/50"
             title="Revert all applied changes"
             leftIcon={<Undo size={14} />}
           >
@@ -241,13 +244,13 @@ export function ChangeList() {
           ))}
         </div>
       </div>
-      <div className="mt-4 pt-4 border-t border-gray-200 flex-shrink-0">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
         <div className="flex flex-col gap-3">
           <Button
             onClick={handleFinishReview}
             size="md"
             variant="ghost"
-            className="w-full bg-gray-600 text-white hover:bg-gray-700 font-semibold"
+            className="w-full bg-gray-600 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-800 dark:hover:bg-gray-300 font-semibold"
           >
             Finish Review ({appliedChanges.length} applied)
           </Button>

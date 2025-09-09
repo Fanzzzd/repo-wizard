@@ -5,10 +5,12 @@ import { useEffect, useState } from 'react';
 import { readFileContent } from '../../services/tauriApi';
 import { getLanguageForFilePath } from '../../lib/language_service';
 import { showErrorDialog } from '../../lib/errorHandler';
+import { useSettingsStore } from '../../store/settingsStore';
 
 export function DiffEditor() {
   const { rootPath } = useWorkspaceStore();
   const { changes, activeChangeId } = useReviewStore();
+  const { theme } = useSettingsStore();
 
   const [originalContent, setOriginalContent] = useState('');
   const [modifiedContent, setModifiedContent] = useState('');
@@ -72,7 +74,7 @@ export function DiffEditor() {
 
   if (!activeChange) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400">
+      <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
         Select a change to review.
       </div>
     );
@@ -80,27 +82,29 @@ export function DiffEditor() {
 
   if (message) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400 p-4 whitespace-pre-wrap">
+      <div className="flex items-center justify-center h-full text-gray-400 p-4 whitespace-pre-wrap select-text dark:text-gray-500">
         {message}
       </div>
     );
   }
 
   return (
-    <MonacoDiffEditor
-      height="100%"
-      language={language}
-      original={originalContent}
-      modified={modifiedContent}
-      theme="vs"
-      options={{
-        readOnly: true,
-        renderSideBySide: true,
-        minimap: { enabled: false },
-        renderSideBySideInlineBreakpoint: 200,
-        showUnused: false,
-        diffAlgorithm: 'advanced',
-      }}
-    />
+    <div className="h-full w-full select-text">
+      <MonacoDiffEditor
+        height="100%"
+        language={language}
+        original={originalContent}
+        modified={modifiedContent}
+        theme={theme === 'dark' ? 'repo-wizard-dark' : 'vs'}
+        options={{
+          readOnly: true,
+          renderSideBySide: true,
+          minimap: { enabled: false },
+          renderSideBySideInlineBreakpoint: 200,
+          showUnused: false,
+          diffAlgorithm: 'advanced',
+        }}
+      />
+    </div>
   );
 }

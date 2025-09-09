@@ -26,44 +26,44 @@ const getPromptStyle = (prompt: MetaPrompt) => {
       case 'file-tree':
         return {
           icon: FolderTree,
-          bg: 'bg-green-100',
-          text: 'text-green-800',
-          hoverBg: 'hover:bg-green-200',
-          iconColor: 'text-green-600',
+          bg: 'bg-green-100 dark:bg-green-900/50',
+          text: 'text-green-800 dark:text-green-300',
+          hoverBg: 'hover:bg-green-200 dark:hover:bg-green-800/50',
+          iconColor: 'text-green-600 dark:text-green-500',
         };
       case 'git-diff':
         return {
           icon: GitBranch,
-          bg: 'bg-indigo-100',
-          text: 'text-indigo-800',
-          hoverBg: 'hover:bg-indigo-200',
-          iconColor: 'text-indigo-600',
+          bg: 'bg-indigo-100 dark:bg-indigo-900/50',
+          text: 'text-indigo-800 dark:text-indigo-300',
+          hoverBg: 'hover:bg-indigo-200 dark:hover:bg-indigo-800/50',
+          iconColor: 'text-indigo-600 dark:text-indigo-500',
         };
       case 'terminal-command':
         return {
           icon: Terminal,
-          bg: 'bg-yellow-100',
-          text: 'text-yellow-800',
-          hoverBg: 'hover:bg-yellow-200',
-          iconColor: 'text-yellow-600',
+          bg: 'bg-yellow-100 dark:bg-yellow-900/50',
+          text: 'text-yellow-800 dark:text-yellow-300',
+          hoverBg: 'hover:bg-yellow-200 dark:hover:bg-yellow-800/50',
+          iconColor: 'text-yellow-600 dark:text-yellow-500',
         };
     }
   }
   if (prompt.mode === 'universal') {
     return {
       icon: Wand2,
-      bg: 'bg-purple-100',
-      text: 'text-purple-800',
-      hoverBg: 'hover:bg-purple-200',
-      iconColor: 'text-purple-500',
+      bg: 'bg-purple-100 dark:bg-purple-900/50',
+      text: 'text-purple-800 dark:text-purple-300',
+      hoverBg: 'hover:bg-purple-200 dark:hover:bg-purple-800/50',
+      iconColor: 'text-purple-500 dark:text-purple-400',
     };
   }
   return {
     icon: Wand2,
-    bg: 'bg-blue-100',
-    text: 'text-blue-800',
-    hoverBg: 'hover:bg-blue-200',
-    iconColor: 'text-blue-500',
+    bg: 'bg-blue-100 dark:bg-blue-900/50',
+    text: 'text-blue-800 dark:text-blue-300',
+    hoverBg: 'hover:bg-blue-200 dark:hover:bg-blue-800/50',
+    iconColor: 'text-blue-500 dark:text-blue-400',
   };
 };
 
@@ -140,7 +140,7 @@ export function MetaPromptSelector({
               setIsSelectorOpen(!isSelectorOpen);
               outerWrapperProps.onMouseEnter();
             }}
-            className="relative flex items-center justify-between gap-2 p-2 border border-gray-300 bg-white rounded-md min-h-[40px] hover:border-blue-400 transition-colors"
+            className="relative flex items-center justify-between gap-2 p-2 border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 rounded-md min-h-[40px] hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
           >
             <div className="flex-grow flex-shrink min-w-0">
               <div
@@ -182,7 +182,7 @@ export function MetaPromptSelector({
                       );
                     })
                   ) : (
-                    <span className="text-gray-400 text-sm px-1 flex-shrink-0">
+                    <span className="text-gray-400 dark:text-gray-500 text-sm px-1 flex-shrink-0">
                       Select meta prompts...
                     </span>
                   )}
@@ -191,7 +191,7 @@ export function MetaPromptSelector({
             </div>
             <ChevronDown
               size={16}
-              className={`flex-shrink-0 text-gray-500 transition-transform ${
+              className={`flex-shrink-0 text-gray-500 dark:text-gray-400 transition-transform ${
                 isSelectorOpen ? 'rotate-180' : ''
               }`}
             />
@@ -207,7 +207,7 @@ export function MetaPromptSelector({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -5, scale: 0.98 }}
             transition={{ duration: 0.1 }}
-            className="absolute top-full left-0 right-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-20 p-2"
+            className="absolute top-full left-0 right-0 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 p-2"
           >
             <div className="flex flex-col gap-1 max-h-60 overflow-y-auto p-1 thin-scrollbar">
               {allPromptsForMode.map(prompt => {
@@ -217,7 +217,7 @@ export function MetaPromptSelector({
                     key={prompt.id}
                     checked={prompt.enabled}
                     onChange={e => togglePrompt(prompt.id, e.target.checked)}
-                    className="w-full px-3 py-2 hover:bg-blue-50 rounded-md transition-colors text-gray-700"
+                    className="w-full px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-md transition-colors text-gray-700 dark:text-gray-300"
                   >
                     <div className="flex items-center justify-between w-full">
                       <span className="flex items-center gap-2">
@@ -237,7 +237,7 @@ export function MetaPromptSelector({
                 </div>
               )}
             </div>
-            <div className="border-t border-gray-200 mt-2 pt-2">
+            <div className="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2">
               <Button
                 onClick={() => {
                   setIsSelectorOpen(false);
@@ -245,7 +245,7 @@ export function MetaPromptSelector({
                 }}
                 variant="ghost"
                 size="md"
-                className="w-full text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                className="w-full text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/50"
               >
                 Manage All Prompts...
               </Button>

@@ -1,5 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
+export type Theme = 'light' | 'dark' | 'system';
+
 export interface FileNode {
   path: string;
   name: string;

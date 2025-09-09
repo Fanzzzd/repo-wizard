@@ -13,46 +13,99 @@ use std::path::PathBuf;
 use tauri::ipc::Channel;
 use tauri::Manager;
 use uuid::Uuid;
+use log::debug;
 
 #[tauri::command]
-pub async fn open_project_window(app: tauri::AppHandle, root_path: String) -> Result<()> {
+pub fn open_project_window(app: tauri::AppHandle, root_path: String) -> Result<()> {
+    debug!("Attempting to open project window for path: {}", root_path);
+
+    // Check registry for any existing window managing this project path
+    if let Some(reg) = app.try_state::<crate::state::WindowRegistry>() {
+        if let Some(label) = reg.get_label_for_project(&root_path) {
+            if let Some(window) = app.get_webview_window(&label) {
+                debug!("Found existing window in registry with label '{}'. Focusing.", label);
+                window.set_focus()?;
+                return Ok(());
+            }
+        }
+    }
+
+    // Fallback to label-based check for windows not yet in registry
     let window_label = format!(
         "project-{}",
         general_purpose::URL_SAFE_NO_PAD.encode(&root_path)
     );
+    debug!("Generated window label: {}", window_label);
+
     if let Some(window) = app.get_webview_window(&window_label) {
+        debug!("Window with label '{}' already exists. Focusing.", window_label);
         window.set_focus()?;
         return Ok(());
     }
 
-    let root_path_json = serde_json::to_string(&root_path)?;
-    let init_script = format!("window.__RPO_WIZ_PROJECT_ROOT__ = {};", root_path_json);
+    debug!("No existing window found. Creating new window with label '{}'", window_label);
 
+    let root_path_json = serde_json::to_string(&root_path)?;
+    let init_script = format!("window.__RPO_WIZ_PROJECT_ROOT__ = {root_path_json};");
+    let project_name = std::path::Path::new(&root_path)
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or(&root_path);
+
+    let created_label = window_label.clone();
     tauri::WebviewWindowBuilder::new(
         &app,
-        window_label,
+        &created_label,
         tauri::WebviewUrl::App("index.html".into()),
     )
-    .title("Repo Wizard")
+    .title(project_name)
     .initialization_script(&init_script)
     .inner_size(1200.0, 800.0)
     .build()?;
+
+    if let Some(reg) = app.try_state::<crate::state::WindowRegistry>() {
+        // Record that this label is now associated with a project
+        debug!("Registering project '{}' for new window '{}'", root_path, created_label);
+        reg.set_project_for_label(&created_label, Some(&root_path));
+    }
 
     Ok(())
 }
 
 #[tauri::command]
-pub async fn create_new_window(app: tauri::AppHandle) -> Result<()> {
+pub fn register_window_project(window: tauri::Window, root_path: Option<String>) -> Result<()> {
+    debug!(
+        "Registering project for window '{}': {:?}",
+        window.label(),
+        root_path
+    );
+    if let Some(reg) = window.app_handle().try_state::<crate::state::WindowRegistry>() {
+        reg.set_project_for_label(window.label(), root_path.as_deref());
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn create_new_window(app: tauri::AppHandle) -> Result<()> {
     let label = format!("main-{}", Uuid::new_v4());
+    debug!("Creating new blank window with label: {}", label);
     tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App("index.html".into()))
         .title("Repo Wizard")
         .inner_size(1200.0, 800.0)
         .build()?;
+    if let Some(reg) = app.try_state::<crate::state::WindowRegistry>() {
+        // Mark as a blank window (no project yet)
+        reg.set_project_for_label(&label, None);
+    }
     Ok(())
 }
 
 #[tauri::command]
 pub async fn close_window(window: tauri::Window) -> Result<()> {
+    debug!("Closing window '{}' and unregistering project.", window.label());
+    if let Some(reg) = window.app_handle().try_state::<crate::state::WindowRegistry>() {
+        reg.set_project_for_label(window.label(), None);
+    }
     window.close()?;
     Ok(())
 }

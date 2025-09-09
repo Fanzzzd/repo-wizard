@@ -93,7 +93,7 @@ export function PromptHistoryPanel() {
 
   return (
     <>
-      <div className="p-4 flex flex-col h-full bg-gray-50 text-gray-800">
+      <div className="p-4 flex flex-col h-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-bold flex items-center gap-2">
             <History size={18} /> Prompt History
@@ -110,7 +110,7 @@ export function PromptHistoryPanel() {
         </div>
         <div className="flex-grow overflow-y-auto thin-scrollbar">
           {promptHistory.length === 0 ? (
-            <div className="flex-grow flex items-center justify-center text-gray-500">
+            <div className="flex-grow flex items-center justify-center text-gray-500 dark:text-gray-400">
               <p>Your prompt history for this project will appear here.</p>
             </div>
           ) : (
@@ -133,14 +133,14 @@ export function PromptHistoryPanel() {
                 return (
                   <div
                     key={entry.id}
-                    className="bg-white p-3 rounded-lg border border-gray-200"
+                    className="bg-white dark:bg-gray-700/50 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
                   >
-                    <p className="text-xs text-gray-500 mb-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                       {new Date(entry.timestamp).toLocaleString()}
                     </p>
                     <p
                       onClick={() => handleOpenDetailModal(entry)}
-                      className="text-sm text-gray-700 whitespace-pre-wrap font-mono bg-gray-50 p-2 rounded-md mb-3 cursor-pointer hover:bg-gray-100"
+                      className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800 p-2 rounded-md mb-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 select-text"
                       title="Click to view/edit full prompt"
                     >
                       {instructionPreview(entry.instructions)}

@@ -33,14 +33,17 @@ export function Layout({ leftPanel, mainPanel, rightPanel }: LayoutProps) {
   }, [isReviewing]);
 
   return (
-    <PanelGroup direction="horizontal" className="h-full w-full bg-white">
+    <PanelGroup
+      direction="horizontal"
+      className="h-full w-full bg-white dark:bg-gray-800"
+    >
       <Panel defaultSize={25} minSize={15}>
         {leftPanel}
       </Panel>
-      <PanelResizeHandle className="w-px bg-gray-200 hover:bg-blue-500 transition-colors data-[resize-handle-state=drag]:bg-blue-500" />
+      <PanelResizeHandle className="w-px bg-gray-200 hover:bg-blue-500 transition-colors data-[resize-handle-state=drag]:bg-blue-500 dark:bg-gray-700" />
       <Panel minSize={40}>{mainPanel}</Panel>
       <PanelResizeHandle
-        className={`w-px bg-gray-200 hover:bg-blue-500 transition-colors data-[resize-handle-state=drag]:bg-blue-500 ${
+        className={`w-px bg-gray-200 hover:bg-blue-500 transition-colors data-[resize-handle-state=drag]:bg-blue-500 dark:bg-gray-700 ${
           isReviewing ? 'hidden' : ''
         }`}
       />

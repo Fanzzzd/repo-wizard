@@ -7,9 +7,12 @@ type CheckboxProps = Omit<React.ComponentPropsWithRef<'input'>, 'type'> & {
 
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
   ({ className, children, checked, isIndeterminate, ...props }, ref) => {
+    // Extract title to apply to the label, not the input
+    const { title, ...restProps } = props;
     return (
       <label
-        className={`flex items-center gap-2 text-sm text-gray-700 select-none ${
+        title={title}
+        className={`flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 select-none ${
           className ?? ''
         }`}
       >
@@ -18,14 +21,14 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           ref={ref}
           checked={checked}
           className="sr-only peer"
-          {...props}
+          {...restProps}
         />
         <div
           className={`relative h-[14px] w-[14px] flex-shrink-0 rounded border transition-colors
             ${
               checked || isIndeterminate
                 ? 'border-blue-400 bg-blue-400'
-                : 'border-gray-300 bg-white'
+                : 'border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800'
             }
             peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-blue-500
             peer-disabled:opacity-50

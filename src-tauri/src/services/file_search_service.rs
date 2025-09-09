@@ -127,7 +127,7 @@ pub async fn search_files(
 
         if !settings.custom_ignore_patterns.is_empty() {
             if let Err(e) = builder.add_custom_ignore_patterns(&settings.custom_ignore_patterns) {
-                log::error!("Error adding custom ignore patterns: {}", e);
+                log::error!("Error adding custom ignore patterns: {e}");
             }
         }
 
@@ -149,7 +149,7 @@ pub async fn search_files(
             let entry = match result {
                 Ok(entry) => entry,
                 Err(e) => {
-                    log::warn!("Error during file walk for search: {}", e);
+                    log::warn!("Error during file walk for search: {e}");
                     continue;
                 }
             };

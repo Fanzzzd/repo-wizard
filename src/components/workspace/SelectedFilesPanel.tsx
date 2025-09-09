@@ -97,7 +97,7 @@ export function SelectedFilesPanel() {
   }, [fileDetails, sortBy]);
 
   return (
-    <div className="p-2 flex flex-col h-full bg-gray-50 text-gray-800">
+    <div className="p-2 flex flex-col h-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
       <div className="flex justify-between items-center mb-2 px-1 flex-shrink-0">
         <h3 className="text-sm font-semibold">
           Selected Files ({selectedFilePaths.length})
@@ -108,8 +108,8 @@ export function SelectedFilesPanel() {
             title="Sort by name"
             className={`p-1 rounded-md transition-colors ${
               sortBy === 'name'
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-500 hover:bg-gray-200'
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
+                : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
             }`}
           >
             <ArrowDownAZ size={16} />
@@ -119,15 +119,15 @@ export function SelectedFilesPanel() {
             title="Sort by token count"
             className={`p-1 rounded-md transition-colors ${
               sortBy === 'tokens'
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-500 hover:bg-gray-200'
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
+                : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
             }`}
           >
             <ArrowDown10 size={16} />
           </button>
         </div>
       </div>
-      <div className="bg-white rounded-md p-1 text-xs flex-grow overflow-y-auto border border-gray-200 min-h-0">
+      <div className="bg-white dark:bg-gray-900 rounded-md p-1 text-xs flex-grow overflow-y-auto border border-gray-200 dark:border-gray-700 min-h-0">
         {sortedFiles.length > 0 ? (
           <ul className="flex flex-col gap-0.5">
             {sortedFiles.map(({ path, shortPath, tokens, isBinary }) => {
@@ -136,16 +136,20 @@ export function SelectedFilesPanel() {
                 <li
                   key={path}
                   className={`flex items-center justify-between p-1.5 rounded group select-none ${
-                    isActive ? 'bg-blue-100 text-blue-900' : 'hover:bg-gray-100'
+                    isActive
+                      ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/50 dark:text-blue-100'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'
                   } ${isBinary ? 'cursor-not-allowed' : 'cursor-default'}`}
                   onClick={() => !isBinary && setActiveFilePath(path)}
                 >
                   <ShortenedPath
                     path={shortPath}
-                    className={`truncate font-mono ${isBinary ? 'text-gray-400' : ''}`}
+                    className={`truncate font-mono ${
+                      isBinary ? 'text-gray-400 dark:text-gray-500' : ''
+                    }`}
                   />
                   <div className="flex items-center flex-shrink-0 ml-2">
-                    <span className="text-gray-500 w-20 text-right">
+                    <span className="text-gray-500 dark:text-gray-400 w-20 text-right">
                       {isBinary
                         ? 'Binary File'
                         : `${formatTokenCount(tokens)} tokens`}
@@ -155,7 +159,7 @@ export function SelectedFilesPanel() {
                         e.stopPropagation();
                         removeSelectedFilePath(path);
                       }}
-                      className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 ml-2"
+                      className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 ml-2"
                       title={`Remove ${path.split('/').pop()}`}
                     >
                       <X size={14} />
@@ -167,13 +171,13 @@ export function SelectedFilesPanel() {
           </ul>
         ) : (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-400 p-2 text-center">
+            <p className="text-gray-400 dark:text-gray-500 p-2 text-center">
               Select files from the tree to add them to the prompt context.
             </p>
           </div>
         )}
       </div>
-      <div className="text-xs text-gray-600 font-medium pt-2 px-1 flex-shrink-0 text-right">
+      <div className="text-xs text-gray-600 dark:text-gray-300 font-medium pt-2 px-1 flex-shrink-0 text-right">
         Total Tokens: ~{formatTokenCount(totalTokens)}
       </div>
     </div>

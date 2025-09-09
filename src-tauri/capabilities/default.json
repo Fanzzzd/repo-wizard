@@ -36,6 +36,7 @@
     "process:default",
     "store:default",
     "core:window:allow-set-title",
+    "core:window:allow-set-theme",
     {
       "identifier": "http:default",
       "allow": [

@@ -1,7 +1,6 @@
 import { useEffect, useCallback, useState, useMemo } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
 import {
   Menu,
   Submenu,
@@ -9,7 +8,7 @@ import {
   PredefinedMenuItem,
 } from '@tauri-apps/api/menu';
 import { platform } from '@tauri-apps/plugin-os';
-import { getMatches } from '@tauri-apps/plugin-cli';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 import { Layout } from './components/Layout';
 import { MainPanel } from './components/MainPanel';
@@ -38,20 +37,46 @@ declare global {
   }
 }
 
-interface SingleInstancePayload {
-  args: string[];
-  cwd: string;
-}
-
 function App() {
   const { setRootPath, rootPath } = useWorkspaceStore();
   const { isReviewing } = useReviewStore();
   const { open: openDialog } = useDialogStore();
   const { status, updateInfo, install } = useUpdateStore();
-  const { recentProjects } = useSettingsStore();
+  const { theme, recentProjects } = useSettingsStore();
   const { openModal: openFileSearchModal } = useFileSearchStore();
   const [fontSize, setFontSize] = useState(14);
   const [isInputFocused, setIsInputFocused] = useState(false);
+
+  useEffect(() => {
+    const win = getCurrentWindow();
+
+    const syncTheme = async () => {
+      const selectedTheme = theme;
+      localStorage.setItem('theme', selectedTheme);
+      try {
+        const nativeTheme = selectedTheme === 'system' ? null : selectedTheme;
+        await win.setTheme(nativeTheme);
+        const isDark =
+          selectedTheme === 'dark' ||
+          (selectedTheme === 'system' && (await win.theme()) === 'dark');
+        document.documentElement.classList.toggle('dark', isDark);
+      } catch (e) {
+        console.error('Failed to apply theme:', e);
+      }
+    };
+
+    syncTheme();
+
+    const unlistenPromise = win.onThemeChanged(({ payload: osTheme }) => {
+      if (useSettingsStore.getState().theme === 'system') {
+        document.documentElement.classList.toggle('dark', osTheme === 'dark');
+      }
+    });
+
+    return () => {
+      unlistenPromise.then(unlisten => unlisten());
+    };
+  }, [theme]);
 
   useEffect(() => {
     const handleFocusChange = () => {
@@ -74,25 +99,6 @@ function App() {
     return () => {
       document.removeEventListener('focusin', handleFocusChange, true);
       document.removeEventListener('focusout', handleFocusChange, true);
-    };
-  }, []);
-
-  useEffect(() => {
-    const unlisten = listen<SingleInstancePayload>('single-instance', event => {
-      const { args: argv, cwd } = event.payload;
-      if (argv.length > 1 && argv[1]) {
-        invoke<string>('resolve_path', { path: argv[1], cwd })
-          .then(absolutePath => {
-            invoke('open_project_window', { rootPath: absolutePath });
-          })
-          .catch(e => {
-            console.warn('Could not process single-instance CLI argument:', e);
-          });
-      }
-    });
-
-    return () => {
-      unlisten.then(f => f());
     };
   }, []);
 
@@ -129,8 +135,9 @@ function App() {
                 recentProjects.map(path =>
                   MenuItem.new({
                     text: path,
-                    action: () =>
-                      invoke('open_project_window', { rootPath: path }),
+                    action: async () => {
+                      await useWorkspaceStore.getState().setRootPath(path);
+                    },
                   })
                 )
               ),
@@ -159,17 +166,11 @@ function App() {
           await PredefinedMenuItem.new({ item: 'Separator' }),
           await PredefinedMenuItem.new({ item: 'Services' }),
           await PredefinedMenuItem.new({ item: 'Separator' }),
-          await PredefinedMenuItem.new({
-            item: 'Hide',
-            text: 'Hide Repo Wizard',
-          }),
+          await PredefinedMenuItem.new({ item: 'Hide', text: 'Hide Repo Wizard' }),
           await PredefinedMenuItem.new({ item: 'HideOthers' }),
           await PredefinedMenuItem.new({ item: 'ShowAll' }),
           await PredefinedMenuItem.new({ item: 'Separator' }),
-          await PredefinedMenuItem.new({
-            item: 'Quit',
-            text: 'Quit Repo Wizard',
-          }),
+          await PredefinedMenuItem.new({ item: 'Quit', text: 'Quit Repo Wizard' }),
         ],
       });
       allMenuItems.push(appMenu);
@@ -205,10 +206,7 @@ function App() {
         }),
         ...openRecentSubmenu,
         await PredefinedMenuItem.new({ item: 'Separator' }),
-        await PredefinedMenuItem.new({
-          item: 'CloseWindow',
-          text: 'Close Window',
-        }),
+        await PredefinedMenuItem.new({ item: 'CloseWindow', text: 'Close Window' }),
       ],
     });
     allMenuItems.push(fileMenu);
@@ -234,10 +232,7 @@ function App() {
       );
     }
 
-    const editMenu = await Submenu.new({
-      text: 'Edit',
-      items: editMenuItems,
-    });
+    const editMenu = await Submenu.new({ text: 'Edit', items: editMenuItems });
     allMenuItems.push(editMenu);
 
     const viewMenu = await Submenu.new({
@@ -246,20 +241,17 @@ function App() {
         await MenuItem.new({
           text: 'Zoom In',
           accelerator: 'CmdOrCtrl+=',
-          action: () =>
-            window.dispatchEvent(new CustomEvent('zoom', { detail: 'in' })),
+          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'in' })),
         }),
         await MenuItem.new({
           text: 'Zoom Out',
           accelerator: 'CmdOrCtrl+-',
-          action: () =>
-            window.dispatchEvent(new CustomEvent('zoom', { detail: 'out' })),
+          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'out' })),
         }),
         await MenuItem.new({
           text: 'Reset Zoom',
           accelerator: 'CmdOrCtrl+0',
-          action: () =>
-            window.dispatchEvent(new CustomEvent('zoom', { detail: 'reset' })),
+          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'reset' })),
         }),
       ],
     });
@@ -277,31 +269,23 @@ function App() {
     });
     allMenuItems.push(windowMenu);
 
-    const menu = await Menu.new({
-      items: allMenuItems,
-    });
+    const menu = await Menu.new({ items: allMenuItems });
     await menu.setAsAppMenu();
   }, [recentProjects, openDialog, isInputFocused, rootPath]);
 
   useEffect(() => {
     const initializeApp = async () => {
+      // This is for windows created by `open_project_window` command, which sets this global.
       if (window.__RPO_WIZ_PROJECT_ROOT__) {
         await setRootPath(window.__RPO_WIZ_PROJECT_ROOT__);
+        // The project is registered in the backend, but we need to ensure this window's
+        // state is also aware of it.
         return;
       }
 
-      try {
-        const matches = await getMatches();
-        const pathArg = matches.args.path?.value;
-        if (pathArg && typeof pathArg === 'string') {
-          const absolutePath = await invoke<string>('resolve_path', {
-            path: pathArg,
-          });
-          await setRootPath(absolutePath);
-        }
-      } catch (e) {
-        console.warn('Could not process CLI arguments:', e);
-      }
+      // Initial app launch (not from CLI) or a new window command.
+      // This is a blank window, so we register it as such.
+      await invoke('register_window_project', { rootPath: null });
     };
     initializeApp();
   }, [setRootPath]);
@@ -309,6 +293,19 @@ function App() {
   useEffect(() => {
     setupMenu();
   }, [setupMenu]);
+
+  useEffect(() => {
+    const updateTitle = async () => {
+      try {
+        const win = getCurrentWindow();
+        const title = rootPath
+          ? rootPath.split(/[\\\/]/).filter(Boolean).pop() || rootPath
+          : 'Repo Wizard';
+        await win.setTitle(title);
+      } catch {}
+    };
+    updateTitle();
+  }, [rootPath]);
 
   useEffect(() => {
     const showUpdateDialog = async () => {
@@ -360,12 +357,11 @@ function App() {
     []
   );
 
-  // Set up global keyboard shortcuts
   useKeyboardShortcuts(
     [
       {
         key: 'p',
-        metaKey: true, // Cmd on Mac
+        metaKey: true,
         ctrlKey: false,
         action: () => {
           if (rootPath && !isInputFocused) {
@@ -376,7 +372,7 @@ function App() {
       },
       {
         key: 'p',
-        ctrlKey: true, // Ctrl on Windows/Linux
+        ctrlKey: true,
         metaKey: false,
         action: () => {
           if (rootPath && !isInputFocused) {
@@ -387,19 +383,15 @@ function App() {
       },
     ],
     !isInputFocused
-  ); // Only enable when not in input fields
+  );
 
   const leftPanel = isReviewing ? <ChangeList /> : <WorkspaceSidebar />;
 
   return (
-    <div className="h-full w-full flex flex-col bg-gray-50">
+    <div className="h-full w-full flex flex-col">
       <Header />
       <div className="flex-grow min-h-0">
-        <Layout
-          leftPanel={leftPanel}
-          mainPanel={<MainPanel />}
-          rightPanel={workspaceRightPanel}
-        />
+        <Layout leftPanel={leftPanel} mainPanel={<MainPanel />} rightPanel={workspaceRightPanel} />
       </div>
 
       <ModalDialog />
