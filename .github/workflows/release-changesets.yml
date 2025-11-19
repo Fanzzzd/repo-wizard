@@ -134,7 +134,9 @@ jobs:
       
       - name: Extract Changelog
         id: changelog
-        run: node scripts/extract-latest-changelog.mjs >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(jq -r .version package.json)
+          node scripts/extract-latest-changelog.mjs "$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build and Upload Assets
         uses: tauri-apps/tauri-action@v0
