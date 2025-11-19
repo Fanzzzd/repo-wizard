@@ -16,9 +16,8 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     outputs:
-      should_release: ${{ steps.check_tag.outputs.should_release }}
-      tag_name: ${{ steps.check_tag.outputs.tag_name }}
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      published: ${{ steps.changesets.outputs.published }}
+      tag_name: v${{ steps.get_version.outputs.version }}
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -37,50 +36,29 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Create Release Pull Request
+      - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@v1
         with:
-          # We don't use the 'publish' input here because we handle tagging manually
           version: npm run version-packages
+          publish: npm run create-tags
           commit: 'chore: version packages'
           title: 'chore: version packages'
+          createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check and Create Tag
-        id: check_tag
+      
+      - name: Get Current Version
+        id: get_version
+        if: steps.changesets.outputs.published == 'true'
         run: |
           VERSION=$(jq -r .version package.json)
-          TAG="app-v$VERSION"
-          echo "Checking for tag: $TAG"
-          
-          git fetch --tags
-          
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists."
-            # If tag exists, we assume it was already released? 
-            # Or maybe we want to re-run build? 
-            # For safety, let's say we release if it exists but maybe checking if release exists is better.
-            # But for this specific "fix", we want to trigger build for the NEW tag.
-            echo "tag_name=$TAG" >> $GITHUB_OUTPUT
-            echo "should_release=true" >> $GITHUB_OUTPUT
-          else
-            echo "Tag $TAG does not exist. Creating..."
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git tag -a "$TAG" -m "Release $TAG"
-            git push origin "$TAG"
-            echo "tag_name=$TAG" >> $GITHUB_OUTPUT
-            echo "should_release=true" >> $GITHUB_OUTPUT
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
   build:
     name: Build & Upload Assets
     needs: release
-    if: needs.release.outputs.should_release == 'true'
+    if: needs.release.outputs.published == 'true'
     permissions:
       contents: write
     strategy:
@@ -141,7 +119,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ needs.release.outputs.tag_name }}
-          releaseName: 'App ${{ needs.release.outputs.tag_name }}'
+          releaseName: '${{ needs.release.outputs.tag_name }}'
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
           prerelease: false
