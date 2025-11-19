@@ -51,6 +51,7 @@ jobs:
 
       - name: Check and Create Tag
         id: check_tag
+        if: steps.changesets.outputs.hasChangesets != 'true'
         run: |
           VERSION=$(jq -r .version package.json)
           TAG="v$VERSION"
@@ -62,7 +63,6 @@ jobs:
             echo "Tag $TAG already exists."
             echo "tag_name=$TAG" >> $GITHUB_OUTPUT
             echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "should_release=true" >> $GITHUB_OUTPUT
           else
             echo "Tag $TAG does not exist. Creating..."
             git config user.name "github-actions[bot]"
