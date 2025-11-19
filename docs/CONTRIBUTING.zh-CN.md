@@ -36,8 +36,8 @@
 
 1.  **开发**：我们在 `main` 分支上进行开发。
 2.  **Version Packages PR**：Changesets 机器人会自动创建并维护一个 "Version Packages" PR。
-    -   这个 PR 会收集所有已合并 PR 中的 changesets。
-    -   它会自动更新 `CHANGELOG.md` 并提升 `package.json`、`src-tauri/Cargo.toml` 和 `src-tauri/tauri.conf.json` 中的版本号。
+    -   这个 PR 会汇总所有已合并 PR 中的变更集。
+    -   它会自动运行 `changeset version` 来更新 `CHANGELOG.md` 并提升 `package.json` 和 `src-tauri/Cargo.toml` 中的版本号。
 3.  **发布**：
     -   审查 "Version Packages" PR，确认更新日志和版本号。
     -   当你准备好发布时，**合并这个 PR**。

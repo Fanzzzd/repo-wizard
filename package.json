@@ -17,7 +17,7 @@
     "fmt:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\" && cargo fmt --manifest-path src-tauri/Cargo.toml --check",
     "fmt:web": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "fmt:rust": "cargo fmt --manifest-path src-tauri/Cargo.toml",
-    "version-packages": "changeset version && node scripts/version-sync.mjs",
+    "version-packages": "changeset version",
     "create-tags": "changeset tag && git push --follow-tags"
   },
   "dependencies": {

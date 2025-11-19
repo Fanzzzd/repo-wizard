@@ -37,7 +37,7 @@ Our release process is automated using [Changesets](https://github.com/changeset
 1.  **Development**: We develop on the `main` branch.
 2.  **Version Packages PR**: The Changesets bot automatically creates and maintains a "Version Packages" PR.
     -   This PR accumulates changesets from merged Pull Requests.
-    -   It updates `CHANGELOG.md` and bumps versions in `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json`.
+    -   It automatically runs `changeset version` to update `CHANGELOG.md` and bump versions in `package.json` and `src-tauri/Cargo.toml`.
 3.  **Publishing**:
     -   Review the "Version Packages" PR to see the changelog and version bumps.
     -   **Merge the PR** when you are ready to release.
