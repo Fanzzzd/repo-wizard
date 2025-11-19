@@ -1,5 +1,11 @@
 # [1.8.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.7.0...app-v1.8.0) (2025-09-09)
 
+## 1.9.0
+
+### Minor Changes
+
+- d9d325b: Refactored LLM file editing commands for better semantic clarity: renamed `MODIFY` to `PATCH` (for partial edits) and `REWRITE` to `OVERWRITE` (for full file replacement). The diff mode now also supports overwrite modifications, allowing the model to choose the most appropriate editing mode.
+
 ## 1.8.2
 
 ### Patch Changes
@@ -484,4 +490,3 @@
 - add meta prompt management to PromptComposer; enhance prompt building with meta prompts ([85de14e](https://github.com/Fanzzzd/repo-wizard/commit/85de14e8e6ab6bbc46648008627d1a9bae47cd67))
 - introduce MetaPromptsManagerModal for managing meta prompts; integrate with PromptComposer for enhanced prompt building ([d9a33d6](https://github.com/Fanzzzd/repo-wizard/commit/d9a33d6ba220ab59c0ffc746077a27ec2ea14a0e))
 - whole edit works ([a60acce](https://github.com/Fanzzzd/repo-wizard/commit/a60accedf682ff0bcbb8486413c7de872f8317df))
-
