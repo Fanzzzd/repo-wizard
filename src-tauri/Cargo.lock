@@ -3913,7 +3913,7 @@ dependencies = [
 
 [[package]]
 name = "repo-wizard"
-version = "1.8.0"
+version = "1.8.1"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
