@@ -1,5 +1,11 @@
 # [1.8.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.7.0...app-v1.8.0) (2025-09-09)
 
+## 1.8.2
+
+### Patch Changes
+
+- 403df81: Internal: Optimize tauri.conf.json to inherit version from package.json.
+
 ## 1.8.1
 
 ### Patch Changes
