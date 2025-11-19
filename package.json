@@ -17,7 +17,8 @@
     "fmt:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\" && cargo fmt --manifest-path src-tauri/Cargo.toml --check",
     "fmt:web": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "fmt:rust": "cargo fmt --manifest-path src-tauri/Cargo.toml",
-    "semantic-release": "semantic-release"
+    "version-packages": "changeset version && node scripts/version-sync.mjs",
+    "create-tags": "changeset tag"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -53,12 +54,7 @@
     "zustand": "^4.5.7"
   },
   "devDependencies": {
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/exec": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^10.3.5",
-    "@semantic-release/release-notes-generator": "^14.0.3",
+    "@changesets/cli": "^2.29.7",
     "@tailwindcss/vite": "^4.1.11",
     "@tauri-apps/cli": "^2.7.0",
     "@types/node": "^20.19.9",
@@ -68,7 +64,6 @@
     "@vitejs/plugin-react": "^4.7.0",
     "cross-env": "^7.0.3",
     "prettier": "^3.3.3",
-    "semantic-release": "^24.2.7",
     "typescript": "~5.5.4",
     "vite": "^5.4.19"
   }

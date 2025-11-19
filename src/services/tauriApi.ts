@@ -55,6 +55,15 @@ export const isBinaryFile = async (path: string): Promise<boolean> => {
   }
 };
 
+export const fileExists = async (path: string): Promise<boolean> => {
+  try {
+    return await invoke('file_exists', { path });
+  } catch (err) {
+    // If the existence check fails, assume it doesn't exist
+    return false;
+  }
+};
+
 export const writeFileContent = async (
   path: string,
   content: string

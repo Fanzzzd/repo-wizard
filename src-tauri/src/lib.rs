@@ -22,9 +22,7 @@ pub fn run() {
         .manage(state::WindowRegistry::default())
         .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
             debug!(
-                "Single instance activated. Args: {:?}, CWD: {:?}",
-                argv,
-                cwd
+                "Single instance activated. Args: {argv:?}, CWD: {cwd:?}"
             );
 
             // Emit event for potential listeners (kept for compatibility)
@@ -44,13 +42,13 @@ pub fn run() {
             // Defer execution to the main thread's event loop to prevent race conditions
             app.run_on_main_thread(move || {
                 if let Some(path_arg) = argv_clone.get(1).cloned() {
-                    debug!("(Main thread) CLI invocation with path argument: {}", path_arg);
+                    debug!("(Main thread) CLI invocation with path argument: {path_arg}");
                     tauri::async_runtime::spawn(async move {
                         let absolute_path =
                             crate::core::path_utils::resolve_path(&path_arg, Some(cwd_clone)).unwrap_or(path_arg);
-                        debug!("(Main thread) Resolved path to: {}", absolute_path);
+                        debug!("(Main thread) Resolved path to: {absolute_path}");
                         if let Err(e) = crate::commands::open_project_window(app_handle, absolute_path) {
-                            error!("(Main thread) Failed to open project window: {}", e);
+                            error!("(Main thread) Failed to open project window: {e}");
                         }
                     });
                 } else {
@@ -58,20 +56,20 @@ pub fn run() {
                     // No path: focus a blank window if available, otherwise create a new blank one
                     if let Some(reg) = app_handle.try_state::<state::WindowRegistry>() {
                         if let Some(label) = reg.first_blank_window_label() {
-                            debug!("(Main thread) Found blank window with label: {}. Focusing.", label);
+                            debug!("(Main thread) Found blank window with label: {label}. Focusing.");
                             if let Some(win) = app_handle.get_webview_window(&label) {
                                 if let Err(e) = win.set_focus() {
-                                    error!("(Main thread) Failed to focus window {}: {}", label, e);
+                                    error!("(Main thread) Failed to focus window {label}: {e}");
                                 }
                                 return;
                             } else {
-                               warn!("(Main thread) Window registry had label '{}' but window was not found.", label);
+                               warn!("(Main thread) Window registry had label '{label}' but window was not found.");
                             }
                         }
                     }
                     debug!("(Main thread) No blank window found. Creating a new one.");
                     if let Err(e) = crate::commands::create_new_window(app_handle) {
-                        error!("(Main thread) Failed to create new blank window: {}", e);
+                        error!("(Main thread) Failed to create new blank window: {e}");
                     }
                 }
             }).unwrap();
@@ -106,7 +104,7 @@ pub fn run() {
             match app.cli().matches() {
                 Ok(matches) => {
                     if let Some(path_arg) = matches.args.get("path").and_then(|arg| arg.value.as_str()) {
-                        debug!("Initial launch with path arg: {}", path_arg);
+                        debug!("Initial launch with path arg: {path_arg}");
                         
                         if let Some(main_window) = handle.get_webview_window("main") {
                             let _ = main_window.close();
@@ -117,7 +115,7 @@ pub fn run() {
                         let absolute_path = crate::core::path_utils::resolve_path(&path_arg_clone, cwd).unwrap_or(path_arg_clone);
                         
                         if let Err(e) = crate::commands::open_project_window(handle, absolute_path) {
-                            error!("Failed to open project window on startup: {}", e);
+                            error!("Failed to open project window on startup: {e}");
                         }
                     } else {
                         debug!("Initial launch with no path arg. Showing main window.");
@@ -129,13 +127,13 @@ pub fn run() {
                         } else {
                             // Fallback if main window isn't there for some reason
                             if let Err(e) = crate::commands::create_new_window(handle) {
-                                error!("Failed to create blank window on startup: {}", e);
+                                error!("Failed to create blank window on startup: {e}");
                             }
                         }
                     }
                 }
                 Err(e) => {
-                    error!("Error getting CLI matches: {}. Opening blank window.", e);
+                    error!("Error getting CLI matches: {e}. Opening blank window.");
                     if let Some(main_window) = handle.get_webview_window("main") {
                         let _ = main_window.show();
                         if let Some(reg) = handle.try_state::<state::WindowRegistry>() {
@@ -156,6 +154,7 @@ pub fn run() {
             commands::read_file_content,
             commands::read_file_as_base64,
             commands::is_binary_file,
+            commands::file_exists,
             commands::write_file_content,
             commands::delete_file,
             commands::move_file,

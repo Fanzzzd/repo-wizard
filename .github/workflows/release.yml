@@ -2,62 +2,12 @@ name: 'Auto Release and Build'
 
 on:
   push:
-    branches:
-      - main
-      - next
+    tags:
+      - 'v*'
 
 jobs:
-  release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
-    outputs:
-      released: ${{ steps.semantic_release.outputs.released }}
-      tag_name: ${{ steps.semantic_release.outputs.tag_name }}
-      release_id: ${{ steps.semantic_release.outputs.release_id }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-          cache: 'pnpm'
-
-      - name: Install Node.js dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: './src-tauri -> target'
-
-      - name: Create Release
-        id: semantic_release
-        run: node scripts/release.mjs
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build:
     name: Build & Upload Assets
-    needs: release
-    if: needs.release.outputs.released == 'true'
     permissions:
       contents: write
     strategy:
@@ -75,10 +25,8 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - name: Checkout code for the specific release tag
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.release.outputs.tag_name }}
 
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -117,5 +65,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          releaseId: ${{ needs.release.outputs.release_id }}
+          tagName: ${{ github.ref_name }}
+          releaseName: 'App ${{ github.ref_name }}'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
+          prerelease: false
           args: ${{ matrix.args }}

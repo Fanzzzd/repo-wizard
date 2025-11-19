@@ -1,10 +1,11 @@
 import { useWorkspaceStore } from '../../store/workspaceStore';
-import { X, ArrowDownAZ, ArrowDown10 } from 'lucide-react';
+import { X, ArrowDownAZ, ArrowDown10, Trash2 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import {
   getRelativePath,
   readFileContent,
   isBinaryFile,
+  fileExists,
 } from '../../services/tauriApi';
 import { estimateTokens, formatTokenCount } from '../../lib/token_estimator';
 import { ShortenedPath } from '../common/ShortenedPath';
@@ -18,6 +19,8 @@ export function SelectedFilesPanel() {
     removeSelectedFilePath,
     activeFilePath,
     setActiveFilePath,
+    refreshCounter,
+    setSelectedFilePaths,
   } = useWorkspaceStore();
   const [fileDetails, setFileDetails] = useState<
     { path: string; shortPath: string; tokens: number; isBinary: boolean }[]
@@ -35,14 +38,37 @@ export function SelectedFilesPanel() {
         selectedFilePaths.map(async path => {
           try {
             const shortPath = await getRelativePath(path, rootPath);
-            const isBinary = await isBinaryFile(path);
-            if (isBinary) {
+            // 1) Existence check first
+            const exists = await fileExists(path);
+            if (!exists) {
+              console.warn(`File not found, removing from selection: ${path}`);
+              removeSelectedFilePath(path);
+              return null;
+            }
+            // 2) Binary check next - do not read binary files
+            const binary = await isBinaryFile(path);
+            if (binary) {
               return { path, shortPath, tokens: 0, isBinary: true };
             }
-
-            const content = await readFileContent(path);
-            const tokens = estimateTokens(content);
-            return { path, shortPath, tokens, isBinary: false };
+            // 3) Safe to read text content for tokens
+            try {
+              const content = await readFileContent(path);
+              const tokens = estimateTokens(content);
+              return { path, shortPath, tokens, isBinary: false };
+            } catch (readErr) {
+              if (isFileNotFoundError(readErr)) {
+                console.warn(`File not found, removing from selection: ${path}`);
+                removeSelectedFilePath(path);
+                return null;
+              }
+              showErrorDialog(
+                new AppError(
+                  `Failed to read file for token count: ${path}`,
+                  readErr
+                )
+              );
+              return null;
+            }
           } catch (error) {
             if (isFileNotFoundError(error)) {
               console.warn(`File not found, removing from selection: ${path}`);
@@ -74,7 +100,7 @@ export function SelectedFilesPanel() {
     };
 
     fetchDetails();
-  }, [selectedFilePaths, rootPath, removeSelectedFilePath]);
+  }, [selectedFilePaths, rootPath, removeSelectedFilePath, refreshCounter]);
 
   const totalTokens = useMemo(
     () => fileDetails.reduce((sum, file) => sum + file.tokens, 0),
@@ -124,6 +150,18 @@ export function SelectedFilesPanel() {
             }`}
           >
             <ArrowDown10 size={16} />
+          </button>
+          <button
+            onClick={() => setSelectedFilePaths([])}
+            title="Clear all selected files"
+            disabled={selectedFilePaths.length === 0}
+            className={`p-1 rounded-md transition-colors ${
+              selectedFilePaths.length === 0
+                ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
+            }`}
+          >
+            <Trash2 size={16} />
           </button>
         </div>
       </div>
