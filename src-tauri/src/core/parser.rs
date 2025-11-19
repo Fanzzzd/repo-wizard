@@ -12,12 +12,12 @@ use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
 pub enum IntermediateOperation {
-    Modify {
+    Patch {
         file_path: String,
         search_replace_blocks: Vec<(String, String)>,
         is_new_file: bool,
     },
-    Rewrite {
+    Overwrite {
         file_path: String,
         content: String,
         is_new_file: bool,
@@ -34,8 +34,8 @@ pub enum IntermediateOperation {
 fn parse_command_word(input: &str) -> IResult<&str, &str> {
     alt((
         tag_no_case("CREATE"),
-        tag_no_case("REWRITE"),
-        tag_no_case("MODIFY"),
+        tag_no_case("OVERWRITE"),
+        tag_no_case("PATCH"),
         tag_no_case("DELETE"),
         tag_no_case("MOVE"),
     ))
@@ -101,8 +101,8 @@ impl<'a> MarkdownParser<'a> {
 
         for op in command_blocks {
             let key = match &op {
-                IntermediateOperation::Modify { file_path, .. } => file_path.clone(),
-                IntermediateOperation::Rewrite { file_path, .. } => file_path.clone(),
+                IntermediateOperation::Patch { file_path, .. } => file_path.clone(),
+                IntermediateOperation::Overwrite { file_path, .. } => file_path.clone(),
                 IntermediateOperation::Delete { file_path } => file_path.clone(),
                 IntermediateOperation::Move { from_path, .. } => from_path.clone(),
             };
@@ -211,12 +211,12 @@ impl<'a> MarkdownParser<'a> {
                 }
                 None
             }
-            "CREATE" | "REWRITE" => Some(IntermediateOperation::Rewrite {
+            "CREATE" | "OVERWRITE" => Some(IntermediateOperation::Overwrite {
                 file_path: sanitize_path(args),
                 content: content.to_string(),
                 is_new_file: command == "CREATE",
             }),
-            "MODIFY" => {
+            "PATCH" => {
                 let mut is_new_file = false;
                 let mut search_replace_blocks = Vec::new();
 
@@ -236,7 +236,7 @@ impl<'a> MarkdownParser<'a> {
                 }
 
                 if !search_replace_blocks.is_empty() {
-                    return Some(IntermediateOperation::Modify {
+                    return Some(IntermediateOperation::Patch {
                         file_path: sanitize_path(args),
                         search_replace_blocks,
                         is_new_file,

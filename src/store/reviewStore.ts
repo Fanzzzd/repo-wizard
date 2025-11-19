@@ -68,7 +68,7 @@ const updateWorkspaceOnFileChange = (
   const isApply = direction === 'apply';
 
   const isCreateOperation =
-    (operation.type === 'modify' || operation.type === 'rewrite') &&
+    (operation.type === 'patch' || operation.type === 'overwrite') &&
     operation.isNewFile;
 
   if (isCreateOperation && isApply) {

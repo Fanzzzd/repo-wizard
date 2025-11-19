@@ -14,22 +14,22 @@ import { Button } from '../common/Button';
 import { ShortenedPath } from '../common/ShortenedPath';
 import { useReviewSession } from '../../hooks/useReviewSession';
 
-const ChangeTypeBadge = ({ type }: { type: 'A' | 'M' | 'W' | 'D' | 'R' }) => {
+const ChangeTypeBadge = ({ type }: { type: 'A' | 'P' | 'O' | 'D' | 'R' }) => {
   const typeMap = {
     A: {
       char: 'A',
       className: 'bg-green-500 text-white',
       title: 'Added',
     },
-    M: {
-      char: 'M',
+    P: {
+      char: 'P',
       className: 'bg-blue-500 text-white',
-      title: 'Modified',
+      title: 'Patched',
     },
-    W: {
-      char: 'W',
+    O: {
+      char: 'O',
       className: 'bg-purple-500 text-white',
-      title: 'Rewritten',
+      title: 'Overwritten',
     },
     D: {
       char: 'D',
@@ -118,10 +118,10 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
   const renderChangeDetails = () => {
     const { operation } = change;
     switch (operation.type) {
-      case 'modify':
+      case 'patch':
         return (
           <>
-            <ChangeTypeBadge type={operation.isNewFile ? 'A' : 'M'} />
+            <ChangeTypeBadge type={operation.isNewFile ? 'A' : 'P'} />
             <FileTypeIcon filename={operation.filePath} isDirectory={false} />
             <ShortenedPath
               path={operation.filePath}
@@ -129,10 +129,10 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
             />
           </>
         );
-      case 'rewrite':
+      case 'overwrite':
         return (
           <>
-            <ChangeTypeBadge type={operation.isNewFile ? 'A' : 'W'} />
+            <ChangeTypeBadge type={operation.isNewFile ? 'A' : 'O'} />
             <FileTypeIcon filename={operation.filePath} isDirectory={false} />
             <ShortenedPath
               path={operation.filePath}

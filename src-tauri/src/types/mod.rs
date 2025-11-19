@@ -13,14 +13,14 @@ pub struct FileNode {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ChangeOperation {
-    Modify {
+    Patch {
         #[serde(rename = "filePath")]
         file_path: String,
         content: String,
         #[serde(rename = "isNewFile")]
         is_new_file: bool,
     },
-    Rewrite {
+    Overwrite {
         #[serde(rename = "filePath")]
         file_path: String,
         content: String,

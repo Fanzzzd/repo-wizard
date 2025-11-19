@@ -31,8 +31,8 @@ export function DiffEditor() {
 
     let filePathForLanguage: string | undefined;
     switch (operation.type) {
-      case 'modify':
-      case 'rewrite':
+      case 'patch':
+      case 'overwrite':
       case 'delete':
         filePathForLanguage = operation.filePath;
         break;

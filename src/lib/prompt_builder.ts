@@ -31,44 +31,23 @@ interface BuildPromptResult {
 
 const diffFormattingRules = `# File editing rules:
 
-Return edits in search/replace blocks. Each set of changes for a file must be in a fenced code block, preceded by a \`MODIFY\` command with the file path.
+You can modify files using either search/replace blocks (for partial edits) or overwriting the entire file (for full content).
 
-**To modify an existing file with one or more changes:**
-MODIFY path/to/file.py
+**1. Modify using search/replace blocks (Preferred for targeted changes):**
+Use the \`PATCH\` command. Each change must be in a \`<<<<<<< SEARCH ... ======= ... >>>>>>> REPLACE\` block.
+
+PATCH path/to/file.py
 \`\`\`
 <<<<<<< SEARCH
-// original code to be replaced in the first location
+    original_code_line_1
+    original_code_line_2
 =======
-// new code to replace the original
->>>>>>> REPLACE
-<<<<<<< SEARCH
-// original code to be replaced in a second location
-=======
-// new code to replace it
+    new_code_line_1
+    new_code_line_2
 >>>>>>> REPLACE
 \`\`\`
-
-**To create a new file:**
-MODIFY path/to/new_file.ext
-\`\`\`
-<<<<<<< SEARCH
-=======
-// content of the new file
->>>>>>> REPLACE
-\`\`\`
-
-When using SEARCH/REPLACE, the SEARCH block must contain only the exact, original lines of code.
-
-To delete a file, output a single line:
-DELETE path/to/file.ext
-
-To move or rename a file, output a single line:
-MOVE path/from/old.ext TO path/to/new.ext
-`;
-
-const wholeFileFormattingRules = `# File editing rules:
-
-For each file you need to modify, use a command (\`CREATE\` for new files, \`REWRITE\` for existing files) followed by the file path, and then the complete, updated content of the file within a fenced code block.
+* The SEARCH block must match the original code exactly, character for character (including whitespace).
+* You can include multiple search/replace blocks for the same file within one fenced block.
 
 **To create a new file:**
 CREATE path/to/new_file.py
@@ -76,8 +55,33 @@ CREATE path/to/new_file.py
 // this file does not exist, it's just an example file to show you the response format
 \`\`\`
 
-**To modify an existing file:**
-REWRITE path/to/existing_file.py
+**To fully overwrite an existing file:**
+OVERWRITE path/to/existing_file.py
+\`\`\`python
+// this file does not exist, it's just an example file to show you the response format
+\`\`\`
+
+**Other operations:**
+
+To delete a file:
+DELETE path/to/file.ext
+
+To move or rename a file:
+MOVE path/from/old.ext TO path/to/new.ext
+`;
+
+const wholeFileFormattingRules = `# File editing rules:
+
+For each file you need to modify, use a command (\`CREATE\` for new files, \`OVERWRITE\` for existing files) followed by the file path, and then the complete, updated content of the file within a fenced code block.
+
+**To create a new file:**
+CREATE path/to/new_file.py
+\`\`\`python
+// this file does not exist, it's just an example file to show you the response format
+\`\`\`
+
+**To fully overwrite an existing file:**
+OVERWRITE path/to/existing_file.py
 \`\`\`python
 // this file does not exist, it's just an example file to show you the response format
 \`\`\`

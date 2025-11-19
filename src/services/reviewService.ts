@@ -19,8 +19,8 @@ export async function processAndStartReview(
   const filesToSnapshot = new Set<string>();
   initialChanges.forEach(({ operation }) => {
     switch (operation.type) {
-      case 'modify':
-      case 'rewrite':
+      case 'patch':
+      case 'overwrite':
       case 'delete':
         filesToSnapshot.add(operation.filePath);
         break;
@@ -44,7 +44,7 @@ export async function processAndStartReview(
         }
       };
 
-      if (operation.type === 'modify' || operation.type === 'rewrite') {
+      if (operation.type === 'patch' || operation.type === 'overwrite') {
         const originalContent = await getBaseFileContent(operation.filePath);
         const isNewFile = originalContent === null;
         const updatedOperation = { ...operation, isNewFile };
@@ -66,8 +66,8 @@ export async function applyChange(change: ReviewChange, rootPath: string) {
   const getAbsPath = (p: string) => `${rootPath}/${p}`;
   const { operation } = change;
   switch (operation.type) {
-    case 'modify':
-    case 'rewrite':
+    case 'patch':
+    case 'overwrite':
       await tauriApi.writeFileContent(
         getAbsPath(operation.filePath),
         operation.content
@@ -93,8 +93,8 @@ export async function revertChange(
   const getAbsPath = (p: string) => `${rootPath}/${p}`;
   const { operation } = change;
   switch (operation.type) {
-    case 'modify':
-    case 'rewrite':
+    case 'patch':
+    case 'overwrite':
       if (operation.isNewFile)
         await tauriApi.deleteFile(getAbsPath(operation.filePath));
       else

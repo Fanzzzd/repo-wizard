@@ -319,9 +319,11 @@ function App() {
                 A new version ({updateInfo.version}) is available. You are using{' '}
                 {__APP_VERSION__}.
               </p>
-              <p className="mt-2 text-sm text-gray-500">Release Notes:</p>
-              <div className="mt-1 max-h-40 overflow-y-auto rounded-md border bg-gray-50 p-2 text-sm thin-scrollbar">
-                <pre className="whitespace-pre-wrap font-sans">
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Release Notes:
+              </p>
+              <div className="mt-1 max-h-40 overflow-y-auto rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2 text-sm thin-scrollbar">
+                <pre className="whitespace-pre-wrap font-sans text-gray-800 dark:text-gray-300">
                   {updateInfo.body || 'No release notes available.'}
                 </pre>
               </div>
@@ -391,7 +393,11 @@ function App() {
     <div className="h-full w-full flex flex-col">
       <Header />
       <div className="flex-grow min-h-0">
-        <Layout leftPanel={leftPanel} mainPanel={<MainPanel />} rightPanel={workspaceRightPanel} />
+        <Layout
+          leftPanel={leftPanel}
+          mainPanel={<MainPanel />}
+          rightPanel={workspaceRightPanel}
+        />
       </div>
 
       <ModalDialog />

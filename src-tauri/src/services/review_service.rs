@@ -16,8 +16,8 @@ pub async fn process_markdown_changes(
 
     for op in intermediate_ops {
         match &op {
-            parser::IntermediateOperation::Modify { file_path, .. }
-            | parser::IntermediateOperation::Rewrite { file_path, .. } => {
+            parser::IntermediateOperation::Patch { file_path, .. }
+            | parser::IntermediateOperation::Overwrite { file_path, .. } => {
                 file_ops.entry(file_path.clone()).or_default().push(op);
             }
             _ => other_ops.push(op),
@@ -35,11 +35,11 @@ pub async fn process_markdown_changes(
         };
 
         let mut is_new_file_flag = !path_buf.exists();
-        let mut last_op_type_is_modify = false;
+        let mut last_op_type_is_patch = false;
 
         for op in ops {
             match op {
-                parser::IntermediateOperation::Modify {
+                parser::IntermediateOperation::Patch {
                     search_replace_blocks,
                     is_new_file,
                     ..
@@ -67,9 +67,9 @@ pub async fn process_markdown_changes(
                     if is_new_file {
                         is_new_file_flag = true;
                     }
-                    last_op_type_is_modify = true;
+                    last_op_type_is_patch = true;
                 }
-                parser::IntermediateOperation::Rewrite {
+                parser::IntermediateOperation::Overwrite {
                     content,
                     is_new_file,
                     ..
@@ -78,7 +78,7 @@ pub async fn process_markdown_changes(
                     if is_new_file {
                         is_new_file_flag = true;
                     }
-                    last_op_type_is_modify = false;
+                    last_op_type_is_patch = false;
                 }
                 _ => {}
             }
@@ -86,14 +86,14 @@ pub async fn process_markdown_changes(
 
         let final_content = String::from_utf8(current_content)?;
 
-        if last_op_type_is_modify {
-            processed_ops.push(ChangeOperation::Modify {
+        if last_op_type_is_patch {
+            processed_ops.push(ChangeOperation::Patch {
                 file_path,
                 content: final_content,
                 is_new_file: is_new_file_flag,
             });
         } else {
-            processed_ops.push(ChangeOperation::Rewrite {
+            processed_ops.push(ChangeOperation::Overwrite {
                 file_path,
                 content: final_content,
                 is_new_file: is_new_file_flag,
