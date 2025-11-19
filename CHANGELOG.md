@@ -1,5 +1,11 @@
 # [1.8.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.7.0...app-v1.8.0) (2025-09-09)
 
+## 1.9.1
+
+### Patch Changes
+
+- f5ef7de: fix: resolve issue where release notes were not being extracted correctly for the auto-update dialog by making the extraction script more robust and adding support for specific version arguments.
+
 ## 1.9.0
 
 ### Minor Changes
