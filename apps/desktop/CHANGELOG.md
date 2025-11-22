@@ -1,5 +1,12 @@
 # [1.8.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.7.0...app-v1.8.0) (2025-09-09)
 
+## [1.10.2](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.10.1...desktop-v1.10.2) (2025-11-22)
+
+
+### Bug Fixes
+
+* trigger pr for desktop ([016fd95](https://github.com/Fanzzzd/repo-wizard/commit/016fd959d11068236b59b2c0950e7c805baaf622))
+
 ## [1.10.1](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.10.0...desktop-v1.10.1) (2025-11-22)
 
 
