@@ -6,11 +6,17 @@ on:
       tag_name:
         required: true
         type: string
+      release_id:
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       tag_name:
         description: 'Tag name to release (e.g. desktop-v1.0.0)'
         required: true
+      release_id:
+        description: 'Release ID to upload assets to'
+        required: false
 
 permissions:
   contents: write
@@ -70,6 +76,6 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ inputs.tag_name }}
+          releaseId: ${{ inputs.release_id }}
           projectPath: apps/desktop
           args: ${{ matrix.args }}
