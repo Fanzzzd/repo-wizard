@@ -21,3 +21,6 @@ dist-ssr
 *.ntvs*
 *.njsproj
 *.sln
+
+# Turbo
+.turbo

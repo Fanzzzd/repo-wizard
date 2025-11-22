@@ -28,8 +28,8 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Type Check (Web)
-        run: pnpm check:web
+      - name: Type Check & Lint (All)
+        run: pnpm turbo check lint
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -37,7 +37,7 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: './apps/desktop/src-tauri -> target'
 
       - name: Install system dependencies (Linux)
         run: |
@@ -45,4 +45,4 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: Check (Rust)
-        run: pnpm check:rust
+        run: pnpm --filter @repo-wizard/desktop check:rust
