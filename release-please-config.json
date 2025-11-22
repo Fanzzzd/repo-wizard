@@ -3,6 +3,7 @@
         "apps/desktop": {
             "release-type": "node",
             "package-name": "@repo-wizard/desktop",
+            "draft": true,
             "extra-files": [
                 "src-tauri/Cargo.toml",
                 "src-tauri/Cargo.lock"
