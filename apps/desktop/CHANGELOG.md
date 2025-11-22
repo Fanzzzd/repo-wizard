@@ -1,5 +1,12 @@
 # [1.8.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.7.0...app-v1.8.0) (2025-09-09)
 
+## [1.10.1](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.10.0...desktop-v1.10.1) (2025-11-22)
+
+
+### Bug Fixes
+
+* Remove numerous icon assets to clean up codebase. ([3fcd47e](https://github.com/Fanzzzd/repo-wizard/commit/3fcd47ea4bb556ca81bd7c374b2ce24f8f2c0429))
+
 ## [1.10.0](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.9.0...desktop-v1.10.0) (2025-11-22)
 
 
