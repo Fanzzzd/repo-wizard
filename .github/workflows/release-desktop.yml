@@ -1,8 +1,16 @@
 name: Release Desktop App
 
 on:
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      tag_name:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name to release (e.g. desktop-v1.0.0)'
+        required: true
 
 permissions:
   contents: write
@@ -65,8 +73,8 @@ jobs:
 
       - name: Upload assets
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
         with:
+          tag_name: ${{ inputs.tag_name }}
           files: |
             apps/desktop/src-tauri/target/release/bundle/dmg/*.dmg
             apps/desktop/src-tauri/target/release/bundle/macos/*.app.tar.gz
