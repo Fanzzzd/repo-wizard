@@ -47,21 +47,21 @@
     "react-dom": "^18.3.1",
     "react-resizable-panels": "^2.1.9",
     "react-terminal": "^1.4.5",
-    "tailwindcss": "^4.1.11",
+    "tailwindcss": "catalog:",
     "uuid": "^11.1.0",
     "zustand": "^4.5.7"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.11",
     "@tauri-apps/cli": "^2.7.0",
-    "@types/node": "^20.19.9",
+    "@types/node": "catalog:",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.7.0",
     "cross-env": "^7.0.3",
-    "prettier": "^3.3.3",
-    "typescript": "~5.5.4",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
     "vite": "^5.4.19"
   }
 }
