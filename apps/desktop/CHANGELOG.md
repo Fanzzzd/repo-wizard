@@ -1,5 +1,3 @@
-# [1.8.0](https://github.com/Fanzzzd/repo-wizard/compare/app-v1.7.0...app-v1.8.0) (2025-09-09)
-
 ## [1.11.0](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.10.2...desktop-v1.11.0) (2025-11-22)
 
 
