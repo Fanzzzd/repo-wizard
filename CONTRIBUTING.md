@@ -22,25 +22,23 @@ If you'd like to submit a Pull Request, please follow these steps.
 1.  **Fork & Clone**: Fork the repository on GitHub and clone your fork locally.
 2.  **Branch**: Create your feature branch from `main` (`git checkout -b my-awesome-feature origin/main`).
 3.  **Code**: Make your changes.
-4.  **Create a Changeset**: This is the most important step for the release process.
-    *   Run `npx changeset` in your terminal.
-    *   Select the packages you modified (usually just `repo-wizard`).
-    *   Select the bump type (major, minor, or patch).
-    *   Write a summary of your changes. This will be your changelog entry.
-5.  **Push**: Push your feature branch to your fork.
-6.  **Pull Request**: Open a pull request from your feature branch to the `main` branch of the original repository. Ensure your PR has a clear title and description.
+4.  **Push**: Push your feature branch to your fork.
+5.  **Pull Request**: Open a pull request from your feature branch to the `main` branch of the original repository. Ensure your PR has a clear title and description following **Conventional Commits**.
 
 ## Release Workflow (for maintainers)
 
-Our release process is automated using [Changesets](https://github.com/changesets/changesets).
+Our release process is automated using [Release Please](https://github.com/googleapis/release-please).
 
 1.  **Development**: We develop on the `main` branch.
-2.  **Version Packages PR**: The Changesets bot automatically creates and maintains a "Version Packages" PR.
-    -   This PR accumulates changesets from merged Pull Requests.
-    -   It automatically runs `changeset version` to update `CHANGELOG.md` and bump versions in `package.json` and `src-tauri/Cargo.toml`.
+2.  **Release PR**: Release Please automatically creates and maintains a "chore(main): release" PR.
+    -   This PR accumulates changelog entries from merged Pull Requests based on Conventional Commits.
+    -   It automatically updates `CHANGELOG.md` and bumps versions in `package.json`, `src-tauri/Cargo.toml`, etc.
 3.  **Publishing**:
-    -   Review the "Version Packages" PR to see the changelog and version bumps.
+    -   Review the Release PR to see the changelog and version bumps.
     -   **Merge the PR** when you are ready to release.
-    -   This triggers a GitHub Action that:
-        -   Creates a Git Tag (e.g., `v1.2.3`).
-        -   Triggers the `release.yml` workflow to build and upload assets.
+    -   This triggers GitHub Actions that:
+        -   Create a GitHub Release.
+        -   Trigger the `release-desktop.yml` workflow to build and upload assets.
+
+> [!IMPORTANT]
+> Please follow [Conventional Commits](https://www.conventionalcommits.org/) for your PR titles (e.g., `feat: add new feature`, `fix: resolve bug`) so that Release Please can generate the changelog correctly.
