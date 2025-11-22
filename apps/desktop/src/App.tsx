@@ -9,6 +9,7 @@ import {
 } from '@tauri-apps/api/menu';
 import { platform } from '@tauri-apps/plugin-os';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { useTheme } from 'next-themes';
 
 import { Layout } from './components/Layout';
 import { MainPanel } from './components/MainPanel';
@@ -42,41 +43,28 @@ function App() {
   const { isReviewing } = useReviewStore();
   const { open: openDialog } = useDialogStore();
   const { status, updateInfo, install } = useUpdateStore();
-  const { theme, recentProjects } = useSettingsStore();
+  const { recentProjects } = useSettingsStore();
   const { openModal: openFileSearchModal } = useFileSearchStore();
   const [fontSize, setFontSize] = useState(14);
   const [isInputFocused, setIsInputFocused] = useState(false);
 
+  const { resolvedTheme } = useTheme();
+
+  // Sync resolved theme -> Tauri window frame
   useEffect(() => {
-    const win = getCurrentWindow();
-
-    const syncTheme = async () => {
-      const selectedTheme = theme;
-      localStorage.setItem('theme', selectedTheme);
+    const updateWindowTheme = async () => {
       try {
-        const nativeTheme = selectedTheme === 'system' ? null : selectedTheme;
-        await win.setTheme(nativeTheme);
-        const isDark =
-          selectedTheme === 'dark' ||
-          (selectedTheme === 'system' && (await win.theme()) === 'dark');
-        document.documentElement.classList.toggle('dark', isDark);
+        const win = getCurrentWindow();
+        // If the theme is 'system', we could pass null, but passing the resolved theme
+        // ensures the window frame always matches the content, even if next-themes
+        // is handling the system preference detection.
+        await win.setTheme(resolvedTheme as 'dark' | 'light');
       } catch (e) {
-        console.error('Failed to apply theme:', e);
+        console.error('Failed to set window theme:', e);
       }
     };
-
-    syncTheme();
-
-    const unlistenPromise = win.onThemeChanged(({ payload: osTheme }) => {
-      if (useSettingsStore.getState().theme === 'system') {
-        document.documentElement.classList.toggle('dark', osTheme === 'dark');
-      }
-    });
-
-    return () => {
-      unlistenPromise.then(unlisten => unlisten());
-    };
-  }, [theme]);
+    updateWindowTheme();
+  }, [resolvedTheme]);
 
   useEffect(() => {
     const handleFocusChange = () => {

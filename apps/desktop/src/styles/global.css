@@ -15,7 +15,7 @@
 }
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -64,7 +64,7 @@ body {
 }
 
 .dark .thin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: theme('colors.gray-500');
+  background-color: theme('colors.gray.500');
 }
 
 .hide-scrollbar {

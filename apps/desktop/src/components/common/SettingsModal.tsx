@@ -24,6 +24,7 @@ import {
   Monitor,
 } from 'lucide-react';
 import { SegmentedControl } from './SegmentedControl';
+import { useTheme } from 'next-themes';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -127,6 +128,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const isScrollingToSection = useRef(false);
 
+  const { theme, setTheme } = useTheme();
+
   const {
     respectGitignore,
     customIgnorePatterns,
@@ -135,8 +138,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     promptHistoryLimit,
     enableClipboardReview,
     showPasteResponseArea,
-    theme,
-    setTheme,
     setRespectGitignore,
     setCustomIgnorePatterns,
     setAutoReviewOnPaste,
@@ -395,7 +396,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         </label>
                         <SegmentedControl
                           options={themeOptions}
-                          value={theme}
+                          value={theme as 'light' | 'dark' | 'system'}
                           onChange={setTheme}
                           layoutId="theme-selector"
                         />

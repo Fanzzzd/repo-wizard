@@ -3,14 +3,13 @@ import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useReviewStore } from '../../store/reviewStore';
 import { useEffect, useState } from 'react';
 import { readFileContent } from '../../services/tauriApi';
-import { getLanguageForFilePath } from '../../lib/language_service';
 import { showErrorDialog } from '../../lib/errorHandler';
-import { useSettingsStore } from '../../store/settingsStore';
+import { useTheme } from 'next-themes';
 
 export function CodeEditor({ forceShowPath }: { forceShowPath?: string }) {
   const { activeFilePath } = useWorkspaceStore();
   const { isReviewing } = useReviewStore();
-  const { theme } = useSettingsStore();
+  const { resolvedTheme } = useTheme();
   const [content, setContent] = useState('');
 
   const pathToShow = forceShowPath ?? activeFilePath;
@@ -38,8 +37,7 @@ export function CodeEditor({ forceShowPath }: { forceShowPath?: string }) {
         height="100%"
         path={pathToShow}
         value={content}
-        language={getLanguageForFilePath(pathToShow)}
-        theme={theme === 'dark' ? 'repo-wizard-dark' : 'vs'}
+        theme={resolvedTheme === 'dark' ? 'repo-wizard-dark' : 'vs'}
         options={{ readOnly: true, automaticLayout: true }}
       />
     </div>

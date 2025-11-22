@@ -1,4 +1,6 @@
 import { iconService } from '../../lib/iconService';
+import { getIconUrl } from '../../lib/iconLoader';
+import { useTheme } from 'next-themes';
 
 interface FileTypeIconProps {
   filename: string;
@@ -11,13 +13,28 @@ export function FileTypeIcon({
   isDirectory,
   isOpen,
 }: FileTypeIconProps) {
+  const { resolvedTheme } = useTheme();
+  const currentTheme = (resolvedTheme as 'light' | 'dark') || 'dark';
+
   const iconName = isDirectory
-    ? iconService.getIconNameForFolder(filename, !!isOpen)
-    : iconService.getIconNameForFile(filename);
+    ? iconService.getIconNameForFolder(filename, !!isOpen, currentTheme)
+    : iconService.getIconNameForFile(filename, currentTheme);
+
+  let iconUrl = getIconUrl(iconName);
+
+  if (!iconUrl) {
+    // Fallback to default icons if the specific icon is not found
+    const fallbackName = isDirectory ? 'folder' : 'file';
+    iconUrl = getIconUrl(fallbackName);
+  }
+
+  if (!iconUrl) {
+    return null;
+  }
 
   return (
     <img
-      src={`/icons/${iconName}.svg`}
+      src={iconUrl}
       alt={`${filename} icon`}
       className="w-4 h-4"
       draggable="false"

@@ -3,19 +3,17 @@ import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useReviewStore } from '../../store/reviewStore';
 import { useEffect, useState } from 'react';
 import { readFileContent } from '../../services/tauriApi';
-import { getLanguageForFilePath } from '../../lib/language_service';
 import { showErrorDialog } from '../../lib/errorHandler';
-import { useSettingsStore } from '../../store/settingsStore';
+import { useTheme } from 'next-themes';
 
 export function DiffEditor() {
   const { rootPath } = useWorkspaceStore();
   const { changes, activeChangeId } = useReviewStore();
-  const { theme } = useSettingsStore();
+  const { resolvedTheme } = useTheme();
 
   const [originalContent, setOriginalContent] = useState('');
   const [modifiedContent, setModifiedContent] = useState('');
   const [message, setMessage] = useState<string | null>(null);
-  const [language, setLanguage] = useState<string | undefined>(undefined);
 
   const activeChange = changes.find(c => c.id === activeChangeId);
 
@@ -23,27 +21,10 @@ export function DiffEditor() {
     setMessage(null);
     setOriginalContent('');
     setModifiedContent('');
-    setLanguage(undefined);
 
     if (!activeChange || !rootPath) return;
 
     const { operation } = activeChange;
-
-    let filePathForLanguage: string | undefined;
-    switch (operation.type) {
-      case 'patch':
-      case 'overwrite':
-      case 'delete':
-        filePathForLanguage = operation.filePath;
-        break;
-      case 'move':
-        filePathForLanguage = operation.toPath;
-        break;
-    }
-
-    if (filePathForLanguage) {
-      setLanguage(getLanguageForFilePath(filePathForLanguage));
-    }
 
     if (operation.type === 'delete' || operation.type === 'move') {
       let msg = `This change is a ${operation.type} operation.`;
@@ -92,10 +73,9 @@ export function DiffEditor() {
     <div className="h-full w-full select-text">
       <MonacoDiffEditor
         height="100%"
-        language={language}
         original={originalContent}
         modified={modifiedContent}
-        theme={theme === 'dark' ? 'repo-wizard-dark' : 'vs'}
+        theme={resolvedTheme === 'dark' ? 'repo-wizard-dark' : 'vs'}
         options={{
           readOnly: true,
           renderSideBySide: true,
