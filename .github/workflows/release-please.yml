@@ -14,8 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       desktop--release_created: ${{ steps.release.outputs['apps/desktop--release_created'] }}
-      desktop--tag_name: ${{ steps.release.outputs['apps/desktop--tag_name'] }}
-      desktop--id: ${{ steps.release.outputs['apps/desktop--id'] }}
+      desktop--release_id: ${{ steps.release.outputs['apps/desktop--id'] }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -29,6 +28,5 @@ jobs:
     if: ${{ needs.release-please.outputs.desktop--release_created == 'true' }}
     uses: ./.github/workflows/release-desktop.yml
     with:
-      tag_name: ${{ needs.release-please.outputs.desktop--tag_name }}
-      release_id: ${{ needs.release-please.outputs.desktop--id }}
+      release_id: ${{ needs.release-please.outputs.desktop--release_id }}
     secrets: inherit

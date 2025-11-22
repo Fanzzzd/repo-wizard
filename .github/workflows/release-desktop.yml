@@ -3,17 +3,11 @@ name: Release Desktop App
 on:
   workflow_call:
     inputs:
-      tag_name:
-        required: true
-        type: string
       release_id:
         required: true
         type: string
   workflow_dispatch:
     inputs:
-      tag_name:
-        description: 'Tag name to release (e.g. desktop-v1.0.0)'
-        required: true
       release_id:
         description: 'Release ID to upload assets to'
         required: false
