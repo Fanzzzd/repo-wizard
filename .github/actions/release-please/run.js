@@ -20,13 +20,16 @@ async function run() {
             token,
         });
 
+        const configFile = process.env.INPUT_CONFIG_FILE || 'release-please-config.json';
+        const manifestFile = process.env.INPUT_MANIFEST_FILE || '.release-please-manifest.json';
+
         // Run release-please
         // We use the Manifest class to handle monorepos and multiple packages
         const manifest = await Manifest.fromManifest(
             github,
             github.repository.defaultBranch,
-            'release-please-config.json',
-            '.release-please-manifest.json'
+            configFile,
+            manifestFile
         );
 
         const pullRequests = await manifest.createPullRequests();
@@ -79,18 +82,13 @@ async function run() {
 }
 
 function setOutput(key, value) {
-    // Normalize key for GitHub Actions outputs (replace / with --)
-    // The official action does this mapping.
-    // e.g. apps/desktop -> apps/desktop--release_created is not valid output name char?
-    // Actually, the official action uses `--` as separator for paths.
-    // Let's check the official action behavior.
-    // It seems it replaces slashes with `--` in the output keys.
-    const normalizedKey = key.replace(/\//g, '--');
+    // We used to normalize keys here, but official action supports slashes.
+    // So we keep the key as is.
 
     if (process.env.GITHUB_OUTPUT) {
-        fs.appendFileSync(process.env.GITHUB_OUTPUT, `${normalizedKey}=${value}\n`);
+        fs.appendFileSync(process.env.GITHUB_OUTPUT, `${key}=${value}\n`);
     } else {
-        console.log(`::set-output name=${normalizedKey}::${value}`);
+        console.log(`::set-output name=${key}::${value}`);
     }
 }
 

@@ -16,17 +16,12 @@ jobs:
       desktop--release_created: ${{ steps.release.outputs['apps/desktop--release_created'] }}
       desktop--release_id: ${{ steps.release.outputs['apps/desktop--id'] }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install release-please fork
-        run: npm install Fanzzzd/release-please#feat/draft-release-force-tag @actions/core
-      - name: Run release-please
+      - uses: ./.github/actions/release-please
         id: release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node .github/scripts/run-release-please.js
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
   desktop-release:
     needs: release-please
