@@ -14,6 +14,13 @@
 * remove redundant tag_name in cicd. ([709c955](https://github.com/Fanzzzd/repo-wizard/commit/709c955e0d08624c24bf60694dbe4ef68e0df960))
 * trigger pr for desktop ([016fd95](https://github.com/Fanzzzd/repo-wizard/commit/016fd959d11068236b59b2c0950e7c805baaf622))
 
+## [1.12.0](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.11.0...desktop-v1.12.0) (2025-11-23)
+
+
+### Features
+
+* Add comprehensive tests for patch application, update release-please workflow, and enhance review service with patch progress tracking. ([f3debc2](https://github.com/Fanzzzd/repo-wizard/commit/f3debc24678f81f3cf06b3b984d2ba826b4daba1))
+
 ## [1.10.2](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.10.1...desktop-v1.10.2) (2025-11-22)
 
 
