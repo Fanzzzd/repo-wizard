@@ -1,22 +1,22 @@
+import { ChevronRight } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import React, {
   createContext,
+  PropsWithChildren,
   useContext,
-  useState,
-  useRef,
   useEffect,
   useLayoutEffect,
   useMemo,
-  PropsWithChildren,
+  useRef,
+  useState,
 } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
-import { ChevronRight } from 'lucide-react';
 
 // --- Contexts ---
 
 interface DropdownMenuContextProps {
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  triggerRef: React.RefObject<HTMLButtonElement>;
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
 }
 
 const DropdownMenuContext = createContext<DropdownMenuContextProps | null>(
@@ -33,7 +33,7 @@ const useDropdownMenu = () => {
 
 interface DropdownSubMenuContextProps {
   isSubMenuOpen: boolean;
-  triggerRef: React.RefObject<HTMLDivElement>;
+  triggerRef: React.RefObject<HTMLDivElement | null>;
 }
 const DropdownSubMenuContext =
   createContext<DropdownSubMenuContextProps | null>(null);
@@ -65,7 +65,7 @@ export function DropdownMenu({ children }: PropsWithChildren<{}>) {
 export function DropdownMenuTrigger({
   children,
 }: {
-  children: React.ReactElement;
+  children: React.ReactElement<any>;
 }) {
   const { setIsOpen, triggerRef } = useDropdownMenu();
   return React.cloneElement(children, {

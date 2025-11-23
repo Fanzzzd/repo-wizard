@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useComposerStore } from '../../store/composerStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useReviewStore } from '../../store/reviewStore';
 import { usePromptGenerator } from '../../hooks/usePromptGenerator';
 import { useReviewSession } from '../../hooks/useReviewSession';
-import { useUndo } from '../../hooks/useUndo';
 import { readText } from '@tauri-apps/plugin-clipboard-manager';
 import { showErrorDialog } from '../../lib/errorHandler';
 import {
@@ -38,10 +37,14 @@ const composerModeOptions: { value: ComposerMode; label: string }[] = [
 
 export function PromptComposer() {
   const {
-    instructions: storeInstructions,
-    setInstructions: setStoreInstructions,
-    markdownResponse: storeMarkdownResponse,
-    setMarkdownResponse: setStoreMarkdownResponse,
+    instructions,
+    setInstructions,
+    undoInstructions,
+    redoInstructions,
+    markdownResponse,
+    setMarkdownResponse,
+    undoMarkdownResponse,
+    redoMarkdownResponse,
     composerMode,
     setComposerMode,
     markMarkdownAsProcessed,
@@ -68,52 +71,6 @@ export function PromptComposer() {
     hasUnprocessedResponse,
     canReenterReview,
   } = useReviewSession();
-
-  const [
-    instructions,
-    {
-      set: setInstructions,
-      undo: undoInstructions,
-      redo: redoInstructions,
-      reset: resetInstructions,
-    },
-  ] = useUndo(storeInstructions);
-
-  const [
-    markdownResponse,
-    {
-      set: setMarkdownResponse,
-      undo: undoMarkdownResponse,
-      redo: redoMarkdownResponse,
-      reset: resetMarkdownResponse,
-    },
-  ] = useUndo(storeMarkdownResponse);
-
-  useEffect(() => {
-    if (storeInstructions !== instructions) {
-      setStoreInstructions(instructions);
-    }
-  }, [instructions, storeInstructions, setStoreInstructions]);
-
-  useEffect(() => {
-    if (storeInstructions !== instructions) {
-      resetInstructions(storeInstructions);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeInstructions]);
-
-  useEffect(() => {
-    if (storeMarkdownResponse !== markdownResponse) {
-      setStoreMarkdownResponse(markdownResponse);
-    }
-  }, [markdownResponse, storeMarkdownResponse, setStoreMarkdownResponse]);
-
-  useEffect(() => {
-    if (storeMarkdownResponse !== markdownResponse) {
-      resetMarkdownResponse(storeMarkdownResponse);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeMarkdownResponse]);
 
   const handlePasteAndReview = async () => {
     try {

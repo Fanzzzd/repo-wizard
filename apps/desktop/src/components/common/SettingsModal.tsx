@@ -340,7 +340,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <div className="max-w-3xl mx-auto space-y-6">
                   <section
                     id="general"
-                    ref={el => (sectionRefs.current['general'] = el)}
+                    ref={el => {
+                      sectionRefs.current['general'] = el;
+                    }}
                     className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
                     <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -378,7 +380,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
                   <section
                     id="appearance"
-                    ref={el => (sectionRefs.current['appearance'] = el)}
+                    ref={el => {
+                      sectionRefs.current['appearance'] = el;
+                    }}
                     className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
                     <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -406,7 +410,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
                   <section
                     id="fileTree"
-                    ref={el => (sectionRefs.current['fileTree'] = el)}
+                    ref={el => {
+                      sectionRefs.current['fileTree'] = el;
+                    }}
                     className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
                     <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -446,7 +452,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
                   <section
                     id="prompting"
-                    ref={el => (sectionRefs.current['prompting'] = el)}
+                    ref={el => {
+                      sectionRefs.current['prompting'] = el;
+                    }}
                     className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
                     <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -516,7 +524,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
                   <section
                     id="cli"
-                    ref={el => (sectionRefs.current.cli = el)}
+                    ref={el => {
+                      sectionRefs.current.cli = el;
+                    }}
                     className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
                     <div className="p-6 border-b border-gray-200 dark:border-gray-700">

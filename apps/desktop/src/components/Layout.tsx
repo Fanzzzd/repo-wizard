@@ -37,11 +37,13 @@ export function Layout({ leftPanel, mainPanel, rightPanel }: LayoutProps) {
       direction="horizontal"
       className="h-full w-full bg-white dark:bg-gray-800"
     >
-      <Panel defaultSize={25} minSize={15}>
+      <Panel defaultSize={25} minSize={15} id="left-panel" order={1}>
         {leftPanel}
       </Panel>
       <PanelResizeHandle className="w-px bg-gray-200 hover:bg-blue-500 transition-colors data-[resize-handle-state=drag]:bg-blue-500 dark:bg-gray-700" />
-      <Panel minSize={40}>{mainPanel}</Panel>
+      <Panel minSize={40} id="main-panel" order={2}>
+        {mainPanel}
+      </Panel>
       <PanelResizeHandle
         className={`w-px bg-gray-200 hover:bg-blue-500 transition-colors data-[resize-handle-state=drag]:bg-blue-500 dark:bg-gray-700 ${
           isReviewing ? 'hidden' : ''
@@ -52,6 +54,8 @@ export function Layout({ leftPanel, mainPanel, rightPanel }: LayoutProps) {
         defaultSize={30}
         minSize={20}
         collapsible={true}
+        id="right-panel"
+        order={3}
       >
         <div className={isReviewing ? 'hidden' : 'h-full flex flex-col'}>
           {rightPanel}

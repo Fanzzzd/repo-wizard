@@ -10,7 +10,7 @@ const maskClasses = {
 
 interface HorizontalScrollerRenderProps {
   /** A ref for the scrollable container element. */
-  scrollContainerRef: React.RefObject<HTMLDivElement>;
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
   /** The className string to apply to the scrollable container. Includes mask styles. */
   scrollContainerClassName: string;
   /** Props for the outer wrapper, including mouse event handlers to show/hide the indicator. */
