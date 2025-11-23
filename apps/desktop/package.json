@@ -1,7 +1,7 @@
 {
   "name": "@repo-wizard/desktop",
   "private": true,
-  "version": "1.12.0",
+  "version": "1.13.0",
   "type": "module",
   "scripts": {
     "dev": "cross-env RUST_BACKTRACE=1 RUST_LOG=repo_wizard=debug,info,tao=warn,wry=warn tauri dev --config src-tauri/tauri.dev.conf.json",

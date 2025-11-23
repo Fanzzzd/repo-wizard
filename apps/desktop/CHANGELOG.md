@@ -14,6 +14,23 @@
 * remove redundant tag_name in cicd. ([709c955](https://github.com/Fanzzzd/repo-wizard/commit/709c955e0d08624c24bf60694dbe4ef68e0df960))
 * trigger pr for desktop ([016fd95](https://github.com/Fanzzzd/repo-wizard/commit/016fd959d11068236b59b2c0950e7c805baaf622))
 
+## [1.13.0](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.12.0...desktop-v1.13.0) (2025-11-23)
+
+
+### Features
+
+* Add comprehensive tests for patch application, update release-please workflow, and enhance review service with patch progress tracking. ([f3debc2](https://github.com/Fanzzzd/repo-wizard/commit/f3debc24678f81f3cf06b3b984d2ba826b4daba1))
+* Establish monorepo with web and desktop applications, utilizing pnpm, Turbo, and Release Please for CI/CD. ([7829a2a](https://github.com/Fanzzzd/repo-wizard/commit/7829a2a49734a026909436eee0f99d307ec01257))
+
+
+### Bug Fixes
+
+* fix release cicd ([4c0068a](https://github.com/Fanzzzd/repo-wizard/commit/4c0068a35522ad8d8bb72db496c70b16d56c4e7f))
+* remove explicit pnpm version from CI and release workflow configurations ([472bf30](https://github.com/Fanzzzd/repo-wizard/commit/472bf30074301fabefeaa12a733ba8a4ae523729))
+* Remove numerous icon assets to clean up codebase. ([3fcd47e](https://github.com/Fanzzzd/repo-wizard/commit/3fcd47ea4bb556ca81bd7c374b2ce24f8f2c0429))
+* remove redundant tag_name in cicd. ([709c955](https://github.com/Fanzzzd/repo-wizard/commit/709c955e0d08624c24bf60694dbe4ef68e0df960))
+* trigger pr for desktop ([016fd95](https://github.com/Fanzzzd/repo-wizard/commit/016fd959d11068236b59b2c0950e7c805baaf622))
+
 ## [1.12.0](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.11.0...desktop-v1.12.0) (2025-11-23)
 
 
