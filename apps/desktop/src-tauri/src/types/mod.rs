@@ -19,6 +19,10 @@ pub enum ChangeOperation {
         content: String,
         #[serde(rename = "isNewFile")]
         is_new_file: bool,
+        #[serde(rename = "totalBlocks")]
+        total_blocks: usize,
+        #[serde(rename = "appliedBlocks")]
+        applied_blocks: usize,
     },
     Overwrite {
         #[serde(rename = "filePath")]

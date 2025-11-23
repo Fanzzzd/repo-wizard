@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false,
+    "skipLibCheck": true,
+    "noResolve": true,
+    "module": "CommonJS",
+    "esModuleInterop": true
+  },
+  "include": ["**/*"],
+  "exclude": ["node_modules"]
+}
+

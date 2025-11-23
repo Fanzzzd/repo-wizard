@@ -1,4 +1,4 @@
-import { DiffEditor as MonacoDiffEditor } from '@monaco-editor/react';
+import { DiffEditor as MonacoDiffEditor, useMonaco } from '@monaco-editor/react';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useReviewStore } from '../../store/reviewStore';
 import { useEffect, useState } from 'react';
@@ -10,12 +10,29 @@ export function DiffEditor() {
   const { rootPath } = useWorkspaceStore();
   const { changes, activeChangeId } = useReviewStore();
   const { resolvedTheme } = useTheme();
+  const monaco = useMonaco();
 
   const [originalContent, setOriginalContent] = useState('');
   const [modifiedContent, setModifiedContent] = useState('');
   const [message, setMessage] = useState<string | null>(null);
+  const [language, setLanguage] = useState('plaintext');
 
   const activeChange = changes.find(c => c.id === activeChangeId);
+
+  useEffect(() => {
+    if (!activeChange || !monaco) return;
+
+    const { operation } = activeChange;
+    const filePath = operation.type === 'move' ? operation.toPath : operation.filePath;
+    const extension = '.' + filePath.split('.').pop();
+
+    const languages = monaco.languages.getLanguages();
+    const detectedLanguage = languages.find(lang => {
+      return lang.extensions?.some(ext => ext.toLowerCase() === extension.toLowerCase());
+    });
+
+    setLanguage(detectedLanguage ? detectedLanguage.id : 'plaintext');
+  }, [activeChange, monaco]);
 
   useEffect(() => {
     setMessage(null);
@@ -75,6 +92,7 @@ export function DiffEditor() {
         height="100%"
         original={originalContent}
         modified={modifiedContent}
+        language={language}
         theme={resolvedTheme === 'dark' ? 'repo-wizard-dark' : 'vs'}
         options={{
           readOnly: true,

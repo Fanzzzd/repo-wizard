@@ -48,13 +48,16 @@ body {
   height: 6px;
   width: 6px;
 }
+
 .thin-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .thin-scrollbar::-webkit-scrollbar-thumb {
   background-color: theme('colors.gray.300');
   border-radius: 3px;
 }
+
 .thin-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: theme('colors.gray.400');
 }
@@ -71,6 +74,7 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }

@@ -2,8 +2,9 @@ mod commands;
 mod core;
 mod error;
 mod state;
-mod services;
-mod types;
+pub mod services;
+pub mod types;
+
 
 use tauri::{Emitter, Manager};
 use tauri_plugin_cli::CliExt;

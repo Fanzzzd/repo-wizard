@@ -4,6 +4,7 @@
             "release-type": "node",
             "package-name": "@repo-wizard/desktop",
             "draft": true,
+            "force-tag": true,
             "extra-files": [
                 "src-tauri/Cargo.toml",
                 "src-tauri/Cargo.lock"

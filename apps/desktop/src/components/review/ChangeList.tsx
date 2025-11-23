@@ -82,13 +82,28 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
   };
 
   const getStatusProps = () => {
+    const op = change.operation;
+    const isPatch = op.type === 'patch';
+    
+    // For non-patch operations, we consider them as single block operations
+    const totalBlocks = isPatch ? op.totalBlocks : 1;
+    const matchingBlocks = isPatch ? op.appliedBlocks : 1;
+    
+    // If pending, we haven't applied anything yet, so 0 applied (from user perspective)
+    // If applied, we show how many blocks successfully matched
+    const displayApplied = change.status === 'pending' ? 0 : matchingBlocks;
+    
+    const countText = `${displayApplied}/${totalBlocks}`;
+
     switch (change.status) {
       case 'applied':
+        const isPartial = matchingBlocks < totalBlocks;
         return {
           icon: <Check size={14} />,
-          text: 'Applied',
-          style:
-            'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-500/20 dark:text-green-300 dark:hover:bg-green-500/30',
+          text: countText,
+          style: isPartial
+            ? 'bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-300 dark:hover:bg-red-500/30'
+            : 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-500/20 dark:text-green-300 dark:hover:bg-green-500/30',
         };
       case 'identical':
         return {
@@ -106,7 +121,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
       default: // pending
         return {
           icon: <CircleDot size={14} />,
-          text: 'Pending',
+          text: countText,
           style:
             'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600',
         };

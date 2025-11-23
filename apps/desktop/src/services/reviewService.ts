@@ -51,7 +51,14 @@ export async function processAndStartReview(
         let updatedChange = { ...change, operation: updatedOperation };
 
         if (!isNewFile && originalContent === updatedOperation.content) {
-          updatedChange = { ...updatedChange, status: 'identical' };
+          // Only mark as identical if it's NOT a patch that failed to apply fully
+          // If appliedBlocks < totalBlocks, it means the patch failed (partially or fully), 
+          // so we should NOT mark it as identical, allowing the UI to show "0/1" or "x/y".
+          const isFailedPatch = operation.type === 'patch' && operation.appliedBlocks < operation.totalBlocks;
+
+          if (!isFailedPatch) {
+            updatedChange = { ...updatedChange, status: 'identical' };
+          }
         }
         return updatedChange;
       }
