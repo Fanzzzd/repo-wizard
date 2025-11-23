@@ -16,6 +16,7 @@ jobs:
       desktop--release_created: ${{ steps.release.outputs['apps/desktop--release_created'] }}
       desktop--release_id: ${{ steps.release.outputs['apps/desktop--id'] }}
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/release-please
         id: release
         with:
