@@ -14,6 +14,13 @@
 * remove redundant tag_name in cicd. ([709c955](https://github.com/Fanzzzd/repo-wizard/commit/709c955e0d08624c24bf60694dbe4ef68e0df960))
 * trigger pr for desktop ([016fd95](https://github.com/Fanzzzd/repo-wizard/commit/016fd959d11068236b59b2c0950e7c805baaf622))
 
+## [1.12.2](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.12.1...desktop-v1.12.2) (2025-11-23)
+
+
+### Bug Fixes
+
+* changee workflow input from `release_id` to `tag_name` and update usage. ([5259703](https://github.com/Fanzzzd/repo-wizard/commit/5259703300acc7ed02dc50bc5778c766f9819965))
+
 ## [1.12.1](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.12.0...desktop-v1.12.1) (2025-11-23)
 
 
