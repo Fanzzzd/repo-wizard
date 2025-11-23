@@ -17,7 +17,7 @@ jobs:
       desktop--release_id: ${{ steps.release.outputs['apps/desktop--id'] }}
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/release-please
+      - uses: Fanzzzd/release-please-action@release-with-force-tag
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
