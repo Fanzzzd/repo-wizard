@@ -14,6 +14,14 @@
 * remove redundant tag_name in cicd. ([709c955](https://github.com/Fanzzzd/repo-wizard/commit/709c955e0d08624c24bf60694dbe4ef68e0df960))
 * trigger pr for desktop ([016fd95](https://github.com/Fanzzzd/repo-wizard/commit/016fd959d11068236b59b2c0950e7c805baaf622))
 
+## [1.12.1](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.12.0...desktop-v1.12.1) (2025-11-23)
+
+
+### Bug Fixes
+
+* delete custom release-please GitHub Action implementation. ([4df4623](https://github.com/Fanzzzd/repo-wizard/commit/4df462351b68d8070ea41b11698a9282902d31dd))
+* update web app package name and release-please configuration. ([5dbec3f](https://github.com/Fanzzzd/repo-wizard/commit/5dbec3f2f577a29f6ae0a522de250c6a53e83955))
+
 ## [1.12.0](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.11.0...desktop-v1.12.0) (2025-11-23)
 
 
