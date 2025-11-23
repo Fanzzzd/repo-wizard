@@ -30,4 +30,5 @@ jobs:
     uses: ./.github/workflows/release-desktop.yml
     with:
       tag_name: ${{ needs.release-please.outputs.desktop--tag_name }}
+      release_id: ${{ needs.release-please.outputs.desktop--release_id }}
     secrets: inherit
