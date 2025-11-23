@@ -15,8 +15,8 @@ jobs:
     outputs:
       desktop--release_created: ${{ steps.release.outputs['apps/desktop--release_created'] }}
       desktop--release_id: ${{ steps.release.outputs['apps/desktop--id'] }}
+      desktop--tag_name: ${{ steps.release.outputs['apps/desktop--tag_name'] }}
     steps:
-      - uses: actions/checkout@v4
       - uses: Fanzzzd/release-please-action@release-with-force-tag
         id: release
         with:
@@ -29,5 +29,5 @@ jobs:
     if: ${{ needs.release-please.outputs.desktop--release_created == 'true' }}
     uses: ./.github/workflows/release-desktop.yml
     with:
-      release_id: ${{ needs.release-please.outputs.desktop--release_id }}
+      tag_name: ${{ needs.release-please.outputs.desktop--tag_name }}
     secrets: inherit

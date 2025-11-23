@@ -3,14 +3,14 @@ name: Release Desktop App
 on:
   workflow_call:
     inputs:
-      release_id:
+      tag_name:
         required: true
         type: string
   workflow_dispatch:
     inputs:
-      release_id:
-        description: 'Release ID to upload assets to'
-        required: false
+      tag_name:
+        description: 'Tag name to release (e.g. v1.0.0)'
+        required: true
 
 permissions:
   contents: write
@@ -36,7 +36,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -70,6 +69,6 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          releaseId: ${{ inputs.release_id }}
+          tagName: ${{ inputs.tag_name }}
           projectPath: apps/desktop
           args: ${{ matrix.args }}
