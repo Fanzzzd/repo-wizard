@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "check": "biome check --write . && tsc --noEmit",
+    "lint": "biome lint . && tsc --noEmit",
+    "format": "biome format --write ."
   },
   "dependencies": {
     "next": "16.0.3",
@@ -18,8 +20,6 @@
     "@types/node": "catalog:",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.0.3",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   }

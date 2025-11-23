@@ -1,20 +1,20 @@
+import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+import {
+  Check,
+  Clipboard,
+  Copy,
+  Edit,
+  History,
+  RefreshCw,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
-import { useHistoryStore } from '../../store/historyStore';
+import { usePromptGenerator } from '../../hooks/usePromptGenerator';
 import { useComposerStore } from '../../store/composerStore';
 import { useDialogStore } from '../../store/dialogStore';
-import {
-  History,
-  Trash2,
-  Copy,
-  Clipboard,
-  Check,
-  RefreshCw,
-  Edit,
-} from 'lucide-react';
-import { writeText } from '@tauri-apps/plugin-clipboard-manager';
-import { Button } from '../common/Button';
+import { useHistoryStore } from '../../store/historyStore';
 import type { PromptHistoryEntry } from '../../types';
-import { usePromptGenerator } from '../../hooks/usePromptGenerator';
+import { Button } from '../common/Button';
 import { PromptHistoryDetailModal } from './PromptHistoryDetailModal';
 
 const instructionPreview = (
@@ -115,7 +115,7 @@ export function PromptHistoryPanel() {
             </div>
           ) : (
             <div className="space-y-3">
-              {promptHistory.map(entry => {
+              {promptHistory.map((entry) => {
                 const isCurrentlyGenerating = generatingPromptId === entry.id;
                 const isCopied = copiedPromptId === entry.id;
 
@@ -138,13 +138,14 @@ export function PromptHistoryPanel() {
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                       {new Date(entry.timestamp).toLocaleString()}
                     </p>
-                    <p
+                    <button
+                      type="button"
                       onClick={() => handleOpenDetailModal(entry)}
-                      className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800 p-2 rounded-md mb-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 select-text"
+                      className="w-full text-left text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800 p-2 rounded-md mb-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 select-text"
                       title="Click to view/edit full prompt"
                     >
                       {instructionPreview(entry.instructions)}
-                    </p>
+                    </button>
                     <div className="flex items-center justify-end gap-2">
                       <Button
                         onClick={() => handleOpenDetailModal(entry)}

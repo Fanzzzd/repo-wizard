@@ -1,21 +1,23 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useWorkspaceStore } from '../store/workspaceStore';
+import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AppError, isFileNotFoundError } from '../lib/error';
+import { showErrorDialog } from '../lib/errorHandler';
+import { buildPrompt } from '../lib/prompt_builder';
+import { estimateTokens } from '../lib/token_estimator';
+import {
+  getRelativePath,
+  isBinaryFile,
+  readFileContent,
+} from '../services/tauriApi';
+import {
+  isCommandRunnerCancelled,
+  openCommandRunner,
+} from '../store/commandRunnerStore';
 import { useComposerStore } from '../store/composerStore';
 import { useHistoryStore } from '../store/historyStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { openCommandRunner } from '../store/commandRunnerStore';
-import {
-  getRelativePath,
-  readFileContent,
-  isBinaryFile,
-} from '../services/tauriApi';
-import { writeText } from '@tauri-apps/plugin-clipboard-manager';
-import { buildPrompt } from '../lib/prompt_builder';
-import { estimateTokens } from '../lib/token_estimator';
+import { useWorkspaceStore } from '../store/workspaceStore';
 import type { MetaPrompt } from '../types';
-import { showErrorDialog } from '../lib/errorHandler';
-import { AppError, isFileNotFoundError } from '../lib/error';
-import { isCommandRunnerCancelled } from '../store/commandRunnerStore';
 
 export function usePromptGenerator() {
   const { selectedFilePaths, rootPath, removeSelectedFilePath, fileTree } =
@@ -34,7 +36,7 @@ export function usePromptGenerator() {
   const [estimatedTokens, setEstimatedTokens] = useState(0);
 
   const metaPrompts = useMemo<MetaPrompt[]>(() => {
-    return promptDefs.map(def => ({
+    return promptDefs.map((def) => ({
       ...def,
       enabled: enabledMetaPromptIds.includes(def.id),
     }));
@@ -46,7 +48,7 @@ export function usePromptGenerator() {
       const textFilePaths = paths.filter((_, i) => !isBinaryResults[i]);
 
       const files = await Promise.all(
-        textFilePaths.map(async path => {
+        textFilePaths.map(async (path) => {
           try {
             const content = await readFileContent(path);
             const relativePath = await getRelativePath(path, root);

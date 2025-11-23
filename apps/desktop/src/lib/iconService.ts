@@ -1,7 +1,7 @@
 import {
   generateManifest,
-  ManifestConfig,
   type Manifest,
+  type ManifestConfig,
 } from 'material-icon-theme';
 import { iconManifestConfig } from './iconManifestConfig';
 
@@ -78,7 +78,7 @@ class IconService {
 
     const defaultIdentifier =
       theme === 'light'
-        ? this.manifest.light?.file ?? this.manifest.file
+        ? (this.manifest.light?.file ?? this.manifest.file)
         : this.manifest.file;
 
     return this.resolveIcon(defaultIdentifier, theme) ?? 'file';
@@ -121,10 +121,10 @@ class IconService {
 
     const defaultIdentifier = isOpen
       ? theme === 'light'
-        ? this.manifest.light?.folderExpanded ?? this.manifest.folderExpanded
+        ? (this.manifest.light?.folderExpanded ?? this.manifest.folderExpanded)
         : this.manifest.folderExpanded
       : theme === 'light'
-        ? this.manifest.light?.folder ?? this.manifest.folder
+        ? (this.manifest.light?.folder ?? this.manifest.folder)
         : this.manifest.folder;
 
     return (

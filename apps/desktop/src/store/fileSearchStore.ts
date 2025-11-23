@@ -3,16 +3,16 @@ import {
   fileSearchService,
   type SearchResult,
 } from '../services/fileSearchService';
-import { useWorkspaceStore } from './workspaceStore';
-import { useSettingsStore } from './settingsStore';
 import type { FileNode } from '../types';
+import { useSettingsStore } from './settingsStore';
+import { useWorkspaceStore } from './workspaceStore';
 
 // Helper function to collect all file paths within a directory node
 function getAllFilesInPath(rootNode: FileNode, targetPath: string): string[] {
   const files: string[] = [];
 
   function traverse(node: FileNode) {
-    if (node.path === targetPath || node.path.startsWith(targetPath + '/')) {
+    if (node.path === targetPath || node.path.startsWith(`${targetPath}/`)) {
       if (!node.isDirectory) {
         files.push(node.path);
       }
@@ -134,7 +134,7 @@ export const useFileSearchStore = create<FileSearchState>((set, get) => ({
     const newSelectedFiles = new Set(selectedFiles);
 
     // Find the result to check if it's a directory
-    const result = results.find(r => r.path === filePath);
+    const result = results.find((r) => r.path === filePath);
     const isDirectory = result?.isDirectory ?? false;
 
     if (isDirectory) {
@@ -145,16 +145,20 @@ export const useFileSearchStore = create<FileSearchState>((set, get) => ({
         if (!fileTree) return;
 
         const directoryFiles = getAllFilesInPath(fileTree, filePath);
-        const isCurrentlySelected = directoryFiles.every(file =>
+        const isCurrentlySelected = directoryFiles.every((file) =>
           newSelectedFiles.has(file)
         );
 
         if (isCurrentlySelected) {
           // Deselect all files in directory
-          directoryFiles.forEach(file => newSelectedFiles.delete(file));
+          directoryFiles.forEach((file) => {
+            newSelectedFiles.delete(file);
+          });
         } else {
           // Select all files in directory
-          directoryFiles.forEach(file => newSelectedFiles.add(file));
+          directoryFiles.forEach((file) => {
+            newSelectedFiles.add(file);
+          });
         }
       } catch (error) {
         console.error('Error handling directory selection:', error);

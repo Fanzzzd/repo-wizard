@@ -1,18 +1,20 @@
 {
-    "name": "repo-wizard-monorepo",
-    "private": true,
-    "scripts": {
-        "build": "turbo build",
-        "dev": "turbo dev",
-        "lint": "turbo lint",
-        "format": "prettier --write \"**/*.{ts,tsx,md}\""
-    },
-    "devDependencies": {
-        "turbo": "latest",
-        "prettier": "latest"
-    },
-    "packageManager": "pnpm@9.15.0",
-    "engines": {
-        "node": ">=18"
-    }
+  "name": "repo-wizard-monorepo",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "biome format --write .",
+    "check": "biome check --write . && turbo check",
+    "ci": "biome ci ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.7",
+    "turbo": "latest"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=18"
+  }
 }

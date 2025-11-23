@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '../../lib/utils';
 
 type InputProps = React.ComponentPropsWithRef<'input'>;
 
@@ -7,7 +8,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <input
         ref={ref}
-        className={`form-input-base ${className ?? ''}`}
+        className={cn('form-input-base', className)}
         {...props}
       />
     );

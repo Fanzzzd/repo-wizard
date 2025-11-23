@@ -1,6 +1,6 @@
+import { AlertTriangle, CheckCircle, Info, X, XCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useDialogStore } from '../../store/dialogStore';
-import { CheckCircle, AlertTriangle, XCircle, Info, X } from 'lucide-react';
 import { Button } from './Button';
 
 const statusIcons = {
@@ -59,6 +59,7 @@ export function ModalDialog() {
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => handleClose(false)}
                   className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700"
                 >

@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { cn } from '../../lib/utils';
 
 interface SegmentedControlOption<T extends string> {
   value: T;
@@ -20,15 +21,17 @@ export function SegmentedControl<T extends string>({
 }: SegmentedControlProps<T>) {
   return (
     <div className="relative z-0 flex bg-gray-200 dark:bg-gray-700 rounded-md p-0.5">
-      {options.map(option => (
+      {options.map((option) => (
         <button
+          type="button"
           key={option.value}
           onClick={() => onChange(option.value)}
-          className={`relative flex-1 text-center text-xs px-2 py-1 font-medium transition-colors duration-200 ${
+          className={cn(
+            'relative flex-1 text-center text-xs px-2 py-1 font-medium transition-colors duration-200',
             value === option.value
               ? 'text-gray-900 dark:text-gray-100'
               : 'text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100'
-          }`}
+          )}
         >
           {value === option.value && (
             <motion.div

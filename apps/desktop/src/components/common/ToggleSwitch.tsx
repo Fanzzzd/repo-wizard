@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
-import React from 'react';
+import type React from 'react';
+import { cn } from '../../lib/utils';
 
 interface ToggleSwitchProps {
   checked: boolean;
@@ -29,11 +30,12 @@ export function ToggleSwitch({ checked, onChange, title }: ToggleSwitchProps) {
       role="switch"
       aria-checked={checked}
       tabIndex={0}
-      className={`flex-shrink-0 w-9 h-5 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+      className={cn(
+        'flex-shrink-0 w-9 h-5 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
         checked
           ? 'bg-blue-500 justify-end'
           : 'bg-gray-300 dark:bg-gray-600 justify-start'
-      }`}
+      )}
       title={title}
     >
       <motion.div

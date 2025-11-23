@@ -1,18 +1,19 @@
+import {
+  AlertTriangle,
+  Check,
+  CheckCheck,
+  CircleDot,
+  Undo,
+} from 'lucide-react';
+import { useReviewSession } from '../../hooks/useReviewSession';
+import { cn } from '../../lib/utils';
 import { useDialogStore } from '../../store/dialogStore';
 import { useReviewStore } from '../../store/reviewStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
-import { FileTypeIcon } from '../workspace/FileTypeIcon';
-import {
-  Check,
-  CircleDot,
-  AlertTriangle,
-  CheckCheck,
-  Undo,
-} from 'lucide-react';
 import type { ReviewChange } from '../../types';
 import { Button } from '../common/Button';
 import { ShortenedPath } from '../common/ShortenedPath';
-import { useReviewSession } from '../../hooks/useReviewSession';
+import { FileTypeIcon } from '../workspace/FileTypeIcon';
 
 const ChangeTypeBadge = ({ type }: { type: 'A' | 'P' | 'O' | 'D' | 'R' }) => {
   const typeMap = {
@@ -47,7 +48,10 @@ const ChangeTypeBadge = ({ type }: { type: 'A' | 'P' | 'O' | 'D' | 'R' }) => {
 
   return (
     <div
-      className={`flex-shrink-0 w-4 h-4 rounded-sm flex items-center justify-center text-[10px] font-bold ${className}`}
+      className={cn(
+        'flex-shrink-0 w-4 h-4 rounded-sm flex items-center justify-center text-[10px] font-bold',
+        className
+      )}
       title={title}
     >
       {char}
@@ -63,10 +67,10 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
     revertChange,
     errors,
   } = useReviewStore();
-  const openDialog = useDialogStore(s => s.open);
+  const openDialog = useDialogStore((s) => s.open);
   const isActive = change.id === activeChangeId;
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = (e: React.SyntheticEvent) => {
     e.stopPropagation();
     if (change.status === 'pending') {
       applyChange(change.id);
@@ -84,19 +88,19 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
   const getStatusProps = () => {
     const op = change.operation;
     const isPatch = op.type === 'patch';
-    
+
     // For non-patch operations, we consider them as single block operations
     const totalBlocks = isPatch ? op.totalBlocks : 1;
     const matchingBlocks = isPatch ? op.appliedBlocks : 1;
-    
+
     // If pending, we haven't applied anything yet, so 0 applied (from user perspective)
     // If applied, we show how many blocks successfully matched
     const displayApplied = change.status === 'pending' ? 0 : matchingBlocks;
-    
+
     const countText = `${displayApplied}/${totalBlocks}`;
 
     switch (change.status) {
-      case 'applied':
+      case 'applied': {
         const isPartial = matchingBlocks < totalBlocks;
         return {
           icon: <Check size={14} />,
@@ -105,11 +109,13 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
             ? 'bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-300 dark:hover:bg-red-500/30'
             : 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-500/20 dark:text-green-300 dark:hover:bg-green-500/30',
         };
+      }
       case 'identical':
         return {
           icon: <Check size={14} />,
           text: 'Identical',
-          style: 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-300',
+          style:
+            'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-300',
         };
       case 'error':
         return {
@@ -174,7 +180,9 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
               path={operation.fromPath}
               className="truncate min-w-0 text-gray-500 dark:text-gray-400"
             />
-            <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">→</span>
+            <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+              →
+            </span>
             <ShortenedPath
               path={operation.toPath}
               className="truncate min-w-0"
@@ -185,9 +193,10 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
   };
 
   return (
-    <div
+    <button
+      type="button"
       onClick={() => setActiveChangeId(change.id)}
-      className={`flex items-center justify-between gap-2 px-2 py-1 rounded text-sm cursor-default ${
+      className={`w-full flex items-center justify-between gap-2 px-2 py-1 rounded text-sm cursor-default ${
         isActive
           ? 'bg-blue-100 text-blue-900 dark:bg-blue-500/30 dark:text-blue-100'
           : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
@@ -198,16 +207,29 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
       </div>
       <div className="flex items-center gap-1.5 flex-shrink-0">
         <button
+          type="button"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              handleClick(e);
+            }
+          }}
           onClick={handleClick}
-          disabled={change.status === 'identical'}
-          title="Cycle Status (Pending -> Applied)"
-          className={`flex items-center justify-center w-24 gap-1.5 py-1 text-xs font-medium rounded-full transition-colors ${style} disabled:cursor-default`}
+          className={`flex items-center justify-center w-24 gap-1.5 py-1 text-xs font-medium rounded-full transition-colors ${style} ${
+            change.status === 'identical' ? 'cursor-default' : 'cursor-pointer'
+          }`}
+          title={
+            change.status !== 'identical'
+              ? 'Click to cycle Status (Pending <-> Applied)'
+              : undefined
+          }
         >
           {icon}
           <span>{text}</span>
         </button>
       </div>
-    </div>
+    </button>
   );
 };
 
@@ -216,7 +238,7 @@ export function ChangeList() {
   const { triggerFileTreeRefresh } = useWorkspaceStore();
   const { endReview, applyAll, revertAll } = useReviewSession();
 
-  const appliedChanges = changes.filter(c => c.status === 'applied');
+  const appliedChanges = changes.filter((c) => c.status === 'applied');
 
   const handleFinishReview = () => {
     endReview();
@@ -254,7 +276,7 @@ export function ChangeList() {
       </div>
       <div className="flex-grow overflow-y-auto pr-1 min-h-0">
         <div className="flex flex-col gap-1">
-          {changes.map(change => (
+          {changes.map((change) => (
             <ChangeItem key={change.id} change={change} />
           ))}
         </div>

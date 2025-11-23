@@ -1,12 +1,13 @@
 import {
-  Settings,
-  RefreshCw,
+  AlertCircle,
+  ArrowUpCircle,
   CheckCircle,
   DownloadCloud,
-  ArrowUpCircle,
-  AlertCircle,
+  RefreshCw,
+  Settings,
 } from 'lucide-react';
 import { useState } from 'react';
+import { cn } from '../lib/utils';
 import { useUpdateStore } from '../store/updateStore';
 import { Button } from './common/Button';
 import { SettingsModal } from './common/SettingsModal';
@@ -68,7 +69,7 @@ function VersionStatus() {
       disabled={isChecking}
       variant="ghost"
       size="sm"
-      className={`font-medium ${currentStatus.style}`}
+      className={cn('font-medium', currentStatus.style)}
       title={currentStatus.title}
       leftIcon={currentStatus.icon}
     >
@@ -89,6 +90,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           <VersionStatus />
           <button
+            type="button"
             onClick={() => setIsSettingsModalOpen(true)}
             className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 dark:hover:bg-gray-700 dark:text-gray-400 dark:hover:text-gray-100"
             title="Settings"

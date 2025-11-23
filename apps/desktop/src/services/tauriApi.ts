@@ -1,15 +1,15 @@
-import { invoke, Channel } from '@tauri-apps/api/core';
-import type {
-  FileNode,
-  ChangeOperation,
-  GitStatus,
-  Commit,
-  GitDiffConfig,
-  CommandStreamEvent,
-  CliStatusResult,
-  CliInstallResult,
-} from '../types';
+import { type Channel, invoke } from '@tauri-apps/api/core';
 import { AppError } from '../lib/error';
+import type {
+  ChangeOperation,
+  CliInstallResult,
+  CliStatusResult,
+  CommandStreamEvent,
+  Commit,
+  FileNode,
+  GitDiffConfig,
+  GitStatus,
+} from '../types';
 
 interface IgnoreSettings {
   respectGitignore: boolean;
@@ -58,7 +58,7 @@ export const isBinaryFile = async (path: string): Promise<boolean> => {
 export const fileExists = async (path: string): Promise<boolean> => {
   try {
     return await invoke('file_exists', { path });
-  } catch (err) {
+  } catch (_err) {
     // If the existence check fails, assume it doesn't exist
     return false;
   }

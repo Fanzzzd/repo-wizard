@@ -1,6 +1,6 @@
-import { listDirectoryRecursive, deleteBackup } from './tauriApi';
-import type { FileNode } from '../types';
 import { showErrorDialog } from '../lib/errorHandler';
+import type { FileNode } from '../types';
+import { deleteBackup, listDirectoryRecursive } from './tauriApi';
 
 interface IgnoreSettings {
   respectGitignore: boolean;

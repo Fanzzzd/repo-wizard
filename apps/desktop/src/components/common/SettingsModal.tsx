@@ -1,30 +1,31 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { useSettingsStore } from '../../store/settingsStore';
-import { useDialogStore } from '../../store/dialogStore';
-import { AnimatePresence, motion } from 'motion/react';
-import { Textarea } from './Textarea';
-import { Checkbox } from './Checkbox';
-import { Button } from './Button';
-import { getCliStatus, installCliShim } from '../../services/tauriApi';
-import type { CliStatusResult } from '../../types';
-import { showErrorDialog } from '../../lib/errorHandler';
-import { Input } from './Input';
 import {
-  X,
-  RefreshCw,
-  BadgeCheck,
-  Terminal,
   AlertTriangle,
-  Settings,
+  BadgeCheck,
   FolderTree,
   MessageSquare,
-  Palette,
-  Sun,
-  Moon,
   Monitor,
+  Moon,
+  Palette,
+  RefreshCw,
+  Settings,
+  Sun,
+  Terminal,
+  X,
 } from 'lucide-react';
-import { SegmentedControl } from './SegmentedControl';
+import { AnimatePresence, motion } from 'motion/react';
 import { useTheme } from 'next-themes';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { showErrorDialog } from '../../lib/errorHandler';
+import { cn } from '../../lib/utils';
+import { getCliStatus, installCliShim } from '../../services/tauriApi';
+import { useDialogStore } from '../../store/dialogStore';
+import { useSettingsStore } from '../../store/settingsStore';
+import type { CliStatusResult } from '../../types';
+import { Button } from './Button';
+import { Checkbox } from './Checkbox';
+import { Input } from './Input';
+import { SegmentedControl } from './SegmentedControl';
+import { Textarea } from './Textarea';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -37,7 +38,7 @@ function CliSettings() {
   });
   const { open: openDialog } = useDialogStore();
 
-  const checkCli = async () => {
+  const checkCli = useCallback(async () => {
     try {
       const result = await getCliStatus();
       setCliStatus(result);
@@ -47,11 +48,11 @@ function CliSettings() {
         error: e instanceof Error ? e.message : String(e),
       });
     }
-  };
+  }, []);
 
   useEffect(() => {
     checkCli();
-  }, []);
+  }, [checkCli]);
 
   const handleSetupCli = async () => {
     try {
@@ -218,13 +219,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (!container) return;
 
     const intersectingStatus = new Map<string, boolean>();
-    categories.forEach(c => intersectingStatus.set(c.id, false));
+    categories.forEach((c) => {
+      intersectingStatus.set(c.id, false);
+    });
 
     const observer = new IntersectionObserver(
-      entries => {
+      (entries) => {
         if (isScrollingToSection.current) return;
 
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
           intersectingStatus.set(entry.target.id, entry.isIntersecting);
         });
 
@@ -258,7 +261,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       }
     );
 
-    categories.forEach(cat => {
+    categories.forEach((cat) => {
       const el = sectionRefs.current[cat.id];
       if (el) observer.observe(el);
     });
@@ -293,13 +296,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <header className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
               <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                 Settings
               </h2>
               <button
+                type="button"
                 onClick={onClose}
                 className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-200"
               >
@@ -310,23 +314,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <main className="flex-grow flex min-h-0 bg-gray-50 dark:bg-gray-900">
               <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-800">
                 <div className="p-2 space-y-1">
-                  {categories.map(cat => (
+                  {categories.map((cat) => (
                     <button
+                      type="button"
                       key={cat.id}
                       onClick={() => handleCategoryClick(cat.id)}
-                      className={`w-full flex items-center gap-3 p-2 text-sm rounded-md text-left transition-colors ${
+                      className={cn(
+                        'w-full flex items-center gap-3 p-2 text-sm rounded-md text-left transition-colors',
                         activeCategory === cat.id
                           ? 'bg-blue-100 text-blue-800 font-semibold dark:bg-blue-900/50 dark:text-blue-200'
                           : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
-                      }`}
+                      )}
                     >
                       <cat.icon
                         size={16}
-                        className={
+                        className={cn(
                           activeCategory === cat.id
                             ? 'text-blue-600 dark:text-blue-400'
                             : 'text-gray-500 dark:text-gray-400'
-                        }
+                        )}
                       />
                       <span>{cat.label}</span>
                     </button>
@@ -340,8 +346,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <div className="max-w-3xl mx-auto space-y-6">
                   <section
                     id="general"
-                    ref={el => {
-                      sectionRefs.current['general'] = el;
+                    ref={(el) => {
+                      sectionRefs.current.general = el;
                     }}
                     className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
@@ -355,18 +361,22 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     </div>
                     <div className="p-6 space-y-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label
+                          htmlFor="history-limit"
+                          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                        >
                           Prompt History Limit
                         </label>
                         <Input
+                          id="history-limit"
                           type="number"
                           min="1"
                           max="200"
                           className="w-24"
                           value={promptHistoryLimit}
-                          onChange={e => {
+                          onChange={(e) => {
                             const value = parseInt(e.target.value, 10);
-                            if (!isNaN(value)) {
+                            if (!Number.isNaN(value)) {
                               setPromptHistoryLimit(Math.max(1, value));
                             }
                           }}
@@ -380,8 +390,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
                   <section
                     id="appearance"
-                    ref={el => {
-                      sectionRefs.current['appearance'] = el;
+                    ref={(el) => {
+                      sectionRefs.current.appearance = el;
                     }}
                     className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
@@ -395,9 +405,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     </div>
                     <div className="p-6 space-y-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Theme
-                        </label>
+                        </div>
                         <SegmentedControl
                           options={themeOptions}
                           value={theme as 'light' | 'dark' | 'system'}
@@ -410,8 +420,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
                   <section
                     id="fileTree"
-                    ref={el => {
-                      sectionRefs.current['fileTree'] = el;
+                    ref={(el) => {
+                      sectionRefs.current.fileTree = el;
                     }}
                     className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
@@ -427,14 +437,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     <div className="p-6 space-y-6">
                       <Checkbox
                         checked={respectGitignore}
-                        onChange={e => setRespectGitignore(e.target.checked)}
+                        onChange={(e) => setRespectGitignore(e.target.checked)}
                       >
                         Respect .gitignore
                       </Checkbox>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Custom Ignore Patterns
-                        </label>
+                        </div>
                         <Textarea
                           rows={6}
                           className="text-xs"
@@ -442,7 +452,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             '# .gitignore syntax\nnode_modules\ndist/\n*.log'
                           }
                           value={customIgnorePatterns}
-                          onChange={e =>
+                          onChange={(e) =>
                             setCustomIgnorePatterns(e.target.value)
                           }
                         />
@@ -452,8 +462,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
                   <section
                     id="prompting"
-                    ref={el => {
-                      sectionRefs.current['prompting'] = el;
+                    ref={(el) => {
+                      sectionRefs.current.prompting = el;
                     }}
                     className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                   >
@@ -474,7 +484,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         <div className="space-y-3 pl-2">
                           <Checkbox
                             checked={autoReviewOnPaste}
-                            onChange={e =>
+                            onChange={(e) =>
                               setAutoReviewOnPaste(e.target.checked)
                             }
                           >
@@ -482,7 +492,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                           </Checkbox>
                           <Checkbox
                             checked={enableClipboardReview}
-                            onChange={e =>
+                            onChange={(e) =>
                               setEnableClipboardReview(e.target.checked)
                             }
                             disabled={!clipboardReviewIsDisablable}
@@ -494,7 +504,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                           </Checkbox>
                           <Checkbox
                             checked={showPasteResponseArea}
-                            onChange={e =>
+                            onChange={(e) =>
                               setShowPasteResponseArea(e.target.checked)
                             }
                             disabled={!pasteAreaIsDisablable}
@@ -508,15 +518,17 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         <h4 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">
                           Prompt Content
                         </h4>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Custom System Prompt
-                        </label>
+                        </div>
                         <Textarea
                           rows={12}
                           className="text-xs"
                           placeholder="Enter your custom system prompt..."
                           value={customSystemPrompt}
-                          onChange={e => setCustomSystemPrompt(e.target.value)}
+                          onChange={(e) =>
+                            setCustomSystemPrompt(e.target.value)
+                          }
                         />
                       </div>
                     </div>
@@ -524,7 +536,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
                   <section
                     id="cli"
-                    ref={el => {
+                    ref={(el) => {
                       sectionRefs.current.cli = el;
                     }}
                     className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"

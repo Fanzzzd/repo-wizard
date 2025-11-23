@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { check, type Update } from '@tauri-apps/plugin-updater';
-import { relaunch } from '@tauri-apps/plugin-process';
 import { fetch as httpFetch } from '@tauri-apps/plugin-http';
+import { relaunch } from '@tauri-apps/plugin-process';
+import { check, type Update } from '@tauri-apps/plugin-updater';
+import { create } from 'zustand';
 
 type UpdateStatus =
   | 'idle'
@@ -11,9 +11,15 @@ type UpdateStatus =
   | 'ready'
   | 'error';
 
+interface SimulatedUpdate {
+  version: string;
+  body: string;
+  date: string;
+}
+
 interface UpdateState {
   status: UpdateStatus;
-  updateInfo: Update | null;
+  updateInfo: Update | SimulatedUpdate | null;
   error: string | null;
   check: () => Promise<void>;
   install: () => Promise<void>;
@@ -56,10 +62,10 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
           date: manifest.pub_date,
         };
         // We set status to ready to trigger the info dialog, but not for installation.
-        set({ status: 'ready', updateInfo: simulatedUpdateInfo as any });
-      } catch (e: any) {
+        set({ status: 'ready', updateInfo: simulatedUpdateInfo });
+      } catch (e: unknown) {
         console.error('DEV MODE: Update simulation failed:', e);
-        set({ status: 'error', error: e.toString() });
+        set({ status: 'error', error: String(e) });
       }
       return;
     }
@@ -74,12 +80,12 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
       } else {
         set({ status: 'up-to-date' });
         setTimeout(() => {
-          set(s => (s.status === 'up-to-date' ? { status: 'idle' } : s));
+          set((s) => (s.status === 'up-to-date' ? { status: 'idle' } : s));
         }, 3000);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Update check/download failed:', e);
-      set({ status: 'error', error: e.toString() });
+      set({ status: 'error', error: String(e) });
     }
   },
 

@@ -1,9 +1,9 @@
 import { create } from 'zustand';
+import { AppError } from '../lib/error';
+import { showErrorDialog } from '../lib/errorHandler';
+import * as reviewService from '../services/reviewService';
 import type { ChangeOperation, ReviewChange } from '../types';
 import { useWorkspaceStore } from './workspaceStore';
-import * as reviewService from '../services/reviewService';
-import { showErrorDialog } from '../lib/errorHandler';
-import { AppError } from '../lib/error';
 
 interface ReviewState {
   isReviewing: boolean;
@@ -77,12 +77,12 @@ const updateWorkspaceOnFileChange = (
 
   if (operation.type === 'delete' && isApply) {
     const filePath = getAbsPath(operation.filePath);
-    setSelectedFilePaths(selectedFilePaths.filter(p => p !== filePath));
+    setSelectedFilePaths(selectedFilePaths.filter((p) => p !== filePath));
     if (activeFilePath === filePath) setActiveFilePath(null);
   } else if (operation.type === 'move') {
     const from = getAbsPath(isApply ? operation.fromPath : operation.toPath);
     const to = getAbsPath(isApply ? operation.toPath : operation.fromPath);
-    const newSelected = selectedFilePaths.map(p => (p === from ? to : p));
+    const newSelected = selectedFilePaths.map((p) => (p === from ? to : p));
     setSelectedFilePaths(newSelected);
     if (activeFilePath === from) setActiveFilePath(to);
   } else if (isCreateOperation && !isApply) {
@@ -100,8 +100,9 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     const { rootPath } = useWorkspaceStore.getState();
     if (!rootPath) return;
 
-    if (get().lastReview?.sessionBaseBackupId) {
-      reviewService.cleanupBackup(get().lastReview!.sessionBaseBackupId!);
+    const lastReview = get().lastReview;
+    if (lastReview?.sessionBaseBackupId) {
+      reviewService.cleanupBackup(lastReview.sessionBaseBackupId);
     }
 
     const { changes, backupId } = await reviewService.processAndStartReview(
@@ -115,14 +116,16 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       changes,
       sessionBaseBackupId: backupId,
       activeChangeId:
-        changes.find(c => c.status === 'pending')?.id ?? changes[0]?.id ?? null,
+        changes.find((c) => c.status === 'pending')?.id ??
+        changes[0]?.id ??
+        null,
       errors: {},
       lastReview: null,
     });
   },
   endReview: () => {
     const { sessionBaseBackupId, changes } = get();
-    const wasAnythingApplied = changes.some(c => c.status === 'applied');
+    const wasAnythingApplied = changes.some((c) => c.status === 'applied');
     if (sessionBaseBackupId && !wasAnythingApplied) {
       reviewService.cleanupBackup(sessionBaseBackupId);
     }
@@ -136,7 +139,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     });
   },
   reenterReview: () => {
-    set(state => {
+    set((state) => {
       if (!state.lastReview) return state;
       const { changes, sessionBaseBackupId } = state.lastReview;
       return {
@@ -145,7 +148,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         changes,
         sessionBaseBackupId,
         activeChangeId:
-          changes.find(c => c.status !== 'identical')?.id ??
+          changes.find((c) => c.status !== 'identical')?.id ??
           changes[0]?.id ??
           null,
         lastReview: null,
@@ -153,34 +156,34 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     });
   },
   clearReviewSession: () => set({ sessionBaseBackupId: null }),
-  setActiveChangeId: id => set({ activeChangeId: id }),
-  applyChange: async id => {
+  setActiveChangeId: (id) => set({ activeChangeId: id }),
+  applyChange: async (id) => {
     const { changes } = get();
     const { rootPath } = useWorkspaceStore.getState();
-    const change = changes.find(c => c.id === id);
+    const change = changes.find((c) => c.id === id);
     if (!change || change.status !== 'pending' || !rootPath) return;
 
     try {
       await reviewService.applyChange(change, rootPath);
-      set(state => ({
-        changes: state.changes.map(c =>
+      set((state) => ({
+        changes: state.changes.map((c) =>
           c.id === id ? { ...c, status: 'applied' } : c
         ),
       }));
       updateWorkspaceOnFileChange(change.operation, 'apply');
-    } catch (e: any) {
-      set(state => ({
-        errors: { ...state.errors, [id]: e.toString() },
-        changes: state.changes.map(c =>
+    } catch (e: unknown) {
+      set((state) => ({
+        errors: { ...state.errors, [id]: String(e) },
+        changes: state.changes.map((c) =>
           c.id === id ? { ...c, status: 'error' } : c
         ),
       }));
     }
   },
-  revertChange: async id => {
+  revertChange: async (id) => {
     const { changes, sessionBaseBackupId } = get();
     const { rootPath } = useWorkspaceStore.getState();
-    const change = changes.find(c => c.id === id);
+    const change = changes.find((c) => c.id === id);
     if (
       !change ||
       change.status !== 'applied' ||
@@ -191,19 +194,19 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
 
     try {
       await reviewService.revertChange(change, sessionBaseBackupId, rootPath);
-      set(state => ({
-        changes: state.changes.map(c =>
+      set((state) => ({
+        changes: state.changes.map((c) =>
           c.id === id ? { ...c, status: 'pending' } : c
         ),
       }));
       updateWorkspaceOnFileChange(change.operation, 'revert');
-    } catch (e: any) {
+    } catch (e: unknown) {
       showErrorDialog(new AppError(`Failed to revert change ${id}`, e));
     }
   },
   applyAllPendingChanges: async () => {
     const { changes, applyChange } = get();
-    for (const change of changes.filter(c => c.status === 'pending')) {
+    for (const change of changes.filter((c) => c.status === 'pending')) {
       await applyChange(change.id);
     }
   },
@@ -211,7 +214,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     const { changes, revertChange } = get();
     for (const change of [...changes]
       .reverse()
-      .filter(c => c.status === 'applied')) {
+      .filter((c) => c.status === 'applied')) {
       await revertChange(change.id);
     }
   },

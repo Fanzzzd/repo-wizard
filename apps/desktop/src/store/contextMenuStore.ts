@@ -1,5 +1,5 @@
-import { create } from 'zustand';
 import type { LucideIcon } from 'lucide-react';
+import { create } from 'zustand';
 
 export type ContextMenuItem =
   | {
@@ -22,7 +22,7 @@ interface ContextMenuState {
   close: () => void;
 }
 
-export const useContextMenuStore = create<ContextMenuState>(set => ({
+export const useContextMenuStore = create<ContextMenuState>((set) => ({
   isOpen: false,
   position: { x: 0, y: 0 },
   items: [],

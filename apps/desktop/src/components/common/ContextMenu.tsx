@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
-import {
-  useContextMenuStore,
-  type ContextMenuItem,
-} from '../../store/contextMenuStore';
 import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useRef } from 'react';
+import { cn } from '../../lib/utils';
+import {
+  type ContextMenuItem,
+  useContextMenuStore,
+} from '../../store/contextMenuStore';
 
 function MenuItem({
   item,
@@ -13,31 +14,27 @@ function MenuItem({
   close: () => void;
 }) {
   if (item.isSeparator) {
-    return (
-      <div className="h-px bg-gray-200 dark:bg-gray-700 my-1 mx-[-4px]" />
-    );
+    return <div className="h-px bg-gray-200 dark:bg-gray-700 my-1 mx-[-4px]" />;
   }
 
   const Icon = item.icon;
 
   return (
     <button
+      type="button"
       onClick={() => {
         item.onClick();
         close();
       }}
       disabled={item.disabled}
-      className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-left transition-colors
-        ${
-          item.isDanger
-            ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10'
-            : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
-        }
-        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
-    >
-      {Icon && (
-        <Icon size={16} className="text-gray-500 dark:text-gray-400" />
+      className={cn(
+        'w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-left transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent',
+        item.isDanger
+          ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10'
+          : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
       )}
+    >
+      {Icon && <Icon size={16} className="text-gray-500 dark:text-gray-400" />}
       <span className="flex-grow">{item.label}</span>
     </button>
   );
@@ -77,6 +74,7 @@ export function ContextMenu() {
           }}
         >
           {items.map((item, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Items are static during open
             <MenuItem key={index} item={item} close={close} />
           ))}
         </motion.div>

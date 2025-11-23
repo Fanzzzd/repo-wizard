@@ -7,10 +7,7 @@ pub struct WindowRegistry(pub Mutex<HashMap<String, Option<String>>>);
 impl WindowRegistry {
     pub fn set_project_for_label(&self, label: &str, project_root: Option<&str>) {
         if let Ok(mut map) = self.0.lock() {
-            map.insert(
-                label.to_string(),
-                project_root.map(|s| s.to_string()),
-            );
+            map.insert(label.to_string(), project_root.map(|s| s.to_string()));
         }
     }
 

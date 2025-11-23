@@ -9,11 +9,11 @@ use crate::types::{
     FileNode, GitStatus, IgnoreSettings, SearchResult,
 };
 use base64::{engine::general_purpose, Engine as _};
+use log::debug;
 use std::path::PathBuf;
 use tauri::ipc::Channel;
 use tauri::Manager;
 use uuid::Uuid;
-use log::debug;
 
 #[tauri::command]
 pub fn open_project_window(app: tauri::AppHandle, root_path: String) -> Result<()> {
@@ -79,7 +79,10 @@ pub fn register_window_project(window: tauri::Window, root_path: Option<String>)
         window.label(),
         root_path
     );
-    if let Some(reg) = window.app_handle().try_state::<crate::state::WindowRegistry>() {
+    if let Some(reg) = window
+        .app_handle()
+        .try_state::<crate::state::WindowRegistry>()
+    {
         reg.set_project_for_label(window.label(), root_path.as_deref());
     }
     Ok(())
@@ -102,8 +105,14 @@ pub fn create_new_window(app: tauri::AppHandle) -> Result<()> {
 
 #[tauri::command]
 pub async fn close_window(window: tauri::Window) -> Result<()> {
-    debug!("Closing window '{}' and unregistering project.", window.label());
-    if let Some(reg) = window.app_handle().try_state::<crate::state::WindowRegistry>() {
+    debug!(
+        "Closing window '{}' and unregistering project.",
+        window.label()
+    );
+    if let Some(reg) = window
+        .app_handle()
+        .try_state::<crate::state::WindowRegistry>()
+    {
         reg.set_project_for_label(window.label(), None);
     }
     window.close()?;

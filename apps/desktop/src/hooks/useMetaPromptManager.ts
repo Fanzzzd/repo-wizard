@@ -1,17 +1,17 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useSettingsStore } from '../store/settingsStore';
+import type { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
+import { Copy, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { showErrorDialog } from '../lib/errorHandler';
 import { useComposerStore } from '../store/composerStore';
 import { useContextMenuStore } from '../store/contextMenuStore';
+import { useSettingsStore } from '../store/settingsStore';
 import type {
+  MagicPromptType,
   MetaPrompt,
   MetaPromptDefinition,
   PromptMode,
-  MagicPromptType,
 } from '../types';
-import { Copy, Trash2 } from 'lucide-react';
-import { arrayMove } from '@dnd-kit/sortable';
-import type { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
-import { showErrorDialog } from '../lib/errorHandler';
 
 export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
   const { metaPrompts: promptDefs, setMetaPrompts: setPromptDefs } =
@@ -29,29 +29,29 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
   >([]);
 
   const selectedPrompt = useMemo(
-    () => localPrompts.find(p => p.id === selectedPromptId),
+    () => localPrompts.find((p) => p.id === selectedPromptId),
     [localPrompts, selectedPromptId]
   );
 
   const { universalPrompts, editPrompts, qaPrompts } = useMemo(() => {
     // The order of localPrompts is managed by dnd-kit and should be respected.
     return {
-      universalPrompts: localPrompts.filter(p => p.mode === 'universal'),
-      editPrompts: localPrompts.filter(p => p.mode === 'edit'),
-      qaPrompts: localPrompts.filter(p => p.mode === 'qa'),
+      universalPrompts: localPrompts.filter((p) => p.mode === 'universal'),
+      editPrompts: localPrompts.filter((p) => p.mode === 'edit'),
+      qaPrompts: localPrompts.filter((p) => p.mode === 'qa'),
     };
   }, [localPrompts]);
 
   useEffect(() => {
     if (isOpen) {
-      const currentPrompts = promptDefs.map(def => ({
+      const currentPrompts = promptDefs.map((def) => ({
         ...def,
         enabled: enabledMetaPromptIds.includes(def.id),
       }));
       setLocalPrompts(currentPrompts);
 
-      setSelectedPromptId(currentId => {
-        if (currentId && currentPrompts.some(p => p.id === currentId)) {
+      setSelectedPromptId((currentId) => {
+        if (currentId && currentPrompts.some((p) => p.id === currentId)) {
           return currentId;
         }
         return currentPrompts[0]?.id ?? null;
@@ -65,14 +65,14 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
         ];
         try {
           const templatesData = await Promise.all(
-            templateFiles.map(async filename => {
+            templateFiles.map(async (filename) => {
               const response = await fetch(`/meta-prompts/${filename}`);
               if (!response.ok) throw new Error(`Failed to fetch ${filename}`);
               const content = await response.text();
               const name = filename
                 .replace('.md', '')
                 .replace(/-/g, ' ')
-                .replace(/\b\w/g, l => l.toUpperCase());
+                .replace(/\b\w/g, (l) => l.toUpperCase());
               return { name, content };
             })
           );
@@ -90,7 +90,9 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       ({ enabled, ...def }) => def
     );
-    const enabledIdsToSave = localPrompts.filter(p => p.enabled).map(p => p.id);
+    const enabledIdsToSave = localPrompts
+      .filter((p) => p.enabled)
+      .map((p) => p.id);
     setPromptDefs(definitionsToSave);
     setEnabledMetaPromptIds(enabledIdsToSave);
   };
@@ -99,8 +101,8 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
     prompt: MetaPrompt,
     update: Partial<Omit<MetaPrompt, 'id'>>
   ) => {
-    setLocalPrompts(currentPrompts =>
-      currentPrompts.map(p => (p.id === prompt.id ? { ...p, ...update } : p))
+    setLocalPrompts((currentPrompts) =>
+      currentPrompts.map((p) => (p.id === prompt.id ? { ...p, ...update } : p))
     );
   };
 
@@ -108,13 +110,13 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
     id: string,
     update: Partial<Omit<MetaPrompt, 'id'>>
   ) => {
-    const prompt = localPrompts.find(p => p.id === id);
+    const prompt = localPrompts.find((p) => p.id === id);
     if (prompt) handleUpdatePrompt(prompt, update);
   };
 
   const handleDragStart = (event: { active: { id: React.Key } }) => {
     setActiveDragPrompt(
-      localPrompts.find(p => p.id === event.active.id) || null
+      localPrompts.find((p) => p.id === event.active.id) || null
     );
   };
 
@@ -128,8 +130,8 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
     const overContainer = (over.data.current?.sortable.containerId ??
       over.id) as PromptMode;
     if (activeContainer && overContainer && activeContainer !== overContainer) {
-      setLocalPrompts(prompts => {
-        const activeIndex = prompts.findIndex(p => p.id === active.id);
+      setLocalPrompts((prompts) => {
+        const activeIndex = prompts.findIndex((p) => p.id === active.id);
         if (activeIndex === -1) return prompts;
         prompts[activeIndex].mode = overContainer;
         return arrayMove(prompts, activeIndex, activeIndex);
@@ -141,9 +143,9 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
     setActiveDragPrompt(null);
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      setLocalPrompts(prompts => {
-        const oldIndex = prompts.findIndex(item => item.id === active.id);
-        const newIndex = prompts.findIndex(item => item.id === over.id);
+      setLocalPrompts((prompts) => {
+        const oldIndex = prompts.findIndex((item) => item.id === active.id);
+        const newIndex = prompts.findIndex((item) => item.id === over.id);
         return oldIndex !== -1 && newIndex !== -1
           ? arrayMove(prompts, oldIndex, newIndex)
           : prompts;
@@ -160,7 +162,7 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
       enabled: true,
       ...promptDef,
     };
-    setLocalPrompts(prev => [newPrompt, ...prev]);
+    setLocalPrompts((prev) => [newPrompt, ...prev]);
     setSelectedPromptId(newPrompt.id);
   };
 
@@ -235,7 +237,7 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
             id: window.crypto.randomUUID(),
             name: `${prompt.name} (Copy)`,
           };
-          const sourceIndex = localPrompts.findIndex(p => p.id === prompt.id);
+          const sourceIndex = localPrompts.findIndex((p) => p.id === prompt.id);
           const newPrompts = [...localPrompts];
           newPrompts.splice(sourceIndex + 1, 0, newPrompt);
           setLocalPrompts(newPrompts);
@@ -248,10 +250,10 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
         icon: Trash2,
         isDanger: true,
         onClick: () => {
-          const newPrompts = localPrompts.filter(p => p.id !== prompt.id);
+          const newPrompts = localPrompts.filter((p) => p.id !== prompt.id);
           setLocalPrompts(newPrompts);
           if (selectedPromptId === prompt.id) {
-            const index = localPrompts.findIndex(p => p.id === prompt.id);
+            const index = localPrompts.findIndex((p) => p.id === prompt.id);
             if (newPrompts.length === 0) setSelectedPromptId(null);
             else {
               const newIndex = Math.max(0, index - 1);

@@ -1,11 +1,11 @@
+import { getGitDiff } from '../services/tauriApi';
 import type {
   ComposerMode,
   EditFormat,
-  MetaPrompt,
   FileNode,
   FileTreeConfig,
+  MetaPrompt,
 } from '../types';
-import { getGitDiff } from '../services/tauriApi';
 
 interface File {
   path: string;
@@ -101,18 +101,18 @@ const formattingRulesMap = {
 const parseIgnorePatterns = (patternsStr: string) => {
   const patterns = patternsStr
     .split(',')
-    .map(p => p.trim())
+    .map((p) => p.trim())
     .filter(Boolean);
   const filePatterns: ((name: string) => boolean)[] = [];
   const dirPatterns: ((name: string) => boolean)[] = [];
 
-  patterns.forEach(pattern => {
+  patterns.forEach((pattern) => {
     if (pattern.endsWith('/')) {
       const dirName = pattern.slice(0, -1);
-      dirPatterns.push(name => name === dirName);
+      dirPatterns.push((name) => name === dirName);
     } else if (pattern.startsWith('*.')) {
       const extension = pattern.slice(1);
-      filePatterns.push(name => name.endsWith(extension));
+      filePatterns.push((name) => name.endsWith(extension));
     } else {
       const matchFn = (name: string) => name === pattern;
       filePatterns.push(matchFn);
@@ -122,7 +122,7 @@ const parseIgnorePatterns = (patternsStr: string) => {
 
   return (node: FileNode) => {
     const patternsToCheck = node.isDirectory ? dirPatterns : filePatterns;
-    return patternsToCheck.some(p => p(node.name));
+    return patternsToCheck.some((p) => p(node.name));
   };
 };
 
@@ -133,7 +133,7 @@ const formatFileTree = (node: FileNode, config?: FileTreeConfig): string => {
     : () => false;
 
   const buildTree = (children: FileNode[], prefix: string) => {
-    let childrenToDisplay = children.filter(child => !isIgnoredFn(child));
+    let childrenToDisplay = children.filter((child) => !isIgnoredFn(child));
 
     const maxFiles = config?.maxFilesPerDirectory;
     if (
@@ -181,7 +181,7 @@ const filterFileTreeBySelection = (
 
   if (node.isDirectory && node.children) {
     const newChildren = node.children
-      .map(child => filterFileTreeBySelection(child, selectedPaths, rootPath))
+      .map((child) => filterFileTreeBySelection(child, selectedPaths, rootPath))
       .filter((c): c is FileNode => c !== null);
 
     if (newChildren.length > 0) {
@@ -214,7 +214,7 @@ export const buildPrompt = async ({
   }
 
   const enabledMetaPrompts = metaPrompts.filter(
-    p => p.enabled && (p.mode === composerMode || p.mode === 'universal')
+    (p) => p.enabled && (p.mode === composerMode || p.mode === 'universal')
   );
 
   if (enabledMetaPrompts.length > 0) {
@@ -232,7 +232,7 @@ export const buildPrompt = async ({
             rootPath &&
             fileTree
           ) {
-            const selectedRelativePaths = new Set(files.map(f => f.path));
+            const selectedRelativePaths = new Set(files.map((f) => f.path));
             treeToRender = filterFileTreeBySelection(
               fileTree,
               selectedRelativePaths,

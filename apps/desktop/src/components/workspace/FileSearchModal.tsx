@@ -1,6 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import { Check, File, Folder, Search } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Search, File, Folder, Check } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useRef } from 'react';
+import { cn } from '../../lib/utils';
 import { useFileSearchStore } from '../../store/fileSearchStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { FileTypeIcon } from './FileTypeIcon';
@@ -39,11 +41,6 @@ function SearchResultItem({
     }
   }, [isSelected]);
 
-  const handleClick = () => {
-    onSelect(); // Still update selection for keyboard navigation
-    onToggleSelection(); // Also toggle file selection
-  };
-
   const handleToggleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onToggleSelection();
@@ -52,12 +49,21 @@ function SearchResultItem({
   return (
     <div
       ref={itemRef}
-      className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors ${
+      role="option"
+      aria-selected={isSelected}
+      tabIndex={isSelected ? 0 : -1}
+      className={cn(
+        'flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors',
         isSelected
           ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/50 dark:text-blue-100'
           : 'hover:bg-gray-50 text-gray-700 dark:hover:bg-gray-700 dark:text-gray-300'
-      }`}
-      onClick={handleClick}
+      )}
+      onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          onSelect();
+        }
+      }}
       title={result.relativePath}
     >
       {/* File icon */}
@@ -83,16 +89,18 @@ function SearchResultItem({
       </div>
 
       {/* Selection indicator */}
-      <div
-        className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-colors ${
+      <button
+        type="button"
+        className={cn(
+          'flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-colors',
           isFileSelected
             ? 'bg-blue-500 border-blue-500 text-white'
             : 'border-gray-300 hover:border-blue-400 dark:border-gray-500 dark:hover:border-blue-500'
-        }`}
+        )}
         onClick={handleToggleClick}
       >
         {isFileSelected && <Check size={12} />}
-      </div>
+      </button>
     </div>
   );
 }
@@ -208,14 +216,11 @@ export function FileSearchModal() {
           exit={{ opacity: 0, scale: 0.95, y: -20 }}
           transition={{ duration: 0.15 }}
           className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-200 dark:border-gray-700"
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Search input */}
           <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-700">
-            <Search
-              size={20}
-              className="text-gray-400 dark:text-gray-500"
-            />
+            <Search size={20} className="text-gray-400 dark:text-gray-500" />
             <input
               ref={inputRef}
               type="text"
@@ -283,6 +288,7 @@ export function FileSearchModal() {
                 selected
               </span>
               <button
+                type="button"
                 onClick={closeModal}
                 className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
               >

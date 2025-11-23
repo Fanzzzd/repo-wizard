@@ -1,4 +1,6 @@
-import React, { useRef, useCallback, useEffect, useState } from 'react';
+import type React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { cn } from '../../lib/utils';
 
 const maskClasses = {
   none: '',
@@ -148,16 +150,20 @@ export function HorizontalScroller({ children }: HorizontalScrollerProps) {
 
   return children({
     scrollContainerRef,
-    scrollContainerClassName: `flex items-center gap-2 flex-nowrap overflow-x-auto hide-scrollbar ${maskClasses[overflowState]}`,
+    scrollContainerClassName: cn(
+      'flex items-center gap-2 flex-nowrap overflow-x-auto hide-scrollbar',
+      maskClasses[overflowState]
+    ),
     outerWrapperProps: {
       onMouseEnter: requestShowIndicator,
       onMouseLeave: () => requestHideIndicator(100),
     },
     scrollbar: (
       <div
-        className={`absolute bottom-[2px] left-2 right-2 h-1 transition-opacity duration-300 pointer-events-none ${
+        className={cn(
+          'absolute bottom-[2px] left-2 right-2 h-1 transition-opacity duration-300 pointer-events-none',
           isOverflowing && showIndicator ? 'opacity-100' : 'opacity-0'
-        }`}
+        )}
       >
         <div className="relative h-full bg-blue-200/50 rounded-full">
           <div

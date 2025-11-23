@@ -17,12 +17,12 @@ interface DialogState {
   close: (confirmed: boolean) => void;
 }
 
-export const useDialogStore = create<DialogState>(set => ({
+export const useDialogStore = create<DialogState>((set) => ({
   isOpen: false,
   options: null,
   onResolve: null,
-  open: opts => {
-    return new Promise<boolean>(resolve => {
+  open: (opts) => {
+    return new Promise<boolean>((resolve) => {
       set({
         isOpen: true,
         options: { type: 'alert', status: 'info', ...opts },
@@ -31,7 +31,7 @@ export const useDialogStore = create<DialogState>(set => ({
     });
   },
   close: (confirmed: boolean) => {
-    set(state => {
+    set((state) => {
       state.onResolve?.(confirmed);
       return { isOpen: false, onResolve: null, options: null };
     });

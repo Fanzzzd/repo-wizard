@@ -1,20 +1,20 @@
-import { create } from 'zustand';
-import { Store as TauriStore } from '@tauri-apps/plugin-store';
-import type { FileNode } from '../types';
-import { useSettingsStore } from './settingsStore';
-import { useComposerStore } from './composerStore';
-import { useHistoryStore } from './historyStore';
-import { useReviewStore } from './reviewStore';
-import * as projectService from '../services/projectService';
-import { showErrorDialog } from '../lib/errorHandler';
 import { listen } from '@tauri-apps/api/event';
-import { startWatching, stopWatching } from '../services/tauriApi';
+import { Store as TauriStore } from '@tauri-apps/plugin-store';
+import { create } from 'zustand';
 import { AppError } from '../lib/error';
+import { showErrorDialog } from '../lib/errorHandler';
+import * as projectService from '../services/projectService';
+import { startWatching, stopWatching } from '../services/tauriApi';
+import type { ComposerMode, FileNode, PromptHistoryEntry } from '../types';
+import { type ComposerState, useComposerStore } from './composerStore';
+import { type HistoryState, useHistoryStore } from './historyStore';
+import { useReviewStore } from './reviewStore';
+import { useSettingsStore } from './settingsStore';
 
 const getProjectStoreKey = (projectPath: string) => {
   try {
     return `project-${btoa(projectPath)}.json`;
-  } catch (e) {
+  } catch (_e) {
     return `project-${projectPath.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
   }
 };
@@ -37,6 +37,15 @@ interface WorkspaceState {
   addSelectedFilePath: (path: string) => void;
   removeSelectedFilePath: (path: string) => void;
   triggerFileTreeRefresh: () => void;
+}
+
+interface PersistedState {
+  activeFilePath?: string | null;
+  selectedFilePaths?: string[];
+  composerMode?: ComposerMode;
+  instructions?: string;
+  enabledMetaPromptIds?: string[];
+  promptHistory?: PromptHistoryEntry[];
 }
 
 const initialState: Omit<
@@ -93,7 +102,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
     const storeKey = getProjectStoreKey(rootPath);
     const projectTauriStore = await TauriStore.load(storeKey);
-    const savedState = (await projectTauriStore.get<any>('state')) || {};
+    const savedState =
+      ((await projectTauriStore.get('state')) as PersistedState) || {};
 
     set({
       ...initialState,
@@ -103,12 +113,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       selectedFilePaths: savedState.selectedFilePaths || [],
     });
 
-    useComposerStore.getState()._load(savedState);
-    useHistoryStore.getState()._load(savedState);
+    useComposerStore.getState()._load(savedState as Partial<ComposerState>);
+    useHistoryStore.getState()._load(savedState as Partial<HistoryState>);
 
     useSettingsStore.getState().addRecentProject(rootPath);
 
-    persistenceUnsubscribe = useWorkspaceStore.subscribe(state => {
+    persistenceUnsubscribe = useWorkspaceStore.subscribe((state) => {
       if (!state.isInitialized) return;
       if (saveTimeout) clearTimeout(saveTimeout);
       saveTimeout = setTimeout(async () => {
@@ -135,7 +145,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       await startWatching(rootPath, settings);
       tauriFileWatcherUnlisten = await listen<string>(
         'file-change-event',
-        event => {
+        (event) => {
           if (event.payload === get().rootPath) {
             get().triggerFileTreeRefresh();
           }
@@ -197,17 +207,17 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     }
   },
 
-  setFileTree: fileTree => set({ fileTree }),
-  setActiveFilePath: path => set({ activeFilePath: path }),
-  setSelectedFilePaths: paths => set({ selectedFilePaths: paths }),
-  addSelectedFilePath: path =>
-    set(state => ({
+  setFileTree: (fileTree) => set({ fileTree }),
+  setActiveFilePath: (path) => set({ activeFilePath: path }),
+  setSelectedFilePaths: (paths) => set({ selectedFilePaths: paths }),
+  addSelectedFilePath: (path) =>
+    set((state) => ({
       selectedFilePaths: [...new Set([...state.selectedFilePaths, path])],
     })),
-  removeSelectedFilePath: path =>
-    set(state => ({
-      selectedFilePaths: state.selectedFilePaths.filter(p => p !== path),
+  removeSelectedFilePath: (path) =>
+    set((state) => ({
+      selectedFilePaths: state.selectedFilePaths.filter((p) => p !== path),
     })),
   triggerFileTreeRefresh: () =>
-    set(state => ({ refreshCounter: state.refreshCounter + 1 })),
+    set((state) => ({ refreshCounter: state.refreshCounter + 1 })),
 }));

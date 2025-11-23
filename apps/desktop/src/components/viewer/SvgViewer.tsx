@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { CodeEditor } from '../editor/CodeEditor';
-import { SegmentedControl } from '../common/SegmentedControl';
-import { Eye, Code } from 'lucide-react';
-import { readFileAsBase64 } from '../../services/tauriApi';
-import { getMimeTypeFromPath } from '../../lib/mime_types';
+import { Code, Eye } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { showErrorDialog } from '../../lib/errorHandler';
+import { getMimeTypeFromPath } from '../../lib/mime_types';
+import { readFileAsBase64 } from '../../services/tauriApi';
+import { SegmentedControl } from '../common/SegmentedControl';
+import { CodeEditor } from '../editor/CodeEditor';
 
 export function SvgViewer({ filePath }: { filePath: string }) {
   const [viewMode, setViewMode] = useState<'preview' | 'code'>('preview');

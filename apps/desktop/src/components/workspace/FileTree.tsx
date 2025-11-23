@@ -1,21 +1,22 @@
-import { ChevronRight, ChevronDown, X, FolderOpen, Folder } from 'lucide-react';
-import { useWorkspaceStore } from '../../store/workspaceStore';
-import { useSettingsStore } from '../../store/settingsStore';
-import { useEffect, useState, useMemo, useRef } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
-import type { FileNode } from '../../types';
-import { FileTypeIcon } from './FileTypeIcon';
+import { ChevronDown, ChevronRight, Folder, FolderOpen, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Checkbox } from '../common/Checkbox';
-import { Button } from '../common/Button';
-import { RecentProjectsModal } from './RecentProjectsModal';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { showErrorDialog } from '../../lib/errorHandler';
+import { cn } from '../../lib/utils';
+import { useSettingsStore } from '../../store/settingsStore';
+import { useWorkspaceStore } from '../../store/workspaceStore';
+import type { FileNode } from '../../types';
+import { Button } from '../common/Button';
+import { Checkbox } from '../common/Checkbox';
+import { FileTypeIcon } from './FileTypeIcon';
+import { RecentProjectsModal } from './RecentProjectsModal';
 
 function collectFilePaths(node: FileNode): string[] {
   if (!node.isDirectory) {
     return [node.path];
   }
-  let paths: string[] = [];
+  const paths: string[] = [];
   if (node.children) {
     for (const child of node.children) {
       paths.push(...collectFilePaths(child));
@@ -54,7 +55,7 @@ function FileNodeComponent({
   const selectedDescendantCount = useMemo(() => {
     if (descendantFilePaths.length === 0) return 0;
     const descendantSet = new Set(descendantFilePaths);
-    return selectedFilePaths.filter(p => descendantSet.has(p)).length;
+    return selectedFilePaths.filter((p) => descendantSet.has(p)).length;
   }, [descendantFilePaths, selectedFilePaths]);
 
   const isSelected = !isDirectory
@@ -72,7 +73,7 @@ function FileNodeComponent({
 
     if (isDirectory) {
       const descendantSet = new Set(descendantFilePaths);
-      const otherPaths = selectedFilePaths.filter(p => !descendantSet.has(p));
+      const otherPaths = selectedFilePaths.filter((p) => !descendantSet.has(p));
       if (isChecked) {
         setSelectedFilePaths([...otherPaths, ...descendantFilePaths]);
       } else {
@@ -98,17 +99,19 @@ function FileNodeComponent({
   return (
     <div>
       <div
-        className={`flex items-center rounded text-sm group select-none ${
+        className={cn(
+          'flex items-center rounded text-sm group select-none',
           isActive
             ? 'bg-blue-100 text-blue-900 dark:bg-blue-500/30 dark:text-blue-100'
             : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50'
-        }`}
+        )}
         title={node.path}
       >
-        <div
+        <button
+          type="button"
           style={{ paddingLeft: `${level * 1.25}rem` }}
-          className="flex items-center self-stretch p-1 cursor-pointer"
-          onClick={e => {
+          className="flex items-center self-stretch p-1 cursor-pointer bg-transparent border-none text-inherit"
+          onClick={(e) => {
             e.stopPropagation();
             if (isDirectory) {
               setIsOpen(!isOpen);
@@ -121,11 +124,12 @@ function FileNodeComponent({
             {isDirectory &&
               (isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
           </div>
-        </div>
+        </button>
 
-        <div
-          className="p-1 flex items-center cursor-pointer"
-          onClick={e => {
+        <button
+          type="button"
+          className="p-1 flex items-center cursor-pointer bg-transparent border-none text-inherit"
+          onClick={(e) => {
             e.stopPropagation();
             checkboxRef.current?.click();
           }}
@@ -138,11 +142,12 @@ function FileNodeComponent({
               onChange={handleCheckboxChange}
             />
           </div>
-        </div>
+        </button>
 
-        <div
-          className="flex items-center gap-2 flex-grow overflow-hidden p-1 cursor-pointer"
-          onClick={e => {
+        <button
+          type="button"
+          className="flex items-center gap-2 flex-grow overflow-hidden p-1 cursor-pointer text-left bg-transparent border-none text-inherit"
+          onClick={(e) => {
             e.stopPropagation();
             if (isDirectory) {
               setIsOpen(!isOpen);
@@ -157,7 +162,7 @@ function FileNodeComponent({
             isOpen={isOpen}
           />
           <span className="truncate">{node.name}</span>
-        </div>
+        </button>
       </div>
       <AnimatePresence initial={false}>
         {isDirectory && isOpen && node.children && (
@@ -168,7 +173,7 @@ function FileNodeComponent({
             transition={{ duration: 0.2 }}
             style={{ overflow: 'hidden' }}
           >
-            {node.children.map(child => (
+            {node.children.map((child) => (
               <FileNodeComponent
                 key={child.path}
                 node={child}
@@ -183,13 +188,8 @@ function FileNodeComponent({
 }
 
 export function FileTree() {
-  const {
-    rootPath,
-    fileTree,
-    refreshCounter,
-    closeProject,
-    loadFileTree,
-  } = useWorkspaceStore();
+  const { rootPath, fileTree, refreshCounter, closeProject, loadFileTree } =
+    useWorkspaceStore();
   const {
     respectGitignore,
     customIgnorePatterns,
@@ -210,6 +210,7 @@ export function FileTree() {
     }
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dependencies are needed to trigger re-run
   useEffect(() => {
     loadFileTree().catch(showErrorDialog);
   }, [
@@ -230,38 +231,43 @@ export function FileTree() {
             </h3>
             <div className="flex-grow overflow-y-auto thin-scrollbar pr-1">
               <ul className="space-y-1">
-                {recentProjects.map(path => (
-                  <li key={path}>
-                    <div
-                      onClick={() => useWorkspaceStore.getState().setRootPath(path)}
-                      className="group w-full text-left p-2 rounded-md hover:bg-gray-200 text-gray-700 hover:text-gray-900 dark:hover:bg-gray-700 dark:text-gray-300 dark:hover:text-gray-100 transition-colors flex items-center justify-between gap-2 cursor-pointer"
+                {recentProjects.map((path) => (
+                  <li
+                    key={path}
+                    className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors group"
+                  >
+                    <button
+                      type="button"
+                      onClick={() =>
+                        useWorkspaceStore.getState().setRootPath(path)
+                      }
+                      className="flex-grow text-left text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 flex items-center gap-2 cursor-pointer bg-transparent border-none min-w-0"
                       title={path}
                     >
-                      <div className="flex items-center gap-2 flex-grow overflow-hidden">
-                        <Folder
-                          size={18}
-                          className="text-yellow-600 flex-shrink-0"
-                        />
-                        <div className="flex-grow overflow-hidden">
-                          <div className="font-semibold text-sm truncate">
-                            {path.split(/[\\/]/).pop()}
-                          </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                            {path}
-                          </div>
+                      <Folder
+                        size={18}
+                        className="text-yellow-600 flex-shrink-0"
+                      />
+                      <div className="flex-grow overflow-hidden">
+                        <div className="font-semibold text-sm truncate">
+                          {path.split(/[\\/]/).pop()}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          {path}
                         </div>
                       </div>
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          removeRecentProject(path);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-500 p-1 rounded-full flex-shrink-0"
-                        title="Remove from recent projects"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeRecentProject(path);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-500 p-1 rounded-full flex-shrink-0"
+                      title="Remove from recent projects"
+                    >
+                      <X size={14} />
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -287,7 +293,7 @@ export function FileTree() {
           <RecentProjectsModal
             isOpen={isRecentProjectsModalOpen}
             onClose={() => setIsRecentProjectsModalOpen(false)}
-            onSelectProject={async path => {
+            onSelectProject={async (path) => {
               await useWorkspaceStore.getState().setRootPath(path);
               setIsRecentProjectsModalOpen(false);
             }}
@@ -303,9 +309,7 @@ export function FileTree() {
     return (
       <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 p-4 bg-gray-50 dark:bg-gray-800">
         <div className="text-center">
-          <FolderOpen
-            className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
-          />
+          <FolderOpen className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
           <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
             Open a project
           </h3>
@@ -344,6 +348,7 @@ export function FileTree() {
           </h2>
         </div>
         <button
+          type="button"
           onClick={handleCloseFolder}
           className="p-1 rounded-full hover:bg-gray-200 text-gray-600 hover:text-gray-900 dark:hover:bg-gray-700 dark:text-gray-400 dark:hover:text-gray-100 flex-shrink-0"
           title="Close Project"

@@ -1,10 +1,10 @@
 import Editor from '@monaco-editor/react';
-import { useWorkspaceStore } from '../../store/workspaceStore';
-import { useReviewStore } from '../../store/reviewStore';
-import { useEffect, useState } from 'react';
-import { readFileContent } from '../../services/tauriApi';
-import { showErrorDialog } from '../../lib/errorHandler';
 import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+import { showErrorDialog } from '../../lib/errorHandler';
+import { readFileContent } from '../../services/tauriApi';
+import { useReviewStore } from '../../store/reviewStore';
+import { useWorkspaceStore } from '../../store/workspaceStore';
 
 export function CodeEditor({ forceShowPath }: { forceShowPath?: string }) {
   const { activeFilePath } = useWorkspaceStore();

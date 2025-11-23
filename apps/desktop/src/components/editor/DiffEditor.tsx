@@ -1,10 +1,13 @@
-import { DiffEditor as MonacoDiffEditor, useMonaco } from '@monaco-editor/react';
-import { useWorkspaceStore } from '../../store/workspaceStore';
-import { useReviewStore } from '../../store/reviewStore';
-import { useEffect, useState } from 'react';
-import { readFileContent } from '../../services/tauriApi';
-import { showErrorDialog } from '../../lib/errorHandler';
+import {
+  DiffEditor as MonacoDiffEditor,
+  useMonaco,
+} from '@monaco-editor/react';
 import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+import { showErrorDialog } from '../../lib/errorHandler';
+import { readFileContent } from '../../services/tauriApi';
+import { useReviewStore } from '../../store/reviewStore';
+import { useWorkspaceStore } from '../../store/workspaceStore';
 
 export function DiffEditor() {
   const { rootPath } = useWorkspaceStore();
@@ -17,18 +20,21 @@ export function DiffEditor() {
   const [message, setMessage] = useState<string | null>(null);
   const [language, setLanguage] = useState('plaintext');
 
-  const activeChange = changes.find(c => c.id === activeChangeId);
+  const activeChange = changes.find((c) => c.id === activeChangeId);
 
   useEffect(() => {
     if (!activeChange || !monaco) return;
 
     const { operation } = activeChange;
-    const filePath = operation.type === 'move' ? operation.toPath : operation.filePath;
-    const extension = '.' + filePath.split('.').pop();
+    const filePath =
+      operation.type === 'move' ? operation.toPath : operation.filePath;
+    const extension = `.${filePath.split('.').pop()}`;
 
     const languages = monaco.languages.getLanguages();
-    const detectedLanguage = languages.find(lang => {
-      return lang.extensions?.some(ext => ext.toLowerCase() === extension.toLowerCase());
+    const detectedLanguage = languages.find((lang) => {
+      return lang.extensions?.some(
+        (ext) => ext.toLowerCase() === extension.toLowerCase()
+      );
     });
 
     setLanguage(detectedLanguage ? detectedLanguage.id : 'plaintext');
@@ -62,7 +68,7 @@ export function DiffEditor() {
     } else {
       readFileContent(absolutePath)
         .then(setOriginalContent)
-        .catch(err => {
+        .catch((err) => {
           showErrorDialog(err);
           const errorMessage = `// Could not load file: ${absolutePath}`;
           setOriginalContent(errorMessage);

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { showErrorDialog } from '../../lib/errorHandler';
-import { readFileAsBase64 } from '../../services/tauriApi';
 import { getMimeTypeFromPath } from '../../lib/mime_types';
+import { readFileAsBase64 } from '../../services/tauriApi';
 
 export function ImageViewer({ filePath }: { filePath: string }) {
   const [src, setSrc] = useState('');

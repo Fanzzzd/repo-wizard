@@ -4,7 +4,7 @@ import App from './App';
 import './styles/global.css';
 import { loader } from '@monaco-editor/react';
 
-loader.init().then(monaco => {
+loader.init().then((monaco) => {
   monaco.editor.defineTheme('repo-wizard-dark', {
     base: 'vs-dark',
     inherit: true,

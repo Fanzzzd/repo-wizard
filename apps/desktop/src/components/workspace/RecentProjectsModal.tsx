@@ -1,9 +1,9 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { useSettingsStore } from '../../store/settingsStore';
+import { Folder, Search, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSettingsStore } from '../../store/settingsStore';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
-import { Folder, Search, X } from 'lucide-react';
 
 interface RecentProjectsModalProps {
   isOpen: boolean;
@@ -34,7 +34,7 @@ export function RecentProjectsModal({
       return recentProjects;
     }
     const lowerCaseSearch = searchTerm.toLowerCase();
-    return recentProjects.filter(path =>
+    return recentProjects.filter((path) =>
       path.toLowerCase().includes(lowerCaseSearch)
     );
   }, [recentProjects, searchTerm]);
@@ -66,13 +66,14 @@ export function RecentProjectsModal({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl h-[70vh] flex flex-col overflow-hidden"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <header className="p-4 border-b dark:border-gray-700 flex items-center justify-between flex-shrink-0">
               <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                 Open Project
               </h2>
               <button
+                type="button"
                 onClick={onClose}
                 className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-200"
               >
@@ -87,7 +88,7 @@ export function RecentProjectsModal({
                   type="text"
                   placeholder="Search recent projects..."
                   value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
                 <Search
@@ -100,13 +101,14 @@ export function RecentProjectsModal({
             <main className="flex-grow flex flex-col min-h-0 bg-gray-50 dark:bg-gray-900 overflow-y-auto thin-scrollbar">
               {filteredProjects.length > 0 ? (
                 <ul className="p-2 space-y-1">
-                  {filteredProjects.map(path => (
+                  {filteredProjects.map((path) => (
                     <li key={path}>
-                      <div
-                        onClick={() => handleSelect(path)}
-                        className="group w-full text-left p-3 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/50 text-gray-800 dark:text-gray-200 hover:text-blue-900 dark:hover:text-blue-200 transition-colors flex items-center justify-between gap-3 cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3 flex-grow overflow-hidden">
+                      <div className="group w-full flex items-center gap-3 p-2 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-colors">
+                        <button
+                          type="button"
+                          onClick={() => handleSelect(path)}
+                          className="flex-grow flex items-center gap-3 overflow-hidden text-left text-gray-800 dark:text-gray-200 hover:text-blue-900 dark:hover:text-blue-200"
+                        >
                           <Folder
                             size={18}
                             className="text-yellow-600 flex-shrink-0"
@@ -119,13 +121,14 @@ export function RecentProjectsModal({
                               {path}
                             </div>
                           </div>
-                        </div>
+                        </button>
                         <button
-                          onClick={e => {
+                          type="button"
+                          onClick={(e) => {
                             e.stopPropagation();
                             removeRecentProject(path);
                           }}
-                          className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 p-1 rounded-full flex-shrink-0"
+                          className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 p-1 rounded-full flex-shrink-0 transition-opacity"
                           title={`Remove from recent projects`}
                         >
                           <X size={14} />

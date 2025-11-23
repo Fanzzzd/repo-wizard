@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import React, {
   createContext,
-  PropsWithChildren,
+  type PropsWithChildren,
   useContext,
   useEffect,
   useLayoutEffect,
@@ -10,6 +10,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { cn } from '../../lib/utils';
 
 // --- Contexts ---
 
@@ -47,7 +48,7 @@ const useDropdownSubMenu = () => {
 
 // --- Components ---
 
-export function DropdownMenu({ children }: PropsWithChildren<{}>) {
+export function DropdownMenu({ children }: PropsWithChildren<unknown>) {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const contextValue = useMemo(
@@ -62,23 +63,28 @@ export function DropdownMenu({ children }: PropsWithChildren<{}>) {
   );
 }
 
+interface ChildProps {
+  onClick?: (e: React.MouseEvent) => void;
+  [key: string]: unknown;
+}
+
 export function DropdownMenuTrigger({
   children,
 }: {
-  children: React.ReactElement<any>;
+  children: React.ReactElement;
 }) {
   const { setIsOpen, triggerRef } = useDropdownMenu();
-  return React.cloneElement(children, {
+  return React.cloneElement(children as React.ReactElement<ChildProps>, {
     ref: triggerRef,
     onClick: (e: React.MouseEvent) => {
       e.preventDefault();
-      setIsOpen(prev => !prev);
-      children.props.onClick?.(e);
+      setIsOpen((prev) => !prev);
+      (children as React.ReactElement<ChildProps>).props.onClick?.(e);
     },
   });
 }
 
-export function DropdownMenuContent({ children }: PropsWithChildren<{}>) {
+export function DropdownMenuContent({ children }: PropsWithChildren<unknown>) {
   const { isOpen, setIsOpen, triggerRef } = useDropdownMenu();
   const contentRef = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState<React.CSSProperties>({});
@@ -170,6 +176,7 @@ export function DropdownMenuItem({
   const { setIsOpen } = useDropdownMenu();
   return (
     <button
+      type="button"
       onClick={() => {
         if (disabled) return;
         onSelect?.();
@@ -177,13 +184,12 @@ export function DropdownMenuItem({
       }}
       disabled={disabled}
       title={title}
-      className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-left transition-colors
-        ${
-          isDanger
-            ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10'
-            : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
-        }
-        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
+      className={cn(
+        'w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-left transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent',
+        isDanger
+          ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10'
+          : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+      )}
     >
       {leftIcon && (
         <div className="w-4 h-4 flex items-center justify-center text-gray-500 dark:text-gray-400">
@@ -199,7 +205,7 @@ export function DropdownMenuSeparator() {
   return <div className="h-px bg-gray-200 dark:bg-gray-700 my-1 -mx-1" />;
 }
 
-export function DropdownMenuLabel({ children }: PropsWithChildren<{}>) {
+export function DropdownMenuLabel({ children }: PropsWithChildren<unknown>) {
   return (
     <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider select-none">
       {children}
@@ -207,7 +213,7 @@ export function DropdownMenuLabel({ children }: PropsWithChildren<{}>) {
   );
 }
 
-export function DropdownMenuSub({ children }: PropsWithChildren<{}>) {
+export function DropdownMenuSub({ children }: PropsWithChildren<unknown>) {
   const [isSubMenuOpen, setIsSubMenuOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   let timeoutId: NodeJS.Timeout | null = null;
@@ -228,6 +234,7 @@ export function DropdownMenuSub({ children }: PropsWithChildren<{}>) {
 
   return (
     <DropdownSubMenuContext.Provider value={contextValue}>
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper for hover events */}
       <div
         ref={triggerRef}
         className="relative"
@@ -252,9 +259,10 @@ export function DropdownMenuSubTrigger({
 }>) {
   return (
     <button
+      type="button"
       disabled={disabled}
       aria-haspopup="menu"
-      className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-left transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
+      className="w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-md text-left transition-colors text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
     >
       {leftIcon && (
         <div className="w-4 h-4 flex items-center justify-center text-gray-500 dark:text-gray-400">
@@ -301,7 +309,6 @@ export function DropdownMenuSubContent({
           top =
             triggerRect.top + triggerRect.height / 2 - contentRect.height / 2;
           break;
-        case 'start':
         default:
           top = triggerRect.top;
           break;

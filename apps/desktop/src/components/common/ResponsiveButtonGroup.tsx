@@ -1,6 +1,8 @@
-import React, { useState, useRef, useLayoutEffect, useCallback } from 'react';
-import { Button } from './Button';
+import type React from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { cn } from '../../lib/utils';
 import type { ButtonProps } from './Button';
+import { Button } from './Button';
 
 interface ResponsiveButtonProps
   extends Omit<ButtonProps, 'children' | 'leftIcon'> {
@@ -53,6 +55,7 @@ export function ResponsiveButtonGroup({
     setShowIcon1(containerWidth >= widthWithIcon2Hidden);
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Layout depends on text content changes
   useLayoutEffect(() => {
     calculateLayout();
     const observer = new ResizeObserver(calculateLayout);
@@ -76,7 +79,7 @@ export function ResponsiveButtonGroup({
           size="md"
           leftIcon={showIcon1 ? icon1 : undefined}
           style={{ flexGrow: text1Width || initialGrow1 }}
-          className={`${button1.className ?? ''} flex-1`}
+          className={cn('flex-1', button1.className)}
         >
           {text1}
         </Button>
@@ -85,7 +88,7 @@ export function ResponsiveButtonGroup({
           size="md"
           leftIcon={showIcon2 ? icon2 : undefined}
           style={{ flexGrow: text2Width || initialGrow2 }}
-          className={`${button2.className ?? ''} flex-1`}
+          className={cn('flex-1', button2.className)}
         >
           {text2}
         </Button>

@@ -1,36 +1,35 @@
-import { useEffect, useCallback, useState, useMemo } from 'react';
-import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import {
   Menu,
-  Submenu,
   MenuItem,
   PredefinedMenuItem,
+  Submenu,
 } from '@tauri-apps/api/menu';
-import { platform } from '@tauri-apps/plugin-os';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { open } from '@tauri-apps/plugin-dialog';
+import { platform } from '@tauri-apps/plugin-os';
 import { useTheme } from 'next-themes';
-
-import { Layout } from './components/Layout';
-import { MainPanel } from './components/MainPanel';
-import { ChangeList } from './components/review/ChangeList';
-import { PromptComposer } from './components/prompt/PromptComposer';
-import { TabbedPanel } from './components/TabbedPanel';
-import { Header } from './components/Header';
-import { PromptHistoryPanel } from './components/history/PromptHistoryPanel';
-import { WorkspaceSidebar } from './components/workspace/WorkspaceSidebar';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { CommandRunnerModal } from './components/common/CommandRunnerModal';
+import { ContextMenu } from './components/common/ContextMenu';
 import { ModalDialog } from './components/common/ModalDialog';
 import { Tooltip } from './components/common/Tooltip';
-import { ContextMenu } from './components/common/ContextMenu';
-import { useWorkspaceStore } from './store/workspaceStore';
-import { useReviewStore } from './store/reviewStore';
-import { useDialogStore } from './store/dialogStore';
-import { useUpdateStore } from './store/updateStore';
-import { useSettingsStore } from './store/settingsStore';
-import { CommandRunnerModal } from './components/common/CommandRunnerModal';
+import { Header } from './components/Header';
+import { PromptHistoryPanel } from './components/history/PromptHistoryPanel';
+import { Layout } from './components/Layout';
+import { MainPanel } from './components/MainPanel';
+import { PromptComposer } from './components/prompt/PromptComposer';
+import { ChangeList } from './components/review/ChangeList';
+import { TabbedPanel } from './components/TabbedPanel';
 import { FileSearchModal } from './components/workspace/FileSearchModal';
-import { useFileSearchStore } from './store/fileSearchStore';
+import { WorkspaceSidebar } from './components/workspace/WorkspaceSidebar';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useDialogStore } from './store/dialogStore';
+import { useFileSearchStore } from './store/fileSearchStore';
+import { useReviewStore } from './store/reviewStore';
+import { useSettingsStore } from './store/settingsStore';
+import { useUpdateStore } from './store/updateStore';
+import { useWorkspaceStore } from './store/workspaceStore';
 
 declare global {
   interface Window {
@@ -93,9 +92,9 @@ function App() {
   useEffect(() => {
     const handleZoom = (e: CustomEvent) => {
       if (e.detail === 'in') {
-        setFontSize(s => Math.min(20, s + 1));
+        setFontSize((s) => Math.min(20, s + 1));
       } else if (e.detail === 'out') {
-        setFontSize(s => Math.max(10, s - 1));
+        setFontSize((s) => Math.max(10, s - 1));
       } else if (e.detail === 'reset') {
         setFontSize(14);
       }
@@ -120,7 +119,7 @@ function App() {
             await Submenu.new({
               text: 'Open Recent',
               items: await Promise.all(
-                recentProjects.map(path =>
+                recentProjects.map((path) =>
                   MenuItem.new({
                     text: path,
                     action: async () => {
@@ -154,11 +153,17 @@ function App() {
           await PredefinedMenuItem.new({ item: 'Separator' }),
           await PredefinedMenuItem.new({ item: 'Services' }),
           await PredefinedMenuItem.new({ item: 'Separator' }),
-          await PredefinedMenuItem.new({ item: 'Hide', text: 'Hide Repo Wizard' }),
+          await PredefinedMenuItem.new({
+            item: 'Hide',
+            text: 'Hide Repo Wizard',
+          }),
           await PredefinedMenuItem.new({ item: 'HideOthers' }),
           await PredefinedMenuItem.new({ item: 'ShowAll' }),
           await PredefinedMenuItem.new({ item: 'Separator' }),
-          await PredefinedMenuItem.new({ item: 'Quit', text: 'Quit Repo Wizard' }),
+          await PredefinedMenuItem.new({
+            item: 'Quit',
+            text: 'Quit Repo Wizard',
+          }),
         ],
       });
       allMenuItems.push(appMenu);
@@ -194,7 +199,10 @@ function App() {
         }),
         ...openRecentSubmenu,
         await PredefinedMenuItem.new({ item: 'Separator' }),
-        await PredefinedMenuItem.new({ item: 'CloseWindow', text: 'Close Window' }),
+        await PredefinedMenuItem.new({
+          item: 'CloseWindow',
+          text: 'Close Window',
+        }),
       ],
     });
     allMenuItems.push(fileMenu);
@@ -229,17 +237,20 @@ function App() {
         await MenuItem.new({
           text: 'Zoom In',
           accelerator: 'CmdOrCtrl+=',
-          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'in' })),
+          action: () =>
+            window.dispatchEvent(new CustomEvent('zoom', { detail: 'in' })),
         }),
         await MenuItem.new({
           text: 'Zoom Out',
           accelerator: 'CmdOrCtrl+-',
-          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'out' })),
+          action: () =>
+            window.dispatchEvent(new CustomEvent('zoom', { detail: 'out' })),
         }),
         await MenuItem.new({
           text: 'Reset Zoom',
           accelerator: 'CmdOrCtrl+0',
-          action: () => window.dispatchEvent(new CustomEvent('zoom', { detail: 'reset' })),
+          action: () =>
+            window.dispatchEvent(new CustomEvent('zoom', { detail: 'reset' })),
         }),
       ],
     });
@@ -287,7 +298,7 @@ function App() {
       try {
         const win = getCurrentWindow();
         const title = rootPath
-          ? rootPath.split(/[\\\/]/).filter(Boolean).pop() || rootPath
+          ? rootPath.split(/[\\/]/).filter(Boolean).pop() || rootPath
           : 'Repo Wizard';
         await win.setTitle(title);
       } catch {}

@@ -1,15 +1,14 @@
 mod commands;
 mod core;
 mod error;
-mod state;
 pub mod services;
+mod state;
 pub mod types;
 
-
+use log::{debug, error, warn};
 use tauri::{Emitter, Manager};
 use tauri_plugin_cli::CliExt;
 use tauri_plugin_log::{Builder as LogBuilder, Target};
-use log::{debug, error, warn};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -106,15 +105,15 @@ pub fn run() {
                 Ok(matches) => {
                     if let Some(path_arg) = matches.args.get("path").and_then(|arg| arg.value.as_str()) {
                         debug!("Initial launch with path arg: {path_arg}");
-                        
+
                         if let Some(main_window) = handle.get_webview_window("main") {
                             let _ = main_window.close();
                         }
-        
+
                         let path_arg_clone = path_arg.to_string();
                         let cwd = std::env::current_dir().ok().and_then(|p| p.to_string_lossy().to_string().into());
                         let absolute_path = crate::core::path_utils::resolve_path(&path_arg_clone, cwd).unwrap_or(path_arg_clone);
-                        
+
                         if let Err(e) = crate::commands::open_project_window(handle, absolute_path) {
                             error!("Failed to open project window on startup: {e}");
                         }

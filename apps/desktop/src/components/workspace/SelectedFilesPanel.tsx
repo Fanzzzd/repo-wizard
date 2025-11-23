@@ -1,23 +1,23 @@
-import { useWorkspaceStore } from '../../store/workspaceStore';
-import { X, ArrowDownAZ, ArrowDown10, Trash2 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
-import {
-  getRelativePath,
-  readFileContent,
-  isBinaryFile,
-  fileExists,
-} from '../../services/tauriApi';
-import { estimateTokens, formatTokenCount } from '../../lib/token_estimator';
-import { ShortenedPath } from '../common/ShortenedPath';
-import { showErrorDialog } from '../../lib/errorHandler';
+import { ArrowDown10, ArrowDownAZ, Trash2, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { AppError, isFileNotFoundError } from '../../lib/error';
+import { showErrorDialog } from '../../lib/errorHandler';
+import { estimateTokens, formatTokenCount } from '../../lib/token_estimator';
+import { cn } from '../../lib/utils';
+import {
+  fileExists,
+  getRelativePath,
+  isBinaryFile,
+  readFileContent,
+} from '../../services/tauriApi';
+import { useWorkspaceStore } from '../../store/workspaceStore';
+import { ShortenedPath } from '../common/ShortenedPath';
 
 export function SelectedFilesPanel() {
   const {
     selectedFilePaths,
     rootPath,
     removeSelectedFilePath,
-    activeFilePath,
     setActiveFilePath,
     refreshCounter,
     setSelectedFilePaths,
@@ -35,7 +35,7 @@ export function SelectedFilesPanel() {
 
     const fetchDetails = async () => {
       const details = await Promise.all(
-        selectedFilePaths.map(async path => {
+        selectedFilePaths.map(async (path) => {
           try {
             const shortPath = await getRelativePath(path, rootPath);
             // 1) Existence check first
@@ -57,7 +57,9 @@ export function SelectedFilesPanel() {
               return { path, shortPath, tokens, isBinary: false };
             } catch (readErr) {
               if (isFileNotFoundError(readErr)) {
-                console.warn(`File not found, removing from selection: ${path}`);
+                console.warn(
+                  `File not found, removing from selection: ${path}`
+                );
                 removeSelectedFilePath(path);
                 return null;
               }
@@ -100,6 +102,7 @@ export function SelectedFilesPanel() {
     };
 
     fetchDetails();
+    void refreshCounter;
   }, [selectedFilePaths, rootPath, removeSelectedFilePath, refreshCounter]);
 
   const totalTokens = useMemo(
@@ -130,36 +133,42 @@ export function SelectedFilesPanel() {
         </h3>
         <div className="flex items-center gap-1">
           <button
+            type="button"
             onClick={() => setSortBy('name')}
             title="Sort by name"
-            className={`p-1 rounded-md transition-colors ${
+            className={cn(
+              'p-1 rounded-md transition-colors',
               sortBy === 'name'
                 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
                 : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
-            }`}
+            )}
           >
             <ArrowDownAZ size={16} />
           </button>
           <button
+            type="button"
             onClick={() => setSortBy('tokens')}
             title="Sort by token count"
-            className={`p-1 rounded-md transition-colors ${
+            className={cn(
+              'p-1 rounded-md transition-colors',
               sortBy === 'tokens'
                 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
                 : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
-            }`}
+            )}
           >
             <ArrowDown10 size={16} />
           </button>
           <button
+            type="button"
             onClick={() => setSelectedFilePaths([])}
             title="Clear all selected files"
             disabled={selectedFilePaths.length === 0}
-            className={`p-1 rounded-md transition-colors ${
+            className={cn(
+              'p-1 rounded-md transition-colors',
               selectedFilePaths.length === 0
                 ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
                 : 'text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700'
-            }`}
+            )}
           >
             <Trash2 size={16} />
           </button>
@@ -168,41 +177,51 @@ export function SelectedFilesPanel() {
       <div className="bg-white dark:bg-gray-900 rounded-md p-1 text-xs flex-grow overflow-y-auto border border-gray-200 dark:border-gray-700 min-h-0">
         {sortedFiles.length > 0 ? (
           <ul className="flex flex-col gap-0.5">
-            {sortedFiles.map(({ path, shortPath, tokens, isBinary }) => {
-              const isActive = path === activeFilePath;
+            {sortedFiles.map(({ path, shortPath, isBinary }) => {
               return (
                 <li
                   key={path}
-                  className={`flex items-center justify-between p-1.5 rounded group select-none ${
-                    isActive
+                  className={cn(
+                    'flex items-center p-1.5 rounded group select-none',
+                    !isBinary &&
+                      path === useWorkspaceStore.getState().activeFilePath
                       ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/50 dark:text-blue-100'
                       : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'
-                  } ${isBinary ? 'cursor-not-allowed' : 'cursor-default'}`}
-                  onClick={() => !isBinary && setActiveFilePath(path)}
+                  )}
                 >
-                  <ShortenedPath
-                    path={shortPath}
-                    className={`truncate font-mono ${
-                      isBinary ? 'text-gray-400 dark:text-gray-500' : ''
-                    }`}
-                  />
-                  <div className="flex items-center flex-shrink-0 ml-2">
-                    <span className="text-gray-500 dark:text-gray-400 w-20 text-right">
+                  <button
+                    type="button"
+                    onClick={() => !isBinary && setActiveFilePath(path)}
+                    disabled={isBinary}
+                    className={cn(
+                      'flex-grow flex items-center justify-between min-w-0 bg-transparent border-none p-0 text-inherit text-left',
+                      isBinary ? 'cursor-not-allowed' : 'cursor-pointer'
+                    )}
+                  >
+                    <ShortenedPath
+                      path={shortPath}
+                      className={cn(
+                        'truncate font-mono',
+                        isBinary ? 'text-gray-400 dark:text-gray-500' : ''
+                      )}
+                    />
+                    <span className="text-gray-500 dark:text-gray-400 w-20 text-right flex-shrink-0 ml-2">
                       {isBinary
                         ? 'Binary File'
-                        : `${formatTokenCount(tokens)} tokens`}
+                        : `${formatTokenCount(fileDetails.find((f) => f.path === path)?.tokens || 0)} tokens`}
                     </span>
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        removeSelectedFilePath(path);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 ml-2"
-                      title={`Remove ${path.split('/').pop()}`}
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeSelectedFilePath(path);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 ml-2 flex-shrink-0"
+                    title={`Remove ${path.split('/').pop()}`}
+                  >
+                    <X size={14} />
+                  </button>
                 </li>
               );
             })}

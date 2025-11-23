@@ -1,5 +1,5 @@
-import { create } from 'zustand';
 import { Store as TauriStore } from '@tauri-apps/plugin-store';
+import { create } from 'zustand';
 import type { EditFormat, MetaPromptDefinition } from '../types';
 
 const SETTINGS_FILE = 'app-settings.json';
@@ -101,31 +101,31 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
 
       set({ _isInitialized: true, _hasHydrated: true });
 
-      useSettingsStore.subscribe(state => {
+      useSettingsStore.subscribe((state) => {
         if (state._hasHydrated) {
           debouncedSave(state);
         }
       });
     },
 
-    setRespectGitignore: value => set({ respectGitignore: value }),
-    setCustomIgnorePatterns: value => set({ customIgnorePatterns: value }),
-    setCustomSystemPrompt: prompt => set({ customSystemPrompt: prompt }),
-    setEditFormat: format => set({ editFormat: format }),
-    setMetaPrompts: prompts => set({ metaPrompts: prompts }),
-    setAutoReviewOnPaste: value => set({ autoReviewOnPaste: value }),
-    setPromptHistoryLimit: limit => set({ promptHistoryLimit: limit }),
-    setEnableClipboardReview: value => set({ enableClipboardReview: value }),
-    setShowPasteResponseArea: value => set({ showPasteResponseArea: value }),
-    addRecentProject: path =>
-      set(state => {
-        const otherProjects = state.recentProjects.filter(p => p !== path);
+    setRespectGitignore: (value) => set({ respectGitignore: value }),
+    setCustomIgnorePatterns: (value) => set({ customIgnorePatterns: value }),
+    setCustomSystemPrompt: (prompt) => set({ customSystemPrompt: prompt }),
+    setEditFormat: (format) => set({ editFormat: format }),
+    setMetaPrompts: (prompts) => set({ metaPrompts: prompts }),
+    setAutoReviewOnPaste: (value) => set({ autoReviewOnPaste: value }),
+    setPromptHistoryLimit: (limit) => set({ promptHistoryLimit: limit }),
+    setEnableClipboardReview: (value) => set({ enableClipboardReview: value }),
+    setShowPasteResponseArea: (value) => set({ showPasteResponseArea: value }),
+    addRecentProject: (path) =>
+      set((state) => {
+        const otherProjects = state.recentProjects.filter((p) => p !== path);
         const newRecentProjects = [path, ...otherProjects].slice(0, 20); // Keep last 20
         return { recentProjects: newRecentProjects };
       }),
-    removeRecentProject: path =>
-      set(state => ({
-        recentProjects: state.recentProjects.filter(p => p !== path),
+    removeRecentProject: (path) =>
+      set((state) => ({
+        recentProjects: state.recentProjects.filter((p) => p !== path),
       })),
   };
 });

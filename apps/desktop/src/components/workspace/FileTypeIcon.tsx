@@ -1,6 +1,6 @@
-import { iconService } from '../../lib/iconService';
-import { getIconUrl } from '../../lib/iconLoader';
 import { useTheme } from 'next-themes';
+import { getIconUrl } from '../../lib/iconLoader';
+import { iconService } from '../../lib/iconService';
 
 interface FileTypeIconProps {
   filename: string;
@@ -39,7 +39,9 @@ export function FileTypeIcon({
       className="w-4 h-4"
       draggable="false"
       // In case of loading error, this will make it less disruptive
-      onError={e => (e.currentTarget.style.display = 'none')}
+      onError={(e) => {
+        e.currentTarget.style.display = 'none';
+      }}
     />
   );
 }

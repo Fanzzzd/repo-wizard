@@ -1,6 +1,6 @@
-import * as tauriApi from './tauriApi';
 import type { ReviewChange } from '../types';
 import { createReviewChange } from '../types';
+import * as tauriApi from './tauriApi';
 
 export async function processAndStartReview(
   markdown: string,
@@ -30,7 +30,7 @@ export async function processAndStartReview(
     }
   });
 
-  const fileList = Array.from(filesToSnapshot).filter(p => p);
+  const fileList = Array.from(filesToSnapshot).filter((p) => p);
   const backupId = await tauriApi.backupFiles(rootPath, fileList);
 
   const changes = await Promise.all(
@@ -39,7 +39,7 @@ export async function processAndStartReview(
       const getBaseFileContent = async (filePath: string) => {
         try {
           return await tauriApi.readFileFromBackup(backupId, filePath);
-        } catch (e) {
+        } catch (_e) {
           return null;
         }
       };
@@ -52,9 +52,11 @@ export async function processAndStartReview(
 
         if (!isNewFile && originalContent === updatedOperation.content) {
           // Only mark as identical if it's NOT a patch that failed to apply fully
-          // If appliedBlocks < totalBlocks, it means the patch failed (partially or fully), 
+          // If appliedBlocks < totalBlocks, it means the patch failed (partially or fully),
           // so we should NOT mark it as identical, allowing the UI to show "0/1" or "x/y".
-          const isFailedPatch = operation.type === 'patch' && operation.appliedBlocks < operation.totalBlocks;
+          const isFailedPatch =
+            operation.type === 'patch' &&
+            operation.appliedBlocks < operation.totalBlocks;
 
           if (!isFailedPatch) {
             updatedChange = { ...updatedChange, status: 'identical' };

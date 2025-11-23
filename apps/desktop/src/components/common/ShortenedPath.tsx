@@ -42,6 +42,7 @@ export const ShortenedPath = React.forwardRef<
       ref={ref}
       className={className}
       style={style}
+      role="tooltip"
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}

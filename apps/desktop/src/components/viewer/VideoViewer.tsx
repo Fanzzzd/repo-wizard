@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { showErrorDialog } from '../../lib/errorHandler';
-import { readFileAsBase64 } from '../../services/tauriApi';
 import { getMimeTypeFromPath } from '../../lib/mime_types';
+import { readFileAsBase64 } from '../../services/tauriApi';
 
 export function VideoViewer({ filePath }: { filePath: string }) {
   const [src, setSrc] = useState('');
@@ -26,6 +26,7 @@ export function VideoViewer({ filePath }: { filePath: string }) {
 
   return (
     <div className="flex items-center justify-center h-full w-full p-4 bg-gray-100 dark:bg-gray-900">
+      {/* biome-ignore lint/a11y/useMediaCaption: Local file preview */}
       <video src={src} controls className="max-w-full max-h-full" />
     </div>
   );

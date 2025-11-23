@@ -1,22 +1,22 @@
+import { Channel } from '@tauri-apps/api/core';
+import { CanvasAddon } from '@xterm/addon-canvas';
+import { FitAddon } from '@xterm/addon-fit';
+import { Terminal } from '@xterm/xterm';
+import '@xterm/xterm/css/xterm.css';
+import { Check, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import {
-  useCommandRunnerStore,
-  closeCommandRunner,
-  captureCommandRunnerOutput,
-} from '../../store/commandRunnerStore';
+import { useCallback, useEffect, useRef } from 'react';
 import {
   resizePty,
-  writeToPty,
   startPtySession,
+  writeToPty,
 } from '../../services/tauriApi';
-import { X, Check } from 'lucide-react';
-import { useEffect, useRef, useCallback } from 'react';
-import { Terminal } from '@xterm/xterm';
-import { FitAddon } from '@xterm/addon-fit';
-import { CanvasAddon } from '@xterm/addon-canvas';
-import '@xterm/xterm/css/xterm.css';
+import {
+  captureCommandRunnerOutput,
+  closeCommandRunner,
+  useCommandRunnerStore,
+} from '../../store/commandRunnerStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
-import { Channel } from '@tauri-apps/api/core';
 import type { CommandStreamEvent } from '../../types';
 import { Button } from './Button';
 
@@ -114,7 +114,7 @@ export function CommandRunnerModal() {
           resizePty(rows, cols);
         });
 
-        term.onData(data => {
+        term.onData((data) => {
           writeToPty(data);
         });
       } else {
@@ -154,7 +154,7 @@ export function CommandRunnerModal() {
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2 }}
             className="bg-gray-900 text-white rounded-lg shadow-xl w-full max-w-4xl h-[70vh] flex flex-col overflow-hidden"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             onAnimationComplete={fitAndResizePty}
           >
             <header className="flex-shrink-0 bg-gray-800 p-2 pl-4 flex items-center justify-between">
@@ -176,6 +176,7 @@ export function CommandRunnerModal() {
                   Capture & Close
                 </Button>
                 <button
+                  type="button"
                   onClick={handleClose}
                   className="p-1 rounded-full hover:bg-gray-700"
                 >

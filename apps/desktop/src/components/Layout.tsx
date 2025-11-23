@@ -1,11 +1,12 @@
+import { useEffect, useRef } from 'react';
 import {
+  type ImperativePanelHandle,
   Panel,
   PanelGroup,
   PanelResizeHandle,
-  type ImperativePanelHandle,
 } from 'react-resizable-panels';
+import { cn } from '../lib/utils';
 import { useReviewStore } from '../store/reviewStore';
-import { useRef, useEffect } from 'react';
 
 interface LayoutProps {
   leftPanel: React.ReactNode;
@@ -45,9 +46,10 @@ export function Layout({ leftPanel, mainPanel, rightPanel }: LayoutProps) {
         {mainPanel}
       </Panel>
       <PanelResizeHandle
-        className={`w-px bg-gray-200 hover:bg-blue-500 transition-colors data-[resize-handle-state=drag]:bg-blue-500 dark:bg-gray-700 ${
-          isReviewing ? 'hidden' : ''
-        }`}
+        className={cn(
+          'w-px bg-gray-200 hover:bg-blue-500 transition-colors data-[resize-handle-state=drag]:bg-blue-500 dark:bg-gray-700',
+          isReviewing && 'hidden'
+        )}
       />
       <Panel
         ref={rightPanelRef}
@@ -57,7 +59,7 @@ export function Layout({ leftPanel, mainPanel, rightPanel }: LayoutProps) {
         id="right-panel"
         order={3}
       >
-        <div className={isReviewing ? 'hidden' : 'h-full flex flex-col'}>
+        <div className={cn(isReviewing ? 'hidden' : 'h-full flex flex-col')}>
           {rightPanel}
         </div>
       </Panel>

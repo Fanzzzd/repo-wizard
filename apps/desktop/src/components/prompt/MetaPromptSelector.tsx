@@ -1,19 +1,20 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { useSettingsStore } from '../../store/settingsStore';
-import { useComposerStore } from '../../store/composerStore';
-import type { MetaPrompt } from '../../types';
 import {
-  X,
   ChevronDown,
-  Wand2,
   FolderTree,
   GitBranch,
   Terminal,
+  Wand2,
+  X,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { cn } from '../../lib/utils';
+import { useComposerStore } from '../../store/composerStore';
+import { useSettingsStore } from '../../store/settingsStore';
+import type { MetaPrompt } from '../../types';
+import { Button } from '../common/Button';
 import { Checkbox } from '../common/Checkbox';
 import { HorizontalScroller } from '../common/HorizontalScroller';
-import { Button } from '../common/Button';
 
 interface MetaPromptSelectorProps {
   composerMode: 'edit' | 'qa';
@@ -79,15 +80,15 @@ export function MetaPromptSelector({
 
   const allPromptsForMode = useMemo<MetaPrompt[]>(() => {
     return promptDefs
-      .filter(p => p.mode === composerMode || p.mode === 'universal')
-      .map(def => ({
+      .filter((p) => p.mode === composerMode || p.mode === 'universal')
+      .map((def) => ({
         ...def,
         enabled: enabledMetaPromptIds.includes(def.id),
       }));
   }, [promptDefs, enabledMetaPromptIds, composerMode]);
 
   const enabledPrompts = useMemo(
-    () => allPromptsForMode.filter(p => p.enabled),
+    () => allPromptsForMode.filter((p) => p.enabled),
     [allPromptsForMode]
   );
 
@@ -102,7 +103,7 @@ export function MetaPromptSelector({
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [selectorContainerRef]);
+  }, []);
 
   const togglePrompt = (id: string, shouldBeEnabled: boolean) => {
     const currentIds = new Set(enabledMetaPromptIds);
@@ -116,12 +117,13 @@ export function MetaPromptSelector({
 
   if (promptDefs.length === 0) {
     return (
-      <div
+      <button
+        type="button"
         onClick={onManageRequest}
-        className="text-center text-sm text-gray-500 border-2 border-dashed border-gray-300 rounded-md p-3 hover:bg-gray-100 hover:border-gray-400 transition-colors"
+        className="w-full text-center text-sm text-gray-500 border-2 border-dashed border-gray-300 rounded-md p-3 hover:bg-gray-100 hover:border-gray-400 transition-colors"
       >
         No meta prompts defined. Click here to create one.
-      </div>
+      </button>
     );
   }
 
@@ -134,13 +136,20 @@ export function MetaPromptSelector({
           outerWrapperProps,
           scrollbar,
         }) => (
-          <div
+          <button
+            type="button"
             {...outerWrapperProps}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                setIsSelectorOpen(!isSelectorOpen);
+                outerWrapperProps.onMouseEnter();
+              }
+            }}
             onClick={() => {
               setIsSelectorOpen(!isSelectorOpen);
               outerWrapperProps.onMouseEnter();
             }}
-            className="relative flex items-center justify-between gap-2 p-2 border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 rounded-md min-h-[40px] hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+            className="relative w-full flex items-center justify-between gap-2 p-2 border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 rounded-md min-h-[40px] hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
           >
             <div className="flex-grow flex-shrink min-w-0">
               <div
@@ -149,7 +158,7 @@ export function MetaPromptSelector({
               >
                 <AnimatePresence>
                   {enabledPrompts.length > 0 ? (
-                    enabledPrompts.map(prompt => {
+                    enabledPrompts.map((prompt) => {
                       const {
                         icon: Icon,
                         bg,
@@ -164,16 +173,30 @@ export function MetaPromptSelector({
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.5 }}
                           transition={{ duration: 0.15 }}
-                          className={`flex-shrink-0 flex items-center gap-1.5 text-sm font-medium pl-3 pr-1.5 py-1 rounded-full ${bg} ${text}`}
+                          className={cn(
+                            'flex-shrink-0 flex items-center gap-1.5 text-sm font-medium pl-3 pr-1.5 py-1 rounded-full',
+                            bg,
+                            text
+                          )}
                         >
                           <Icon size={12} className="mr-0.5" />
                           <span>{prompt.name}</span>
                           <button
-                            onClick={e => {
+                            type="button"
+                            onKeyDown={(e) => {
+                              e.stopPropagation();
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                togglePrompt(prompt.id, false);
+                              }
+                            }}
+                            onClick={(e) => {
                               e.stopPropagation();
                               togglePrompt(prompt.id, false);
                             }}
-                            className={`p-0.5 rounded-full ${hoverBg}`}
+                            className={cn(
+                              'p-0.5 rounded-full cursor-pointer',
+                              hoverBg
+                            )}
                             title={`Deselect ${prompt.name}`}
                           >
                             <X size={14} />
@@ -191,12 +214,13 @@ export function MetaPromptSelector({
             </div>
             <ChevronDown
               size={16}
-              className={`flex-shrink-0 text-gray-500 dark:text-gray-400 transition-transform ${
-                isSelectorOpen ? 'rotate-180' : ''
-              }`}
+              className={cn(
+                'flex-shrink-0 text-gray-500 dark:text-gray-400 transition-transform',
+                isSelectorOpen && 'rotate-180'
+              )}
             />
             {scrollbar}
-          </div>
+          </button>
         )}
       </HorizontalScroller>
 
@@ -210,13 +234,13 @@ export function MetaPromptSelector({
             className="absolute top-full left-0 right-0 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 p-2"
           >
             <div className="flex flex-col gap-1 max-h-60 overflow-y-auto p-1 thin-scrollbar">
-              {allPromptsForMode.map(prompt => {
+              {allPromptsForMode.map((prompt) => {
                 const { icon: Icon, iconColor } = getPromptStyle(prompt);
                 return (
                   <Checkbox
                     key={prompt.id}
                     checked={prompt.enabled}
-                    onChange={e => togglePrompt(prompt.id, e.target.checked)}
+                    onChange={(e) => togglePrompt(prompt.id, e.target.checked)}
                     className="w-full px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-md transition-colors text-gray-700 dark:text-gray-300"
                   >
                     <div className="flex items-center justify-between w-full">

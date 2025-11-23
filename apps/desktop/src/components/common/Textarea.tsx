@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '../../lib/utils';
 
 type TextareaProps = React.ComponentPropsWithRef<'textarea'> & {
   onUndo?: () => void;
@@ -34,7 +35,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <textarea
         ref={ref}
-        className={`form-input-base font-mono resize-none ${className ?? ''}`}
+        className={cn('form-input-base font-mono resize-none', className)}
         onKeyDown={hasCustomUndoRedo ? handleKeyDown : props.onKeyDown}
         {...props}
       />

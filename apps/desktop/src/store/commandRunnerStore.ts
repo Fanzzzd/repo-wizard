@@ -8,19 +8,19 @@ interface CommandRunnerState {
   initialCommand: string | null;
   isFinished: boolean;
   _resolve: ((output: string) => void) | null;
-  _reject: ((reason?: any) => void) | null;
+  _reject: ((reason?: unknown) => void) | null;
   setFinished: () => void;
   _setState: (partial: Partial<CommandRunnerState>) => void;
 }
 
-const useCommandRunnerStore = create<CommandRunnerState>(set => ({
+const useCommandRunnerStore = create<CommandRunnerState>((set) => ({
   isVisible: false,
   initialCommand: null,
   isFinished: false,
   _resolve: null,
   _reject: null,
   setFinished: () => set({ isFinished: true }),
-  _setState: partial => set(partial),
+  _setState: (partial) => set(partial),
 }));
 
 export const openCommandRunner = (

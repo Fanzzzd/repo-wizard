@@ -1,7 +1,7 @@
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { useWorkspaceStore } from '../../store/workspaceStore';
 import { FileTree } from './FileTree';
 import { SelectedFilesPanel } from './SelectedFilesPanel';
-import { useWorkspaceStore } from '../../store/workspaceStore';
 
 export function WorkspaceSidebar() {
   const { rootPath } = useWorkspaceStore();
@@ -22,12 +22,7 @@ export function WorkspaceSidebar() {
       {rootPath && (
         <>
           <PanelResizeHandle className="h-px bg-gray-200 hover:bg-blue-500 transition-colors data-[resize-handle-state=drag]:bg-blue-500 dark:bg-gray-700" />
-          <Panel
-            defaultSize={35}
-            minSize={10}
-            id="selected-files"
-            order={2}
-          >
+          <Panel defaultSize={35} minSize={10} id="selected-files" order={2}>
             <SelectedFilesPanel />
           </Panel>
         </>

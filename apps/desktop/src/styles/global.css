@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -54,20 +54,24 @@ body {
 }
 
 .thin-scrollbar::-webkit-scrollbar-thumb {
-  background-color: theme('colors.gray.300');
+  /* biome-ignore lint/correctness/noUnknownFunction: Tailwind theme function */
+  background-color: theme("colors.gray.300");
   border-radius: 3px;
 }
 
 .thin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: theme('colors.gray.400');
+  /* biome-ignore lint/correctness/noUnknownFunction: Tailwind theme function */
+  background-color: theme("colors.gray.400");
 }
 
 .dark .thin-scrollbar::-webkit-scrollbar-thumb {
-  background-color: theme('colors.gray.600');
+  /* biome-ignore lint/correctness/noUnknownFunction: Tailwind theme function */
+  background-color: theme("colors.gray.600");
 }
 
 .dark .thin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: theme('colors.gray.500');
+  /* biome-ignore lint/correctness/noUnknownFunction: Tailwind theme function */
+  background-color: theme("colors.gray.500");
 }
 
 .hide-scrollbar {

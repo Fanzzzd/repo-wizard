@@ -1,12 +1,12 @@
+import { RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useWorkspaceStore } from '../../store/workspaceStore';
 import { isBinaryFile } from '../../services/tauriApi';
-import { ImageViewer } from './ImageViewer';
-import { VideoViewer } from './VideoViewer';
-import { SvgViewer } from './SvgViewer';
+import { useWorkspaceStore } from '../../store/workspaceStore';
 import { CodeEditor } from '../editor/CodeEditor';
 import { FallbackViewer } from './FallbackViewer';
-import { RefreshCw } from 'lucide-react';
+import { ImageViewer } from './ImageViewer';
+import { SvgViewer } from './SvgViewer';
+import { VideoViewer } from './VideoViewer';
 
 const IMAGE_EXTENSIONS = [
   'png',
@@ -36,7 +36,7 @@ export function FileViewer() {
     }
 
     setFileType('loading');
-    setKey(k => k + 1);
+    setKey((k) => k + 1);
 
     const determineFileType = async () => {
       const extension = activeFilePath.split('.').pop()?.toLowerCase();

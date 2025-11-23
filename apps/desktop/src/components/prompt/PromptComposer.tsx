@@ -1,29 +1,30 @@
+import { readText } from '@tauri-apps/plugin-clipboard-manager';
+import {
+  Check,
+  Clipboard,
+  ClipboardCheck,
+  FileSearch2,
+  History,
+  RefreshCw,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { useState } from 'react';
-import { useComposerStore } from '../../store/composerStore';
-import { useWorkspaceStore } from '../../store/workspaceStore';
-import { useSettingsStore } from '../../store/settingsStore';
-import { useReviewStore } from '../../store/reviewStore';
 import { usePromptGenerator } from '../../hooks/usePromptGenerator';
 import { useReviewSession } from '../../hooks/useReviewSession';
-import { readText } from '@tauri-apps/plugin-clipboard-manager';
 import { showErrorDialog } from '../../lib/errorHandler';
-import {
-  Clipboard,
-  Check,
-  SlidersHorizontal,
-  History,
-  FileSearch2,
-  RefreshCw,
-  ClipboardCheck,
-} from 'lucide-react';
-import type { ComposerMode, EditFormat } from '../../types';
-import { MetaPromptsManagerModal } from './MetaPromptsManagerModal';
 import { formatTokenCount } from '../../lib/token_estimator';
+import { cn } from '../../lib/utils';
+import { useComposerStore } from '../../store/composerStore';
+import { useReviewStore } from '../../store/reviewStore';
+import { useSettingsStore } from '../../store/settingsStore';
+import { useWorkspaceStore } from '../../store/workspaceStore';
+import type { ComposerMode, EditFormat } from '../../types';
 import { Button } from '../common/Button';
+import { ResponsiveButtonGroup } from '../common/ResponsiveButtonGroup';
+import { SegmentedControl } from '../common/SegmentedControl';
 import { Textarea } from '../common/Textarea';
 import { MetaPromptSelector } from './MetaPromptSelector';
-import { SegmentedControl } from '../common/SegmentedControl';
-import { ResponsiveButtonGroup } from '../common/ResponsiveButtonGroup';
+import { MetaPromptsManagerModal } from './MetaPromptsManagerModal';
 
 const editFormatOptions: { value: EditFormat; label: string }[] = [
   { value: 'whole', label: 'Whole File' },
@@ -174,9 +175,9 @@ export function PromptComposer() {
         <h2 className="font-bold mb-2">Compose Prompt</h2>
 
         <div className="mb-4">
-          <label className="text-sm font-semibold mb-1 block dark:text-gray-300">
+          <div className="text-sm font-semibold mb-1 block dark:text-gray-300">
             Mode
-          </label>
+          </div>
           <SegmentedControl
             options={composerModeOptions}
             value={composerMode}
@@ -187,9 +188,9 @@ export function PromptComposer() {
 
         {composerMode === 'edit' && (
           <div className="mb-4">
-            <label className="text-sm font-semibold mb-1 block dark:text-gray-300">
+            <div className="text-sm font-semibold mb-1 block dark:text-gray-300">
               Edit Format
-            </label>
+            </div>
             <SegmentedControl
               options={editFormatOptions}
               value={editFormat}
@@ -219,9 +220,9 @@ export function PromptComposer() {
 
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-semibold dark:text-gray-300">
+            <div className="text-sm font-semibold dark:text-gray-300">
               Meta Prompts
-            </label>
+            </div>
             <Button
               onClick={() => setIsMetaPromptsManagerOpen(true)}
               variant="ghost"
@@ -244,7 +245,7 @@ export function PromptComposer() {
           className="flex-grow mb-2"
           placeholder="Enter your refactoring instructions here..."
           value={instructions}
-          onChange={e => setInstructions(e.target.value)}
+          onChange={(e) => setInstructions(e.target.value)}
           onUndo={undoInstructions}
           onRedo={redoInstructions}
         />
@@ -267,11 +268,12 @@ export function PromptComposer() {
 
       {shouldShowReviewSection && (
         <div
-          className={`flex flex-col space-y-2 ${
+          className={cn(
+            'flex flex-col space-y-2',
             showPasteResponseArea
               ? 'mt-4 pt-4 border-t border-gray-200 dark:border-gray-700'
               : 'mt-4'
-          }`}
+          )}
         >
           {showPasteResponseArea ? (
             <>

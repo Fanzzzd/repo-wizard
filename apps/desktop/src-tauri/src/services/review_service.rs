@@ -76,7 +76,7 @@ pub async fn process_markdown_changes(
                         is_new_file_flag = true;
                     }
                     last_op_type_is_patch = false;
-                    // Reset accumulators if overwritten? 
+                    // Reset accumulators if overwritten?
                     // If we overwrite, previous patches are irrelevant or subsumed.
                     // But maybe we should keep them if the user wants to know what happened?
                     // Usually overwrite is a fresh start.
@@ -104,7 +104,6 @@ pub async fn process_markdown_changes(
                 is_new_file: is_new_file_flag,
             });
         }
-
     }
 
     for op in other_ops {
@@ -151,14 +150,11 @@ fn apply_patch(content: &str, search: &str, replace: &str) -> Result<String> {
         return Ok(normalized_content.replacen(&normalized_search, replace, 1));
     }
 
-
-
-
     // 2. Fuzzy match (trimmed lines)
     let search_lines: Vec<&str> = normalized_search.trim().lines().map(|l| l.trim()).collect();
 
     if search_lines.is_empty() {
-         return Err(anyhow!("Search block is empty or only whitespace"));
+        return Err(anyhow!("Search block is empty or only whitespace"));
     }
 
     let content_lines: Vec<&str> = normalized_content.lines().collect();
@@ -168,17 +164,17 @@ fn apply_patch(content: &str, search: &str, replace: &str) -> Result<String> {
         if content_lines_trimmed[i..i + search_lines.len()] == search_lines[..] {
             // Found match at line i
             let mut new_content = String::new();
-            
+
             // Append lines before match
             for line in &content_lines[..i] {
                 new_content.push_str(line);
                 new_content.push('\n');
             }
-            
+
             // Append replacement
             new_content.push_str(replace);
             if !replace.ends_with('\n') {
-                new_content.push('\n'); 
+                new_content.push('\n');
             }
 
             // Append lines after match
@@ -186,7 +182,7 @@ fn apply_patch(content: &str, search: &str, replace: &str) -> Result<String> {
                 new_content.push_str(line);
                 new_content.push('\n');
             }
-            
+
             return Ok(new_content);
         }
     }

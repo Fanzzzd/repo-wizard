@@ -6,24 +6,24 @@ interface HistoryState {
   future: string[];
 }
 
-interface ComposerState {
+export interface ComposerState {
   composerMode: ComposerMode;
-  
+
   instructions: string;
   instructionsHistory: HistoryState;
-  
+
   markdownResponse: string;
   markdownResponseHistory: HistoryState;
-  
+
   processedMarkdownResponse: string | null;
   enabledMetaPromptIds: string[];
 
   setComposerMode: (mode: ComposerMode) => void;
-  
+
   setInstructions: (instructions: string) => void;
   undoInstructions: () => void;
   redoInstructions: () => void;
-  
+
   setMarkdownResponse: (response: string) => void;
   undoMarkdownResponse: () => void;
   redoMarkdownResponse: () => void;
@@ -48,98 +48,105 @@ const initialState = {
   enabledMetaPromptIds: [],
 };
 
-export const useComposerStore = create<ComposerState>(set => ({
+export const useComposerStore = create<ComposerState>((set) => ({
   ...initialState,
 
-  setComposerMode: mode => set({ composerMode: mode }),
+  setComposerMode: (mode) => set({ composerMode: mode }),
 
-  setInstructions: (newInstructions) => set(state => {
-     if (state.instructions === newInstructions) return {};
-     return {
-         instructions: newInstructions,
-         instructionsHistory: {
-             past: [...state.instructionsHistory.past, state.instructions],
-             future: []
-         }
-     };
-  }),
+  setInstructions: (newInstructions) =>
+    set((state) => {
+      if (state.instructions === newInstructions) return {};
+      return {
+        instructions: newInstructions,
+        instructionsHistory: {
+          past: [...state.instructionsHistory.past, state.instructions],
+          future: [],
+        },
+      };
+    }),
 
-  undoInstructions: () => set(state => {
+  undoInstructions: () =>
+    set((state) => {
       const { past, future } = state.instructionsHistory;
       if (past.length === 0) return {};
       const previous = past[past.length - 1];
       const newPast = past.slice(0, past.length - 1);
       return {
-          instructions: previous,
-          instructionsHistory: {
-              past: newPast,
-              future: [state.instructions, ...future]
-          }
+        instructions: previous,
+        instructionsHistory: {
+          past: newPast,
+          future: [state.instructions, ...future],
+        },
       };
-  }),
+    }),
 
-  redoInstructions: () => set(state => {
+  redoInstructions: () =>
+    set((state) => {
       const { past, future } = state.instructionsHistory;
       if (future.length === 0) return {};
       const next = future[0];
       const newFuture = future.slice(1);
       return {
-          instructions: next,
-          instructionsHistory: {
-              past: [...past, state.instructions],
-              future: newFuture
-          }
+        instructions: next,
+        instructionsHistory: {
+          past: [...past, state.instructions],
+          future: newFuture,
+        },
       };
-  }),
+    }),
 
-  setMarkdownResponse: (newResponse) => set(state => {
-     if (state.markdownResponse === newResponse) return {};
-     return {
-         markdownResponse: newResponse,
-         markdownResponseHistory: {
-             past: [...state.markdownResponseHistory.past, state.markdownResponse],
-             future: []
-         }
-     };
-  }),
-  
-  undoMarkdownResponse: () => set(state => {
+  setMarkdownResponse: (newResponse) =>
+    set((state) => {
+      if (state.markdownResponse === newResponse) return {};
+      return {
+        markdownResponse: newResponse,
+        markdownResponseHistory: {
+          past: [...state.markdownResponseHistory.past, state.markdownResponse],
+          future: [],
+        },
+      };
+    }),
+
+  undoMarkdownResponse: () =>
+    set((state) => {
       const { past, future } = state.markdownResponseHistory;
       if (past.length === 0) return {};
       const previous = past[past.length - 1];
       const newPast = past.slice(0, past.length - 1);
       return {
-          markdownResponse: previous,
-          markdownResponseHistory: {
-              past: newPast,
-              future: [state.markdownResponse, ...future]
-          }
+        markdownResponse: previous,
+        markdownResponseHistory: {
+          past: newPast,
+          future: [state.markdownResponse, ...future],
+        },
       };
-  }),
+    }),
 
-  redoMarkdownResponse: () => set(state => {
+  redoMarkdownResponse: () =>
+    set((state) => {
       const { past, future } = state.markdownResponseHistory;
       if (future.length === 0) return {};
       const next = future[0];
       const newFuture = future.slice(1);
       return {
-          markdownResponse: next,
-          markdownResponseHistory: {
-              past: [...past, state.markdownResponse],
-              future: newFuture
-          }
+        markdownResponse: next,
+        markdownResponseHistory: {
+          past: [...past, state.markdownResponse],
+          future: newFuture,
+        },
       };
-  }),
+    }),
 
   markMarkdownAsProcessed: () =>
-    set(state => ({ processedMarkdownResponse: state.markdownResponse })),
-  setEnabledMetaPromptIds: ids => set({ enabledMetaPromptIds: ids }),
+    set((state) => ({ processedMarkdownResponse: state.markdownResponse })),
+  setEnabledMetaPromptIds: (ids) => set({ enabledMetaPromptIds: ids }),
 
-  _load: state => set({
+  _load: (state) =>
+    set({
       ...state,
       // Reset history on load to prevent weird states from persistence
       instructionsHistory: initialHistory,
-      markdownResponseHistory: initialHistory
-  }),
+      markdownResponseHistory: initialHistory,
+    }),
   _reset: () => set(initialState),
 }));

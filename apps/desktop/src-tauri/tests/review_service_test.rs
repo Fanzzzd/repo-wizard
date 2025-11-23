@@ -17,7 +17,7 @@ macro_rules! patch_test {
             let temp_dir = tempdir().expect("Failed to create temp dir");
             let temp_path = temp_dir.path();
             let file_path = temp_path.join("test.txt");
-            
+
             fs::write(&file_path, $initial).expect("Failed to write test file");
 
             let markdown = format!("PATCH test.txt\n```\n{}\n```", $patch);
@@ -27,21 +27,21 @@ macro_rules! patch_test {
                 .expect("Failed to process changes");
 
             assert_eq!(result.len(), 1, "Expected exactly one operation");
-            
+
             match &result[0] {
-                ChangeOperation::Patch { 
-                    total_blocks, 
-                    applied_blocks, 
+                ChangeOperation::Patch {
+                    total_blocks,
+                    applied_blocks,
                     content,
-                    .. 
+                    ..
                 } => {
                     assert_eq!(*total_blocks, $total, "Total blocks mismatch");
                     assert_eq!(*applied_blocks, $applied, "Applied blocks mismatch");
-                    
+
                     $(
                         assert!(content.contains($contain), "Content missing: {}", $contain);
                     )*
-                    
+
                     $(
                         assert!(!content.contains($not_contain), "Content should not contain: {}", $not_contain);
                     )*

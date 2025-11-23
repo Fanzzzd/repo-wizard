@@ -1,7 +1,7 @@
-import type { CSSProperties, PropsWithChildren } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import type { CSSProperties, PropsWithChildren } from 'react';
 
 export function SortableItem({
   children,
@@ -31,6 +31,6 @@ export function SortableItem({
   );
 }
 
-export function DragHandle({ children }: PropsWithChildren<{}>) {
+export function DragHandle({ children }: PropsWithChildren) {
   return <div className="flex items-center justify-center">{children}</div>;
 }

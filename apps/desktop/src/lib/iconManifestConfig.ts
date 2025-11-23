@@ -1,4 +1,4 @@
-import { type ManifestConfig } from 'material-icon-theme';
+import type { ManifestConfig } from 'material-icon-theme';
 
 export const iconManifestConfig: ManifestConfig = {
   files: {
