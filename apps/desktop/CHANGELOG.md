@@ -14,6 +14,13 @@
 * remove redundant tag_name in cicd. ([709c955](https://github.com/Fanzzzd/repo-wizard/commit/709c955e0d08624c24bf60694dbe4ef68e0df960))
 * trigger pr for desktop ([016fd95](https://github.com/Fanzzzd/repo-wizard/commit/016fd959d11068236b59b2c0950e7c805baaf622))
 
+## [1.13.0](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.12.2...desktop-v1.13.0) (2025-11-24)
+
+
+### Features
+
+* **desktop:** add undo/redo support for meta prompts manager ([5f1d1a9](https://github.com/Fanzzzd/repo-wizard/commit/5f1d1a90aba50e243d4099c76247ddaf63e5c2ab))
+
 ## [1.12.2](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.12.1...desktop-v1.12.2) (2025-11-23)
 
 
