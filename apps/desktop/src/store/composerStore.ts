@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ComposerMode } from '../types';
+import type { ComposerMode } from '../types/prompt';
 
 interface HistoryState {
   past: string[];

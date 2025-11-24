@@ -2,7 +2,7 @@ import { X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { useHistoryStore } from '../../store/historyStore';
-import type { PromptHistoryEntry } from '../../types';
+import type { PromptHistoryEntry } from '../../types/prompt';
 import { Button } from '../common/Button';
 import { Textarea } from '../common/Textarea';
 

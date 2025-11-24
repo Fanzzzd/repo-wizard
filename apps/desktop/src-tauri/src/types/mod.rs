@@ -1,56 +1,48 @@
 use serde::{Deserialize, Serialize};
+use specta::Type;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, Type)]
+#[serde(rename_all = "camelCase")]
 pub struct FileNode {
     pub path: String,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub children: Option<Vec<FileNode>>,
-    #[serde(rename = "isDirectory")]
     pub is_directory: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Type)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ChangeOperation {
+    #[serde(rename_all = "camelCase")]
     Patch {
-        #[serde(rename = "filePath")]
         file_path: String,
         content: String,
-        #[serde(rename = "isNewFile")]
         is_new_file: bool,
-        #[serde(rename = "totalBlocks")]
-        total_blocks: usize,
-        #[serde(rename = "appliedBlocks")]
-        applied_blocks: usize,
+        total_blocks: u32,
+        applied_blocks: u32,
     },
+    #[serde(rename_all = "camelCase")]
     Overwrite {
-        #[serde(rename = "filePath")]
         file_path: String,
         content: String,
-        #[serde(rename = "isNewFile")]
         is_new_file: bool,
     },
-    Delete {
-        #[serde(rename = "filePath")]
-        file_path: String,
-    },
-    Move {
-        #[serde(rename = "fromPath")]
-        from_path: String,
-        #[serde(rename = "toPath")]
-        to_path: String,
-    },
+    #[serde(rename_all = "camelCase")]
+    Delete { file_path: String },
+    #[serde(rename_all = "camelCase")]
+    Move { from_path: String, to_path: String },
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct GitStatus {
     pub has_staged_changes: bool,
     pub has_unstaged_changes: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
+#[serde(rename_all = "camelCase")]
 pub struct Commit {
     pub hash: String,
     pub message: String,
@@ -58,7 +50,7 @@ pub struct Commit {
     pub date: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Type, Clone)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum DiffOption {
     Staged,
@@ -66,20 +58,28 @@ pub enum DiffOption {
     Commit { hash: String },
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, Type)]
+#[serde(rename_all = "snake_case")]
+pub enum CliStatus {
+    Installed,
+    NotInstalled,
+    Error,
+}
+
+#[derive(Debug, Serialize, Clone, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct CliStatusResult {
-    pub status: String,
+    pub status: CliStatus,
     pub error: Option<String>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct CliInstallResult {
     pub message: String,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Type)]
 #[serde(rename_all = "camelCase", tag = "type", content = "data")]
 pub enum CommandStreamEvent {
     Stdout(Vec<u8>),
@@ -88,15 +88,14 @@ pub enum CommandStreamEvent {
     Finish(String),
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Type)]
+#[serde(rename_all = "camelCase")]
 pub struct IgnoreSettings {
-    #[serde(rename = "respectGitignore")]
     pub respect_gitignore: bool,
-    #[serde(rename = "customIgnorePatterns")]
     pub custom_ignore_patterns: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchResult {
     pub path: String,

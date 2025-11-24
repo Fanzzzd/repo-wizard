@@ -1,5 +1,4 @@
-import type { ReviewChange } from '../types';
-import { createReviewChange } from '../types';
+import { createReviewChange, type ReviewChange } from '../types/review';
 import * as tauriApi from './tauriApi';
 
 export async function processAndStartReview(

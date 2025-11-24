@@ -15,12 +15,12 @@ import {
 import { AnimatePresence, motion } from 'motion/react';
 import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { CliStatusResult } from '../../bindings';
 import { showErrorDialog } from '../../lib/errorHandler';
 import { cn } from '../../lib/utils';
 import { getCliStatus, installCliShim } from '../../services/tauriApi';
 import { useDialogStore } from '../../store/dialogStore';
 import { useSettingsStore } from '../../store/settingsStore';
-import type { CliStatusResult } from '../../types';
 import { Button } from './Button';
 import { Checkbox } from './Checkbox';
 import { Input } from './Input';
@@ -32,8 +32,10 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
+type CliState = CliStatusResult | { status: 'checking'; error?: null };
+
 function CliSettings() {
-  const [cliStatus, setCliStatus] = useState<CliStatusResult>({
+  const [cliStatus, setCliStatus] = useState<CliState>({
     status: 'checking',
   });
   const { open: openDialog } = useDialogStore();
@@ -104,7 +106,7 @@ function CliSettings() {
         return (
           <div
             className="flex items-center gap-2 text-sm text-red-700 dark:text-red-300 p-2 bg-red-50 dark:bg-red-500/10 rounded-md"
-            title={cliStatus.error}
+            title={cliStatus.error || undefined}
           >
             <AlertTriangle size={16} />
             <span className="font-medium">Error checking status</span>

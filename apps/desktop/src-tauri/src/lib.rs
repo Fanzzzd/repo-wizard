@@ -18,6 +18,57 @@ pub fn run() {
         cwd: String,
     }
 
+    let specta_builder = {
+        let specta_builder = tauri_specta::Builder::<tauri::Wry>::new()
+            .commands(tauri_specta::collect_commands![
+                commands::open_project_window,
+                commands::create_new_window,
+                commands::register_window_project,
+                commands::close_window,
+                commands::list_directory_recursive,
+                commands::get_relative_path,
+                commands::read_file_content,
+                commands::read_file_as_base64,
+                commands::is_binary_file,
+                commands::file_exists,
+                commands::write_file_content,
+                commands::delete_file,
+                commands::move_file,
+                commands::backup_files,
+                commands::revert_file_from_backup,
+                commands::read_file_from_backup,
+                commands::delete_backup,
+                commands::parse_changes_from_markdown,
+                commands::is_git_repository,
+                commands::get_git_status,
+                commands::get_recent_commits,
+                commands::get_git_diff,
+                commands::resolve_path,
+                commands::start_pty_session,
+                commands::resize_pty,
+                commands::write_to_pty,
+                commands::kill_pty,
+                commands::get_cli_status,
+                commands::install_cli_shim,
+                commands::start_watching,
+                commands::stop_watching,
+                commands::search_files
+            ])
+            .events(tauri_specta::collect_events![]);
+
+        #[cfg(debug_assertions)]
+        specta_builder
+            .export(
+                specta_typescript::Typescript::default().header("// @ts-nocheck"),
+                "../src/bindings.ts",
+            )
+            .expect("Failed to export typescript bindings");
+
+        specta_builder
+    };
+
+    let invoke_handler = specta_builder.invoke_handler();
+
     tauri::Builder::default()
         .manage(state::WindowRegistry::default())
         .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
@@ -63,7 +114,7 @@ pub fn run() {
                                 }
                                 return;
                             } else {
-                               warn!("(Main thread) Window registry had label '{label}' but window was not found.");
+                                warn!("(Main thread) Window registry had label '{label}' but window was not found.");
                             }
                         }
                     }
@@ -99,7 +150,9 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_http::init())
-        .setup(|app| {
+        .setup(move |app| {
+            specta_builder.mount_events(app);
+
             let handle = app.handle().clone();
             match app.cli().matches() {
                 Ok(matches) => {
@@ -144,40 +197,7 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![
-            commands::open_project_window,
-            commands::create_new_window,
-            commands::register_window_project,
-            commands::close_window,
-            commands::list_directory_recursive,
-            commands::get_relative_path,
-            commands::read_file_content,
-            commands::read_file_as_base64,
-            commands::is_binary_file,
-            commands::file_exists,
-            commands::write_file_content,
-            commands::delete_file,
-            commands::move_file,
-            commands::backup_files,
-            commands::revert_file_from_backup,
-            commands::read_file_from_backup,
-            commands::delete_backup,
-            commands::parse_changes_from_markdown,
-            commands::is_git_repository,
-            commands::get_git_status,
-            commands::get_recent_commits,
-            commands::get_git_diff,
-            commands::resolve_path,
-            commands::start_pty_session,
-            commands::resize_pty,
-            commands::write_to_pty,
-            commands::kill_pty,
-            commands::get_cli_status,
-            commands::install_cli_shim,
-            commands::start_watching,
-            commands::stop_watching,
-            commands::search_files
-        ])
+        .invoke_handler(invoke_handler)
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

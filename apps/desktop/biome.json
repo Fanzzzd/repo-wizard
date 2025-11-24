@@ -1,0 +1,22 @@
+{
+  "extends": "//",
+  "files": {
+    "includes": [
+      "src/**",
+      "./*.json",
+      "./*.js",
+      "./*.ts",
+      "./*.mts",
+      "./*.mjs",
+      "!src-tauri",
+      "!src/bindings.ts"
+    ]
+  },
+  "linter": {
+    "rules": {
+      "a11y": {
+        "recommended": false
+      }
+    }
+  }
+}

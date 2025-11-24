@@ -1,11 +1,12 @@
 import { listen } from '@tauri-apps/api/event';
 import { Store as TauriStore } from '@tauri-apps/plugin-store';
 import { create } from 'zustand';
+import type { FileNode } from '../bindings';
 import { AppError } from '../lib/error';
 import { showErrorDialog } from '../lib/errorHandler';
 import * as projectService from '../services/projectService';
 import { startWatching, stopWatching } from '../services/tauriApi';
-import type { ComposerMode, FileNode, PromptHistoryEntry } from '../types';
+import type { ComposerMode, PromptHistoryEntry } from '../types/prompt';
 import { type ComposerState, useComposerStore } from './composerStore';
 import { type HistoryState, useHistoryStore } from './historyStore';
 import { useReviewStore } from './reviewStore';

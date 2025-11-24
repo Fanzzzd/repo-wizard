@@ -1,4 +1,5 @@
 use serde::{ser::Serializer, Serialize};
+use specta::Type;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -19,6 +20,12 @@ impl Serialize for AppError {
         S: Serializer,
     {
         serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl Type for AppError {
+    fn inline(type_map: &mut specta::TypeMap, generics: specta::Generics) -> specta::DataType {
+        String::inline(type_map, generics)
     }
 }
 

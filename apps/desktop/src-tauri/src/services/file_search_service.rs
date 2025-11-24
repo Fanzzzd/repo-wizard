@@ -108,7 +108,7 @@ pub async fn search_files(
     root_path: &Path,
     query: &str,
     settings: IgnoreSettings,
-    limit: Option<usize>,
+    limit: Option<u32>,
 ) -> Result<Vec<SearchResult>> {
     if query.trim().is_empty() {
         return Ok(vec![]);
@@ -116,7 +116,7 @@ pub async fn search_files(
 
     let root_path_owned = root_path.to_owned();
     let query_owned = query.to_string();
-    let limit = limit.unwrap_or(100);
+    let limit = limit.unwrap_or(100) as usize;
 
     let results = tokio::task::spawn_blocking(move || {
         let root_path = &root_path_owned;

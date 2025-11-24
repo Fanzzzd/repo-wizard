@@ -234,7 +234,6 @@ export function DropdownMenuSub({ children }: PropsWithChildren<unknown>) {
 
   return (
     <DropdownSubMenuContext.Provider value={contextValue}>
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper for hover events */}
       <div
         ref={triggerRef}
         className="relative"

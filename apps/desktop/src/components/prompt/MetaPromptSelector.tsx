@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '../../lib/utils';
 import { useComposerStore } from '../../store/composerStore';
 import { useSettingsStore } from '../../store/settingsStore';
-import type { MetaPrompt } from '../../types';
+import type { MetaPrompt } from '../../types/prompt';
 import { Button } from '../common/Button';
 import { Checkbox } from '../common/Checkbox';
 import { HorizontalScroller } from '../common/HorizontalScroller';
@@ -136,8 +136,9 @@ export function MetaPromptSelector({
           outerWrapperProps,
           scrollbar,
         }) => (
-          <button
-            type="button"
+          <div
+            role="button"
+            tabIndex={0}
             {...outerWrapperProps}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -149,7 +150,7 @@ export function MetaPromptSelector({
               setIsSelectorOpen(!isSelectorOpen);
               outerWrapperProps.onMouseEnter();
             }}
-            className="relative w-full flex items-center justify-between gap-2 p-2 border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 rounded-md min-h-[40px] hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+            className="relative w-full flex items-center justify-between gap-2 p-2 border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 rounded-md min-h-[40px] hover:border-blue-400 dark:hover:border-blue-500 transition-colors cursor-pointer"
           >
             <div className="flex-grow flex-shrink min-w-0">
               <div
@@ -220,7 +221,7 @@ export function MetaPromptSelector({
               )}
             />
             {scrollbar}
-          </button>
+          </div>
         )}
       </HorizontalScroller>
 

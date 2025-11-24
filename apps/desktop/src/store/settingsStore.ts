@@ -1,6 +1,7 @@
 import { Store as TauriStore } from '@tauri-apps/plugin-store';
 import { create } from 'zustand';
-import type { EditFormat, MetaPromptDefinition } from '../types';
+import type { EditFormat, MetaPromptDefinition } from '../types/prompt';
+import type { AppSettings } from '../types/settings';
 
 const SETTINGS_FILE = 'app-settings.json';
 
@@ -12,19 +13,21 @@ Take requests for changes to the supplied code.
 If the request is ambiguous, ask questions.
 `;
 
-interface SettingsState {
-  // Store state
-  respectGitignore: boolean;
-  customIgnorePatterns: string;
-  customSystemPrompt: string;
-  editFormat: EditFormat;
-  metaPrompts: MetaPromptDefinition[];
-  autoReviewOnPaste: boolean;
-  recentProjects: string[];
-  promptHistoryLimit: number;
-  enableClipboardReview: boolean;
-  showPasteResponseArea: boolean;
+const defaultSettings: AppSettings = {
+  respectGitignore: true,
+  customIgnorePatterns: '.git',
+  customSystemPrompt: defaultSystemPrompt,
+  editFormat: 'whole',
+  metaPrompts: [],
+  autoReviewOnPaste: true,
+  recentProjects: [],
+  promptHistoryLimit: 50,
+  enableClipboardReview: true,
+  showPasteResponseArea: true,
+  theme: 'system',
+};
 
+interface SettingsState extends AppSettings {
   // Actions
   setRespectGitignore: (value: boolean) => void;
   setCustomIgnorePatterns: (value: string) => void;
@@ -53,25 +56,25 @@ const getTauriStore = async (): Promise<TauriStore> => {
 };
 
 export const useSettingsStore = create<SettingsState>((set, get) => {
-  const initialState = {
-    respectGitignore: true,
-    customIgnorePatterns: '.git',
-    customSystemPrompt: defaultSystemPrompt,
-    editFormat: 'whole' as EditFormat,
-    metaPrompts: [] as MetaPromptDefinition[],
-    autoReviewOnPaste: true,
-    recentProjects: [] as string[],
-    promptHistoryLimit: 50,
-    enableClipboardReview: true,
-    showPasteResponseArea: true,
-  };
+  const initialState = defaultSettings;
 
   let saveTimeout: NodeJS.Timeout | null = null;
   const debouncedSave = (state: SettingsState) => {
     if (saveTimeout) clearTimeout(saveTimeout);
     saveTimeout = setTimeout(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { _isInitialized, _hasHydrated, _init, ...stateToSave } = state;
+      const stateToSave = {
+        respectGitignore: state.respectGitignore,
+        customIgnorePatterns: state.customIgnorePatterns,
+        customSystemPrompt: state.customSystemPrompt,
+        editFormat: state.editFormat,
+        metaPrompts: state.metaPrompts,
+        autoReviewOnPaste: state.autoReviewOnPaste,
+        recentProjects: state.recentProjects,
+        promptHistoryLimit: state.promptHistoryLimit,
+        enableClipboardReview: state.enableClipboardReview,
+        showPasteResponseArea: state.showPasteResponseArea,
+        theme: state.theme,
+      };
       const store = await getTauriStore();
       await store.set('state', stateToSave);
       await store.save();
@@ -87,19 +90,21 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       if (get()._isInitialized) return;
 
       const store = await getTauriStore();
-      const savedState = await store.get<Partial<SettingsState>>('state');
+      const rawState = (await store.get(
+        'state'
+      )) as Partial<AppSettings> | null;
 
-      if (savedState) {
-        if (
-          savedState.recentProjects &&
-          !Array.isArray(savedState.recentProjects)
-        ) {
-          savedState.recentProjects = [];
-        }
-        set(savedState);
+      const stateToLoad: AppSettings = {
+        ...defaultSettings,
+        ...(rawState || {}),
+      };
+
+      // Ensure metaPrompts is an array if corrupted
+      if (!Array.isArray(stateToLoad.metaPrompts)) {
+        stateToLoad.metaPrompts = [];
       }
 
-      set({ _isInitialized: true, _hasHydrated: true });
+      set({ ...stateToLoad, _isInitialized: true, _hasHydrated: true });
 
       useSettingsStore.subscribe((state) => {
         if (state._hasHydrated) {

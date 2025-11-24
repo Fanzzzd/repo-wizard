@@ -10,7 +10,7 @@ import { cn } from '../../lib/utils';
 import { useDialogStore } from '../../store/dialogStore';
 import { useReviewStore } from '../../store/reviewStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
-import type { ReviewChange } from '../../types';
+import type { ReviewChange } from '../../types/review';
 import { Button } from '../common/Button';
 import { ShortenedPath } from '../common/ShortenedPath';
 import { FileTypeIcon } from '../workspace/FileTypeIcon';

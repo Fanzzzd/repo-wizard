@@ -2,20 +2,14 @@ import { Check, File, Folder, Search } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import type React from 'react';
 import { useEffect, useRef } from 'react';
+import type { SearchResult } from '../../bindings';
 import { cn } from '../../lib/utils';
 import { useFileSearchStore } from '../../store/fileSearchStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { FileTypeIcon } from './FileTypeIcon';
 
 interface SearchResultItemProps {
-  result: {
-    path: string;
-    relativePath: string;
-    name: string;
-    parentDir: string;
-    score: number;
-    isDirectory: boolean;
-  };
+  result: SearchResult;
   isSelected: boolean;
   isFileSelected: boolean;
   onSelect: () => void;

@@ -1,8 +1,9 @@
 import { create } from 'zustand';
+import type { ChangeOperation } from '../bindings';
 import { AppError } from '../lib/error';
 import { showErrorDialog } from '../lib/errorHandler';
 import * as reviewService from '../services/reviewService';
-import type { ChangeOperation, ReviewChange } from '../types';
+import type { ReviewChange } from '../types/review';
 import { useWorkspaceStore } from './workspaceStore';
 
 interface ReviewState {
@@ -67,9 +68,10 @@ const updateWorkspaceOnFileChange = (
   const getAbsPath = (p: string) => `${rootPath}/${p}`;
   const isApply = direction === 'apply';
 
+  // Explicitly check type before accessing isNewFile to ensure type safety
   const isCreateOperation =
-    (operation.type === 'patch' || operation.type === 'overwrite') &&
-    operation.isNewFile;
+    (operation.type === 'patch' && operation.isNewFile) ||
+    (operation.type === 'overwrite' && operation.isNewFile);
 
   if (isCreateOperation && isApply) {
     addSelectedFilePath(getAbsPath(operation.filePath));

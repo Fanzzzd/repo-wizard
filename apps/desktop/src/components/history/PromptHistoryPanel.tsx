@@ -13,7 +13,7 @@ import { usePromptGenerator } from '../../hooks/usePromptGenerator';
 import { useComposerStore } from '../../store/composerStore';
 import { useDialogStore } from '../../store/dialogStore';
 import { useHistoryStore } from '../../store/historyStore';
-import type { PromptHistoryEntry } from '../../types';
+import type { PromptHistoryEntry } from '../../types/prompt';
 import { Button } from '../common/Button';
 import { PromptHistoryDetailModal } from './PromptHistoryDetailModal';
 

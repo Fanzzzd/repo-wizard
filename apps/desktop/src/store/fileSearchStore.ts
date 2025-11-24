@@ -1,9 +1,6 @@
 import { create } from 'zustand';
-import {
-  fileSearchService,
-  type SearchResult,
-} from '../services/fileSearchService';
-import type { FileNode } from '../types';
+import type { FileNode, SearchResult } from '../bindings';
+import { fileSearchService } from '../services/fileSearchService';
 import { useSettingsStore } from './settingsStore';
 import { useWorkspaceStore } from './workspaceStore';
 

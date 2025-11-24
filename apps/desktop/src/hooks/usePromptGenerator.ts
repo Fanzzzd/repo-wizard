@@ -17,7 +17,7 @@ import { useComposerStore } from '../store/composerStore';
 import { useHistoryStore } from '../store/historyStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useWorkspaceStore } from '../store/workspaceStore';
-import type { MetaPrompt } from '../types';
+import type { MetaPrompt } from '../types/prompt';
 
 export function usePromptGenerator() {
   const { selectedFilePaths, rootPath, removeSelectedFilePath, fileTree } =

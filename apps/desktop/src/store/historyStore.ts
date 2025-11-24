@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { PromptHistoryEntry } from '../types';
+import type { PromptHistoryEntry } from '../types/prompt';
 import { useSettingsStore } from './settingsStore';
 
 export interface HistoryState {

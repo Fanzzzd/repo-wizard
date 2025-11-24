@@ -1,18 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-
-export interface SearchResult {
-  path: string;
-  relativePath: string;
-  name: string;
-  parentDir: string;
-  score: number;
-  isDirectory: boolean;
-}
-
-export interface IgnoreSettings {
-  respectGitignore: boolean;
-  customIgnorePatterns: string;
-}
+import type { IgnoreSettings, SearchResult } from '../bindings';
 
 export class FileSearchService {
   private static instance: FileSearchService;
@@ -111,3 +98,4 @@ export class FileSearchService {
 }
 
 export const fileSearchService = FileSearchService.getInstance();
+export type { SearchResult };

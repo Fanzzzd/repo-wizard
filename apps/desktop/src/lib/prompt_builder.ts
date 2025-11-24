@@ -1,11 +1,11 @@
+import type { FileNode } from '../bindings';
 import { getGitDiff } from '../services/tauriApi';
 import type {
   ComposerMode,
   EditFormat,
-  FileNode,
   FileTreeConfig,
   MetaPrompt,
-} from '../types';
+} from '../types/prompt';
 
 interface File {
   path: string;

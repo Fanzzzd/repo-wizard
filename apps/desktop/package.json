@@ -10,11 +10,15 @@
     "web:dev": "vite",
     "web:build": "pnpm check:web && vite build",
     "web:serve": "vite preview",
-    "check": "pnpm check:web && pnpm check:rust",
-    "check:web": "biome check --write src/ && tsc --noEmit",
+    "check": "run-s -c check:web check:rust",
+    "check:web": "run-s -c check:web:biome check:web:tsc",
+    "check:web:biome": "biome check --write src/",
+    "check:web:tsc": "tsc --noEmit",
     "check:rust": "cargo fmt --manifest-path src-tauri/Cargo.toml && cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings",
-    "lint": "pnpm lint:web && pnpm lint:rust",
-    "lint:web": "biome lint src/ && tsc --noEmit",
+    "lint": "run-s -c lint:web lint:rust",
+    "lint:web": "run-s -c lint:web:biome lint:web:tsc",
+    "lint:web:biome": "biome lint src/",
+    "lint:web:tsc": "tsc --noEmit",
     "lint:rust": "cargo fmt --manifest-path src-tauri/Cargo.toml --check && cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings"
   },
   "dependencies": {
@@ -51,6 +55,7 @@
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "catalog:",
     "uuid": "^11.1.0",
+    "zod": "^4.1.12",
     "zustand": "^4.5.7"
   },
   "devDependencies": {
@@ -63,6 +68,7 @@
     "@vitejs/plugin-react": "^4.7.0",
     "babel-plugin-react-compiler": "^1.0.0",
     "cross-env": "^7.0.3",
+    "npm-run-all": "^4.1.5",
     "typescript": "catalog:",
     "vite": "^5.4.19"
   }

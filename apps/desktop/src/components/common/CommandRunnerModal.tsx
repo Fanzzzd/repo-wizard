@@ -6,6 +6,7 @@ import '@xterm/xterm/css/xterm.css';
 import { Check, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useRef } from 'react';
+import type { CommandStreamEvent } from '../../bindings';
 import {
   resizePty,
   startPtySession,
@@ -17,7 +18,6 @@ import {
   useCommandRunnerStore,
 } from '../../store/commandRunnerStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
-import type { CommandStreamEvent } from '../../types';
 import { Button } from './Button';
 
 export function CommandRunnerModal() {

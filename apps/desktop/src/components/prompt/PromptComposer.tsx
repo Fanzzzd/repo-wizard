@@ -18,7 +18,7 @@ import { useComposerStore } from '../../store/composerStore';
 import { useReviewStore } from '../../store/reviewStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
-import type { ComposerMode, EditFormat } from '../../types';
+import type { ComposerMode, EditFormat } from '../../types/prompt';
 import { Button } from '../common/Button';
 import { ResponsiveButtonGroup } from '../common/ResponsiveButtonGroup';
 import { SegmentedControl } from '../common/SegmentedControl';

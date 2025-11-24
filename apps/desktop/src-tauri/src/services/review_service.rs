@@ -36,8 +36,8 @@ pub async fn process_markdown_changes(
 
         let mut is_new_file_flag = !path_buf.exists();
         let mut last_op_type_is_patch = false;
-        let mut acc_total_blocks = 0;
-        let mut acc_applied_blocks = 0;
+        let mut acc_total_blocks: u32 = 0;
+        let mut acc_applied_blocks: u32 = 0;
 
         for op in ops {
             match op {
@@ -47,7 +47,7 @@ pub async fn process_markdown_changes(
                     ..
                 } => {
                     let mut content_str = String::from_utf8_lossy(&current_content).to_string();
-                    acc_total_blocks += search_replace_blocks.len();
+                    acc_total_blocks += search_replace_blocks.len() as u32;
 
                     for (search_block, replace_block) in search_replace_blocks {
                         match apply_patch(&content_str, &search_block, &replace_block) {

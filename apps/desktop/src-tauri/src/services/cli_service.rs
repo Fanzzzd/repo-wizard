@@ -1,4 +1,4 @@
-use crate::types::{CliInstallResult, CliStatusResult};
+use crate::types::{CliInstallResult, CliStatus, CliStatusResult};
 use anyhow::{anyhow, Result};
 use std::env;
 use std::path::{Path, PathBuf};
@@ -123,7 +123,7 @@ pub fn get_cli_status() -> CliStatusResult {
         for p in env::split_paths(&path_var) {
             if get_shim_path(&p).is_file() {
                 return CliStatusResult {
-                    status: "installed".to_string(),
+                    status: CliStatus::Installed,
                     error: None,
                 };
             }
@@ -131,7 +131,7 @@ pub fn get_cli_status() -> CliStatusResult {
     }
 
     CliStatusResult {
-        status: "not_installed".to_string(),
+        status: CliStatus::NotInstalled,
         error: None,
     }
 }

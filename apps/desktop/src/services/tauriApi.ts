@@ -1,53 +1,49 @@
-import { type Channel, invoke } from '@tauri-apps/api/core';
+import type { Channel } from '@tauri-apps/api/core';
+import {
+  type ChangeOperation,
+  type CliInstallResult,
+  type CliStatusResult,
+  type CommandStreamEvent,
+  type Commit,
+  commands,
+  type DiffOption,
+  type FileNode,
+  type GitStatus,
+  type IgnoreSettings,
+  type Result,
+  type SearchResult,
+} from '../bindings';
 import { AppError } from '../lib/error';
-import type {
-  ChangeOperation,
-  CliInstallResult,
-  CliStatusResult,
-  CommandStreamEvent,
-  Commit,
-  FileNode,
-  GitDiffConfig,
-  GitStatus,
-} from '../types';
 
-interface IgnoreSettings {
-  respectGitignore: boolean;
-  customIgnorePatterns: string;
+// Helper to unwrap Result from tauri-specta
+async function unwrap<T, E>(promise: Promise<Result<T, E>>): Promise<T> {
+  const result = await promise;
+  if (result.status === 'ok') {
+    return result.data;
+  } else {
+    throw new AppError(String(result.error), null);
+  }
 }
 
 export const listDirectoryRecursive = async (
   path: string,
   settings: IgnoreSettings
 ): Promise<FileNode> => {
-  try {
-    return await invoke('list_directory_recursive', { path, settings });
-  } catch (err) {
-    throw new AppError(`Failed to list directory: ${path}`, err);
-  }
+  return unwrap(commands.listDirectoryRecursive(path, settings));
 };
 
 export const readFileAsBase64 = async (path: string): Promise<string> => {
-  try {
-    return await invoke('read_file_as_base64', { path });
-  } catch (err) {
-    throw new AppError(`Failed to read file as base64 for: ${path}`, err);
-  }
+  return unwrap(commands.readFileAsBase64(path));
 };
 
 export const readFileContent = async (path: string): Promise<string> => {
-  try {
-    return await invoke('read_file_content', { path });
-  } catch (err) {
-    throw new AppError(`Failed to read file content for: ${path}`, err);
-  }
+  return unwrap(commands.readFileContent(path));
 };
 
 export const isBinaryFile = async (path: string): Promise<boolean> => {
   try {
-    return await invoke('is_binary_file', { path });
+    return await unwrap(commands.isBinaryFile(path));
   } catch (err) {
-    // If check fails, assume it's binary to be safe.
     console.warn(
       new AppError(`Failed to check if file is binary: ${path}`, err)
     );
@@ -57,9 +53,8 @@ export const isBinaryFile = async (path: string): Promise<boolean> => {
 
 export const fileExists = async (path: string): Promise<boolean> => {
   try {
-    return await invoke('file_exists', { path });
+    return await unwrap(commands.fileExists(path));
   } catch (_err) {
-    // If the existence check fails, assume it doesn't exist
     return false;
   }
 };
@@ -68,38 +63,22 @@ export const writeFileContent = async (
   path: string,
   content: string
 ): Promise<void> => {
-  try {
-    return await invoke('write_file_content', { path, content });
-  } catch (err) {
-    throw new AppError(`Failed to write file content for: ${path}`, err);
-  }
+  await unwrap(commands.writeFileContent(path, content));
 };
 
 export const deleteFile = async (filePath: string): Promise<void> => {
-  try {
-    return await invoke('delete_file', { filePath });
-  } catch (err) {
-    throw new AppError(`Failed to delete file: ${filePath}`, err);
-  }
+  await unwrap(commands.deleteFile(filePath));
 };
 
 export const moveFile = async (from: string, to: string): Promise<void> => {
-  try {
-    return await invoke('move_file', { from, to });
-  } catch (err) {
-    throw new AppError(`Failed to move file from ${from} to ${to}`, err);
-  }
+  await unwrap(commands.moveFile(from, to));
 };
 
 export const backupFiles = async (
   rootPath: string,
   filePaths: string[]
 ): Promise<string> => {
-  try {
-    return await invoke('backup_files', { rootPath, filePaths });
-  } catch (err) {
-    throw new AppError(`Failed to backup files for project: ${rootPath}`, err);
-  }
+  return unwrap(commands.backupFiles(rootPath, filePaths));
 };
 
 export const revertFileFromBackup = async (
@@ -107,107 +86,54 @@ export const revertFileFromBackup = async (
   backupId: string,
   relativePath: string
 ): Promise<void> => {
-  try {
-    return await invoke('revert_file_from_backup', {
-      rootPath,
-      backupId,
-      relativePath,
-    });
-  } catch (err) {
-    throw new AppError(
-      `Failed to revert file from backup: ${relativePath}`,
-      err
-    );
-  }
+  await unwrap(commands.revertFileFromBackup(rootPath, backupId, relativePath));
 };
 
 export const readFileFromBackup = async (
   backupId: string,
   relativePath: string
 ): Promise<string> => {
-  try {
-    return await invoke('read_file_from_backup', { backupId, relativePath });
-  } catch (err) {
-    throw new AppError(`Failed to read file from backup: ${relativePath}`, err);
-  }
+  return unwrap(commands.readFileFromBackup(backupId, relativePath));
 };
 
 export const deleteBackup = async (backupId: string): Promise<void> => {
-  try {
-    return await invoke('delete_backup', { backupId });
-  } catch (err) {
-    throw new AppError(`Failed to delete backup: ${backupId}`, err);
-  }
+  await unwrap(commands.deleteBackup(backupId));
 };
 
 export const getRelativePath = async (
   fullPath: string,
   rootPath: string
 ): Promise<string> => {
-  try {
-    return await invoke('get_relative_path', { fullPath, rootPath });
-  } catch (err) {
-    throw new AppError(`Failed to get relative path for: ${fullPath}`, err);
-  }
+  return unwrap(commands.getRelativePath(fullPath, rootPath));
 };
 
 export const parseChangesFromMarkdown = async (
   markdown: string,
   rootPath: string
 ): Promise<ChangeOperation[]> => {
-  try {
-    return await invoke('parse_changes_from_markdown', { markdown, rootPath });
-  } catch (err) {
-    throw new AppError('Failed to parse changes from markdown', err);
-  }
+  return unwrap(commands.parseChangesFromMarkdown(markdown, rootPath));
 };
 
 export const isGitRepository = async (path: string): Promise<boolean> => {
-  try {
-    return await invoke('is_git_repository', { path });
-  } catch (err) {
-    throw new AppError(`Failed to check if path is git repo: ${path}`, err);
-  }
+  return unwrap(commands.isGitRepository(path));
 };
 
 export const getGitStatus = async (repoPath: string): Promise<GitStatus> => {
-  try {
-    return await invoke('get_git_status', { repoPath });
-  } catch (err) {
-    throw new AppError(`Failed to get git status for: ${repoPath}`, err);
-  }
+  return unwrap(commands.getGitStatus(repoPath));
 };
 
 export const getRecentCommits = async (
   repoPath: string,
   count: number
 ): Promise<Commit[]> => {
-  try {
-    return await invoke('get_recent_commits', { repoPath, count });
-  } catch (err) {
-    throw new AppError(`Failed to get recent commits for: ${repoPath}`, err);
-  }
+  return unwrap(commands.getRecentCommits(repoPath, count));
 };
 
 export const getGitDiff = async (
   repoPath: string,
-  config: GitDiffConfig
+  config: DiffOption
 ): Promise<string> => {
-  let option: { type: string; hash?: string };
-  if (config.type === 'commit') {
-    if (!config.hash) {
-      throw new AppError('Commit hash is required for commit diff.', null);
-    }
-    option = { type: 'commit', hash: config.hash };
-  } else {
-    option = { type: config.type };
-  }
-
-  try {
-    return await invoke('get_git_diff', { repoPath, option });
-  } catch (err) {
-    throw new AppError(`Failed to get git diff for: ${repoPath}`, err);
-  }
+  return unwrap(commands.getGitDiff(repoPath, config));
 };
 
 export const startPtySession = async (
@@ -216,7 +142,7 @@ export const startPtySession = async (
   onEvent: Channel<CommandStreamEvent>
 ) => {
   try {
-    await invoke('start_pty_session', { rootPath, command, onEvent });
+    await unwrap(commands.startPtySession(rootPath, command, onEvent));
   } catch (err) {
     console.error('Failed to start PTY session:', err);
     throw err;
@@ -225,7 +151,7 @@ export const startPtySession = async (
 
 export const resizePty = async (rows: number, cols: number): Promise<void> => {
   try {
-    await invoke('resize_pty', { rows, cols });
+    await unwrap(commands.resizePty(rows, cols));
   } catch (err) {
     console.warn(`Failed to resize PTY:`, err);
   }
@@ -233,7 +159,7 @@ export const resizePty = async (rows: number, cols: number): Promise<void> => {
 
 export const writeToPty = async (text: string): Promise<void> => {
   try {
-    await invoke('write_to_pty', { text });
+    await unwrap(commands.writeToPty(text));
   } catch (err) {
     console.warn('Failed to write to PTY:', err);
   }
@@ -241,43 +167,40 @@ export const writeToPty = async (text: string): Promise<void> => {
 
 export const killPty = async (): Promise<void> => {
   try {
-    await invoke('kill_pty');
+    await unwrap(commands.killPty());
   } catch (err) {
     console.warn('Failed to kill PTY:', err);
   }
 };
 
 export const getCliStatus = async (): Promise<CliStatusResult> => {
-  try {
-    return await invoke('get_cli_status');
-  } catch (err) {
-    throw new AppError('Failed to check CLI status', err);
-  }
+  return unwrap(commands.getCliStatus());
 };
 
 export const installCliShim = async (): Promise<CliInstallResult> => {
-  try {
-    return await invoke('install_cli_shim');
-  } catch (err) {
-    throw new AppError('Failed to install CLI shim', err);
-  }
+  return unwrap(commands.installCliShim());
 };
 
 export const startWatching = async (
   rootPath: string,
   settings: IgnoreSettings
 ): Promise<void> => {
-  try {
-    await invoke('start_watching', { rootPath, settings });
-  } catch (err) {
-    throw new AppError(`Failed to start watching: ${rootPath}`, err);
-  }
+  await unwrap(commands.startWatching(rootPath, settings));
 };
 
 export const stopWatching = async (rootPath: string): Promise<void> => {
   try {
-    await invoke('stop_watching', { rootPath });
+    await unwrap(commands.stopWatching(rootPath));
   } catch (err) {
     console.warn(new AppError(`Failed to stop watching: ${rootPath}`, err));
   }
+};
+
+export const searchFiles = async (
+  query: string,
+  rootPath: string,
+  settings: IgnoreSettings,
+  limit: number | null = null
+): Promise<SearchResult[]> => {
+  return unwrap(commands.searchFiles(query, rootPath, settings, limit));
 };

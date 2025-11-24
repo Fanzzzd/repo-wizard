@@ -27,19 +27,18 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
+import type { Commit, GitStatus } from '../../bindings';
 import { useMetaPromptManager } from '../../hooks/useMetaPromptManager';
 import { cn } from '../../lib/utils';
 import * as tauriApi from '../../services/tauriApi';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import type {
-  Commit,
   FileTreeConfig,
   GitDiffConfig,
-  GitStatus,
   MetaPrompt,
   PromptMode,
   TerminalCommandConfig,
-} from '../../types';
+} from '../../types/prompt';
 import { Button } from '../common/Button';
 import {
   DropdownMenu,
@@ -388,7 +387,8 @@ function GitDiffConfigEditor({
   onUpdate: (update: Partial<Omit<MetaPrompt, 'id'>>) => void;
   rootPath: string | null;
 }) {
-  const config = prompt.gitDiffConfig ?? { type: 'unstaged', hash: null };
+  // Default to unstaged if undefined
+  const config: GitDiffConfig = prompt.gitDiffConfig ?? { type: 'unstaged' };
   const [isRepo, setIsRepo] = useState(false);
   const [status, setStatus] = useState<GitStatus | null>(null);
   const [commits, setCommits] = useState<Commit[]>([]);
@@ -416,11 +416,17 @@ function GitDiffConfigEditor({
     fetchGitInfo();
   }, [rootPath]);
 
-  const handleConfigChange = (update: Partial<GitDiffConfig>) => {
-    onUpdate({ gitDiffConfig: { ...config, ...update } });
+  const handleConfigChange = (newConfig: GitDiffConfig) => {
+    onUpdate({ gitDiffConfig: newConfig });
   };
 
-  const diffTypeOptions: { value: GitDiffConfig['type']; label: string }[] = [
+  // Helper to safe access hash when type is commit
+  const currentHash = config.type === 'commit' ? config.hash : '';
+
+  const diffTypeOptions: {
+    value: GitDiffConfig['type'];
+    label: string;
+  }[] = [
     { value: 'unstaged', label: 'Unstaged' },
     { value: 'staged', label: 'Staged' },
     { value: 'commit', label: 'Commit' },
@@ -453,7 +459,13 @@ function GitDiffConfigEditor({
         <SegmentedControl
           options={diffTypeOptions}
           value={config.type}
-          onChange={(type) => handleConfigChange({ type, hash: null })}
+          onChange={(type) => {
+            if (type === 'commit') {
+              handleConfigChange({ type: 'commit', hash: '' });
+            } else {
+              handleConfigChange({ type: type as 'staged' | 'unstaged' });
+            }
+          }}
           layoutId="gitdiff-type-slider"
         />
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -473,8 +485,13 @@ function GitDiffConfigEditor({
           </div>
           {commits.length > 0 ? (
             <select
-              value={config.hash ?? ''}
-              onChange={(e) => handleConfigChange({ hash: e.target.value })}
+              value={currentHash}
+              onChange={(e) =>
+                handleConfigChange({
+                  type: 'commit',
+                  hash: e.target.value,
+                })
+              }
               className="form-input-base w-full"
             >
               <option value="" disabled>

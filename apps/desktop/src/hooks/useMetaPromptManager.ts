@@ -3,6 +3,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { Copy, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { showErrorDialog } from '../lib/errorHandler';
+import { MAGIC_PROMPT_DEFAULTS } from '../lib/magicPromptsDefaults';
 import { useComposerStore } from '../store/composerStore';
 import { useContextMenuStore } from '../store/contextMenuStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -11,7 +12,7 @@ import type {
   MetaPrompt,
   MetaPromptDefinition,
   PromptMode,
-} from '../types';
+} from '../types/prompt';
 
 export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
   const { metaPrompts: promptDefs, setMetaPrompts: setPromptDefs } =
@@ -188,40 +189,9 @@ export function useMetaPromptManager({ isOpen }: { isOpen: boolean }) {
   };
 
   const handleAddMagicPrompt = (magicType: MagicPromptType) => {
-    if (magicType === 'file-tree') {
-      addPrompt({
-        name: 'File Tree',
-        content:
-          "Here is the project's file structure based on the configuration:\n\n{FILE_TREE_CONTENT}",
-        mode: 'universal',
-        promptType: 'magic',
-        magicType: 'file-tree',
-        fileTreeConfig: {
-          scope: 'all',
-          maxFilesPerDirectory: null,
-          ignorePatterns: '',
-        },
-      });
-    } else if (magicType === 'git-diff') {
-      addPrompt({
-        name: 'Git Diff',
-        content:
-          'Here are the recent code changes from the project repository. Please use this as context for my request.\n\n```diff\n{GIT_DIFF_CONTENT}\n```',
-        mode: 'universal',
-        promptType: 'magic',
-        magicType: 'git-diff',
-        gitDiffConfig: { type: 'unstaged', hash: null },
-      });
-    } else if (magicType === 'terminal-command') {
-      addPrompt({
-        name: 'Terminal Output',
-        content:
-          'Here is the output of a command I ran. Please use this as context for my request.\n\n```\n{TERMINAL_COMMAND_OUTPUT}\n```',
-        mode: 'universal',
-        promptType: 'magic',
-        magicType: 'terminal-command',
-        terminalCommandConfig: { command: 'pnpm check' },
-      });
+    const defaults = MAGIC_PROMPT_DEFAULTS[magicType];
+    if (defaults) {
+      addPrompt(defaults);
     }
   };
 
