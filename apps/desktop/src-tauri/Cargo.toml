@@ -56,3 +56,5 @@ tauri-plugin-single-instance = "2"
 
 [dev-dependencies]
 walkdir = "2.5.0"
+indoc = "2.0"
+similar-asserts = "1.5"

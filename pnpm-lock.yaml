@@ -135,6 +135,9 @@ importers:
         specifier: ^4.5.7
         version: 4.5.7(@types/react@19.2.6)(react@19.2.0)
     devDependencies:
+      '@repo-wizard/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
       '@tailwindcss/vite':
         specifier: ^4.1.11
         version: 4.1.11(vite@5.4.19(@types/node@20.19.9)(lightningcss@1.30.2))
@@ -184,6 +187,9 @@ importers:
         specifier: 19.2.0
         version: 19.2.0(react@19.2.0)
     devDependencies:
+      '@repo-wizard/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.1.17
@@ -202,6 +208,8 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
+
+  packages/typescript-config: {}
 
 packages:
 
