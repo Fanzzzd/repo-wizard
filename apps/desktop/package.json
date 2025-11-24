@@ -56,9 +56,11 @@
     "tailwindcss": "catalog:",
     "uuid": "^11.1.0",
     "zod": "^4.1.12",
+    "zundo": "^2.3.0",
     "zustand": "^4.5.7"
   },
   "devDependencies": {
+    "@repo-wizard/typescript-config": "workspace:*",
     "@tailwindcss/vite": "^4.1.11",
     "@tauri-apps/cli": "^2.7.0",
     "@types/node": "catalog:",
@@ -70,7 +72,6 @@
     "cross-env": "^7.0.3",
     "npm-run-all": "^4.1.5",
     "typescript": "catalog:",
-    "@repo-wizard/typescript-config": "workspace:*",
     "vite": "^5.4.19"
   }
 }

@@ -558,12 +558,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </div>
               </div>
             </main>
-
-            <footer className="bg-gray-100 dark:bg-gray-900/50 px-4 py-3 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-              <Button onClick={onClose} variant="primary" size="md">
-                Done
-              </Button>
-            </footer>
           </motion.div>
         </motion.div>
       )}

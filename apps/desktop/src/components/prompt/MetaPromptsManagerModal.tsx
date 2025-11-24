@@ -31,6 +31,7 @@ import type { Commit, GitStatus } from '../../bindings';
 import { useMetaPromptManager } from '../../hooks/useMetaPromptManager';
 import { cn } from '../../lib/utils';
 import * as tauriApi from '../../services/tauriApi';
+import { useSettingsStore } from '../../store/settingsStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import type {
   FileTreeConfig,
@@ -566,7 +567,6 @@ export function MetaPromptsManagerModal({
     universalPrompts,
     editPrompts,
     qaPrompts,
-    handleSave,
     handleUpdatePrompt,
     handleUpdatePromptById,
     handleDragStart,
@@ -594,6 +594,35 @@ export function MetaPromptsManagerModal({
     if (e.target === e.currentTarget) onClose();
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const isCmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+      const isShift = e.shiftKey;
+      const isZ = e.key.toLowerCase() === 'z';
+
+      if (isCmdOrCtrl && isZ) {
+        // Check if focus is on an input or textarea
+        const activeTag = document.activeElement?.tagName.toLowerCase();
+        const isInputActive = activeTag === 'input' || activeTag === 'textarea';
+
+        if (!isInputActive) {
+          e.preventDefault();
+          if (isShift) {
+            useSettingsStore.temporal.getState().redo();
+          } else {
+            useSettingsStore.temporal.getState().undo();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
   const promptSections = {
     universal: {
       prompts: universalPrompts,
@@ -610,11 +639,6 @@ export function MetaPromptsManagerModal({
       icon: <MessageSquare size={14} />,
       title: 'QA Mode',
     },
-  };
-
-  const onSaveAndClose = () => {
-    handleSave();
-    onClose();
   };
 
   return (
@@ -854,15 +878,6 @@ export function MetaPromptsManagerModal({
                 )}
               </div>
             </main>
-
-            <footer className="bg-gray-100 dark:bg-gray-900/50 px-4 py-3 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-              <Button onClick={onClose} variant="secondary" size="md">
-                Cancel
-              </Button>
-              <Button onClick={onSaveAndClose} variant="primary" size="md">
-                Save & Close
-              </Button>
-            </footer>
           </motion.div>
         </motion.div>
       )}
