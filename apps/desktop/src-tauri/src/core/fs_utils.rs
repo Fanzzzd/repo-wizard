@@ -2,7 +2,7 @@ use crate::types::{FileNode, IgnoreSettings};
 use anyhow::{anyhow, Result};
 use ignore::{DirEntry, WalkBuilder};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::sync::mpsc;
 use tokio::fs;
 use tokio::io::AsyncReadExt;
@@ -116,16 +116,46 @@ pub async fn list_directory_recursive(
     .await?
 }
 
-pub async fn read_file_content(path: &PathBuf) -> Result<String> {
+pub async fn read_file_content(path: &Path) -> Result<String> {
     let bytes = fs::read(path).await?;
     Ok(String::from_utf8_lossy(&bytes).to_string())
 }
 
-pub async fn read_file_bytes(path: &PathBuf) -> Result<Vec<u8>> {
+pub async fn read_file_bytes(path: &Path) -> Result<Vec<u8>> {
     fs::read(path).await.map_err(anyhow::Error::from)
 }
 
-pub async fn write_file_content(path: &PathBuf, content: &str) -> Result<()> {
+fn normalize_path(path: &Path) -> PathBuf {
+    let mut result = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::Prefix(prefix) => result.push(Component::Prefix(prefix)),
+            Component::RootDir => result.push(Component::RootDir),
+            Component::CurDir => {}
+            Component::ParentDir => {
+                result.pop();
+            }
+            Component::Normal(c) => result.push(c),
+        }
+    }
+    result
+}
+
+fn ensure_safe_path(path: &Path, root_path: &Path) -> Result<()> {
+    let normalized_path = normalize_path(path);
+    let normalized_root = normalize_path(root_path);
+    if !normalized_path.starts_with(normalized_root) {
+        return Err(anyhow!(
+            "Security Error: Access denied. Path {:?} is outside of project root.",
+            path
+        ));
+    }
+    Ok(())
+}
+
+pub async fn write_file_content(path: &Path, content: &str, root_path: &Path) -> Result<()> {
+    ensure_safe_path(path, root_path)?;
+
     if let Some(parent) = path.parent() {
         if !parent.exists() {
             fs::create_dir_all(parent).await?;
@@ -134,11 +164,15 @@ pub async fn write_file_content(path: &PathBuf, content: &str) -> Result<()> {
     fs::write(path, content).await.map_err(anyhow::Error::from)
 }
 
-pub async fn delete_file(path: &PathBuf) -> Result<()> {
+pub async fn delete_file(path: &Path, root_path: &Path) -> Result<()> {
+    ensure_safe_path(path, root_path)?;
     fs::remove_file(path).await.map_err(anyhow::Error::from)
 }
 
-pub async fn move_file(from: &PathBuf, to: &PathBuf) -> Result<()> {
+pub async fn move_file(from: &Path, to: &Path, root_path: &Path) -> Result<()> {
+    ensure_safe_path(from, root_path)?;
+    ensure_safe_path(to, root_path)?;
+
     if let Some(parent) = to.parent() {
         if !parent.exists() {
             fs::create_dir_all(parent).await?;

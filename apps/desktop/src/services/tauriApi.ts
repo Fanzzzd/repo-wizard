@@ -61,17 +61,25 @@ export const fileExists = async (path: string): Promise<boolean> => {
 
 export const writeFileContent = async (
   path: string,
-  content: string
+  content: string,
+  rootPath: string
 ): Promise<void> => {
-  await unwrap(commands.writeFileContent(path, content));
+  await unwrap(commands.writeFileContent(path, content, rootPath));
 };
 
-export const deleteFile = async (filePath: string): Promise<void> => {
-  await unwrap(commands.deleteFile(filePath));
+export const deleteFile = async (
+  filePath: string,
+  rootPath: string
+): Promise<void> => {
+  await unwrap(commands.deleteFile(filePath, rootPath));
 };
 
-export const moveFile = async (from: string, to: string): Promise<void> => {
-  await unwrap(commands.moveFile(from, to));
+export const moveFile = async (
+  from: string,
+  to: string,
+  rootPath: string
+): Promise<void> => {
+  await unwrap(commands.moveFile(from, to, rootPath));
 };
 
 export const backupFiles = async (

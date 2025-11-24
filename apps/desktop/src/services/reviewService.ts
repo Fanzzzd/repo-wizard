@@ -78,16 +78,18 @@ export async function applyChange(change: ReviewChange, rootPath: string) {
     case 'overwrite':
       await tauriApi.writeFileContent(
         getAbsPath(operation.filePath),
-        operation.content
+        operation.content,
+        rootPath
       );
       break;
     case 'delete':
-      await tauriApi.deleteFile(getAbsPath(operation.filePath));
+      await tauriApi.deleteFile(getAbsPath(operation.filePath), rootPath);
       break;
     case 'move':
       await tauriApi.moveFile(
         getAbsPath(operation.fromPath),
-        getAbsPath(operation.toPath)
+        getAbsPath(operation.toPath),
+        rootPath
       );
       break;
   }
@@ -104,7 +106,7 @@ export async function revertChange(
     case 'patch':
     case 'overwrite':
       if (operation.isNewFile)
-        await tauriApi.deleteFile(getAbsPath(operation.filePath));
+        await tauriApi.deleteFile(getAbsPath(operation.filePath), rootPath);
       else
         await tauriApi.revertFileFromBackup(
           rootPath,
@@ -122,7 +124,8 @@ export async function revertChange(
     case 'move':
       await tauriApi.moveFile(
         getAbsPath(operation.toPath),
-        getAbsPath(operation.fromPath)
+        getAbsPath(operation.fromPath),
+        rootPath
       );
       break;
   }

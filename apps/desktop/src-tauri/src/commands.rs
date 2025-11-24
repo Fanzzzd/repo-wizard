@@ -165,22 +165,28 @@ pub async fn file_exists(path: String) -> Result<bool> {
 
 #[tauri::command]
 #[specta::specta]
-pub async fn write_file_content(path: String, content: String) -> Result<()> {
-    project_service::write_file_content(&PathBuf::from(path), &content).await?;
+pub async fn write_file_content(path: String, content: String, root_path: String) -> Result<()> {
+    project_service::write_file_content(&PathBuf::from(path), &content, &PathBuf::from(root_path))
+        .await?;
     Ok(())
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn delete_file(file_path: String) -> Result<()> {
-    project_service::delete_file(&PathBuf::from(file_path)).await?;
+pub async fn delete_file(file_path: String, root_path: String) -> Result<()> {
+    project_service::delete_file(&PathBuf::from(file_path), &PathBuf::from(root_path)).await?;
     Ok(())
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn move_file(from: String, to: String) -> Result<()> {
-    project_service::move_file(&PathBuf::from(from), &PathBuf::from(to)).await?;
+pub async fn move_file(from: String, to: String, root_path: String) -> Result<()> {
+    project_service::move_file(
+        &PathBuf::from(from),
+        &PathBuf::from(to),
+        &PathBuf::from(root_path),
+    )
+    .await?;
     Ok(())
 }
 

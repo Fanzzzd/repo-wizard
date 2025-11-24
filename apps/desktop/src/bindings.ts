@@ -85,25 +85,25 @@ async fileExists(path: string) : Promise<Result<boolean, string>> {
     else return { status: "error", error: e  as any };
 }
 },
-async writeFileContent(path: string, content: string) : Promise<Result<null, string>> {
+async writeFileContent(path: string, content: string, rootPath: string) : Promise<Result<null, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("write_file_content", { path, content }) };
+    return { status: "ok", data: await TAURI_INVOKE("write_file_content", { path, content, rootPath }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
-async deleteFile(filePath: string) : Promise<Result<null, string>> {
+async deleteFile(filePath: string, rootPath: string) : Promise<Result<null, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("delete_file", { filePath }) };
+    return { status: "ok", data: await TAURI_INVOKE("delete_file", { filePath, rootPath }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
-async moveFile(from: string, to: string) : Promise<Result<null, string>> {
+async moveFile(from: string, to: string, rootPath: string) : Promise<Result<null, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("move_file", { from, to }) };
+    return { status: "ok", data: await TAURI_INVOKE("move_file", { from, to, rootPath }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
