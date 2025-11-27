@@ -4,6 +4,7 @@ import { AppError, isFileNotFoundError } from '../lib/error';
 import { showErrorDialog } from '../lib/errorHandler';
 import { buildPrompt } from '../lib/prompt_builder';
 import { estimateTokens } from '../lib/token_estimator';
+import { getAutoContextFiles } from '../services/autoContext';
 import {
   getRelativePath,
   isBinaryFile,
@@ -20,8 +21,13 @@ import { useWorkspaceStore } from '../store/workspaceStore';
 import type { MetaPrompt } from '../types/prompt';
 
 export function usePromptGenerator() {
-  const { selectedFilePaths, rootPath, removeSelectedFilePath, fileTree } =
-    useWorkspaceStore();
+  const {
+    selectedFilePaths,
+    rootPath,
+    removeSelectedFilePath,
+    addSelectedFilePath,
+    fileTree,
+  } = useWorkspaceStore();
   const { instructions, composerMode, enabledMetaPromptIds } =
     useComposerStore();
   const { addPromptToHistory } = useHistoryStore();
@@ -29,10 +35,12 @@ export function usePromptGenerator() {
     customSystemPrompt,
     editFormat,
     metaPrompts: promptDefs,
+    autoContext,
   } = useSettingsStore();
 
   const [isCopied, setIsCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGatheringContext, setIsGatheringContext] = useState(false);
   const [estimatedTokens, setEstimatedTokens] = useState(0);
 
   const metaPrompts = useMemo<MetaPrompt[]>(() => {
@@ -114,10 +122,54 @@ export function usePromptGenerator() {
     const finalInstructions = instructionsOverride ?? instructions;
 
     try {
-      const files = await getFilesWithRelativePaths(
-        selectedFilePaths,
-        rootPath
-      );
+      let filesToProcess = [...selectedFilePaths];
+
+      if (autoContext.enabled && fileTree) {
+        console.log('Auto Context enabled, fetching files...');
+        setIsGatheringContext(true);
+        try {
+          const autoFiles = await getAutoContextFiles({
+            instructions: finalInstructions,
+            fileTree,
+            rootPath,
+            settings: autoContext,
+          });
+
+          console.log('Auto Context returned files:', autoFiles);
+
+          const separator = rootPath.includes('\\') ? '\\' : '/';
+          const absoluteAutoFiles = autoFiles.map((f) => {
+            const cleanRoot = rootPath.endsWith(separator)
+              ? rootPath.slice(0, -1)
+              : rootPath;
+            const cleanFile = f.startsWith(separator) ? f.slice(1) : f;
+            return `${cleanRoot}${separator}${cleanFile}`;
+          });
+
+          filesToProcess = [
+            ...new Set([...filesToProcess, ...absoluteAutoFiles]),
+          ];
+
+          // Select the files in the sidebar
+          absoluteAutoFiles.forEach((path) => {
+            addSelectedFilePath(path);
+          });
+
+          console.log('Files to process after Auto Context:', filesToProcess);
+        } catch (e) {
+          console.error('Auto context failed', e);
+          showErrorDialog(e);
+        } finally {
+          setIsGatheringContext(false);
+        }
+      } else {
+        console.log('Auto Context skipped:', {
+          enabled: autoContext.enabled,
+          hasFileTree: !!fileTree,
+        });
+      }
+
+      const files = await getFilesWithRelativePaths(filesToProcess, rootPath);
 
       const { fullPrompt, terminalCommandToRun } = await buildPrompt({
         files,
@@ -168,6 +220,7 @@ export function usePromptGenerator() {
     generateAndCopyPrompt,
     isCopied,
     isGenerating,
+    isGatheringContext,
     getFilesWithRelativePaths,
   };
 }

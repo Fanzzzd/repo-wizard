@@ -61,10 +61,10 @@ const getPromptStyle = (prompt: MetaPrompt) => {
   }
   return {
     icon: Wand2,
-    bg: 'bg-blue-100 dark:bg-blue-900/50',
-    text: 'text-blue-800 dark:text-blue-300',
-    hoverBg: 'hover:bg-blue-200 dark:hover:bg-blue-800/50',
-    iconColor: 'text-blue-500 dark:text-blue-400',
+    bg: 'bg-blue-100 dark:bg-[#262626]',
+    text: 'text-blue-800 dark:text-[#ededed]',
+    hoverBg: 'hover:bg-blue-200 dark:hover:bg-[#404040]',
+    iconColor: 'text-blue-500 dark:text-[#a3a3a3]',
   };
 };
 
@@ -120,7 +120,7 @@ export function MetaPromptSelector({
       <button
         type="button"
         onClick={onManageRequest}
-        className="w-full text-center text-sm text-gray-500 border-2 border-dashed border-gray-300 rounded-md p-3 hover:bg-gray-100 hover:border-gray-400 transition-colors"
+        className="w-full text-center text-sm text-gray-500 border-2 border-dashed border-gray-300 rounded-md p-3 hover:bg-gray-100 hover:border-gray-400 dark:border-[#262626] dark:hover:bg-[#262626]/50 dark:hover:border-[#404040] transition-colors"
       >
         No meta prompts defined. Click here to create one.
       </button>
@@ -150,7 +150,7 @@ export function MetaPromptSelector({
               setIsSelectorOpen(!isSelectorOpen);
               outerWrapperProps.onMouseEnter();
             }}
-            className="relative w-full flex items-center justify-between gap-2 p-2 border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 rounded-md min-h-[40px] hover:border-blue-400 dark:hover:border-blue-500 transition-colors cursor-pointer"
+            className="relative w-full flex items-center justify-between gap-2 p-2 border border-gray-300 bg-white dark:border-[#262626] dark:bg-[#171717] rounded-md min-h-[40px] hover:border-blue-400 dark:hover:border-[#404040] transition-colors cursor-pointer"
           >
             <div className="flex-grow flex-shrink min-w-0">
               <div
@@ -206,7 +206,7 @@ export function MetaPromptSelector({
                       );
                     })
                   ) : (
-                    <span className="text-gray-400 dark:text-gray-500 text-sm px-1 flex-shrink-0">
+                    <span className="text-gray-400 dark:text-[#737373] text-sm px-1 flex-shrink-0">
                       Select meta prompts...
                     </span>
                   )}
@@ -216,7 +216,7 @@ export function MetaPromptSelector({
             <ChevronDown
               size={16}
               className={cn(
-                'flex-shrink-0 text-gray-500 dark:text-gray-400 transition-transform',
+                'flex-shrink-0 text-gray-500 dark:text-[#a3a3a3] transition-transform',
                 isSelectorOpen && 'rotate-180'
               )}
             />
@@ -232,7 +232,7 @@ export function MetaPromptSelector({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -5, scale: 0.98 }}
             transition={{ duration: 0.1 }}
-            className="absolute top-full left-0 right-0 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 p-2"
+            className="absolute top-full left-0 right-0 mt-1 w-full bg-white dark:bg-[#171717] border border-gray-200 dark:border-[#262626] rounded-lg shadow-xl z-20 p-2"
           >
             <div className="flex flex-col gap-1 max-h-60 overflow-y-auto p-1 thin-scrollbar">
               {allPromptsForMode.map((prompt) => {
@@ -242,7 +242,7 @@ export function MetaPromptSelector({
                     key={prompt.id}
                     checked={prompt.enabled}
                     onChange={(e) => togglePrompt(prompt.id, e.target.checked)}
-                    className="w-full px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-md transition-colors text-gray-700 dark:text-gray-300"
+                    className="w-full px-3 py-2 hover:bg-gray-100 dark:hover:bg-[#262626] rounded-md transition-colors text-gray-700 dark:text-[#d4d4d4]"
                   >
                     <div className="flex items-center justify-between w-full">
                       <span className="flex items-center gap-2">
@@ -250,7 +250,7 @@ export function MetaPromptSelector({
                         {prompt.name}
                       </span>
                       {prompt.enabled && (
-                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                        <div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-[#ededed]" />
                       )}
                     </div>
                   </Checkbox>
@@ -262,7 +262,7 @@ export function MetaPromptSelector({
                 </div>
               )}
             </div>
-            <div className="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2">
+            <div className="border-t border-gray-200 dark:border-[#262626] mt-2 pt-2">
               <Button
                 onClick={() => {
                   setIsSelectorOpen(false);
@@ -270,7 +270,7 @@ export function MetaPromptSelector({
                 }}
                 variant="ghost"
                 size="md"
-                className="w-full text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/50"
+                className="w-full text-blue-600 hover:text-blue-800 dark:text-[#ededed] dark:hover:text-white hover:bg-blue-50 dark:hover:bg-[#262626]"
               >
                 Manage All Prompts...
               </Button>

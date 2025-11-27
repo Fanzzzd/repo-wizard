@@ -7,7 +7,7 @@ const statusIcons = {
   success: <CheckCircle className="text-green-500" size={24} />,
   warning: <AlertTriangle className="text-yellow-500" size={24} />,
   error: <XCircle className="text-red-500" size={24} />,
-  info: <Info className="text-blue-500" size={24} />,
+  info: <Info className="text-blue-500 dark:text-[#ededed]" size={24} />,
 };
 
 export function ModalDialog() {
@@ -39,7 +39,7 @@ export function ModalDialog() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md overflow-hidden"
+            className="bg-white dark:bg-[#171717] rounded-lg shadow-xl w-full max-w-md overflow-hidden"
           >
             <div className="p-6">
               <div className="flex items-start gap-4">
@@ -47,10 +47,10 @@ export function ModalDialog() {
                   {statusIcons[options.status ?? 'info']}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-[#ededed]">
                     {options.title}
                   </h3>
-                  <div className="mt-2 text-sm text-gray-600 dark:text-gray-300 select-text">
+                  <div className="mt-2 text-sm text-gray-600 dark:text-[#d4d4d4] select-text">
                     {typeof options.content === 'string' ? (
                       <p>{options.content}</p>
                     ) : (
@@ -61,14 +61,14 @@ export function ModalDialog() {
                 <button
                   type="button"
                   onClick={() => handleClose(false)}
-                  className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700"
+                  className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 dark:text-[#a3a3a3] dark:hover:text-[#ededed] dark:hover:bg-[#262626]"
                 >
                   <X size={20} />
                 </button>
               </div>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-900/50 dark:border-t dark:border-gray-700 px-6 py-3 flex flex-row-reverse gap-3">
+            <div className="bg-gray-50 dark:bg-[#0a0a0a] dark:border-t dark:border-[#262626] px-6 py-3 flex flex-row-reverse gap-3">
               {options.type === 'confirm' && (
                 <Button
                   onClick={() => handleClose(true)}

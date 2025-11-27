@@ -9,7 +9,7 @@ export function WorkspaceSidebar() {
   return (
     <PanelGroup
       direction="vertical"
-      className="h-full w-full bg-gray-50 dark:bg-gray-800"
+      className="h-full w-full bg-gray-50 dark:bg-[#171717]"
     >
       <Panel
         defaultSize={rootPath ? 65 : 100}
@@ -21,7 +21,7 @@ export function WorkspaceSidebar() {
       </Panel>
       {rootPath && (
         <>
-          <PanelResizeHandle className="h-px bg-gray-200 hover:bg-blue-500 transition-colors data-[resize-handle-state=drag]:bg-blue-500 dark:bg-gray-700" />
+          <PanelResizeHandle className="h-px bg-gray-200 hover:bg-gray-400 transition-colors data-[resize-handle-state=drag]:bg-gray-400 dark:bg-[#262626] dark:hover:bg-[#404040] dark:data-[resize-handle-state=drag]:bg-[#404040]" />
           <Panel defaultSize={35} minSize={10} id="selected-files" order={2}>
             <SelectedFilesPanel />
           </Panel>

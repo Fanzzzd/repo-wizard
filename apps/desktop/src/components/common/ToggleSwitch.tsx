@@ -31,10 +31,10 @@ export function ToggleSwitch({ checked, onChange, title }: ToggleSwitchProps) {
       aria-checked={checked}
       tabIndex={0}
       className={cn(
-        'flex-shrink-0 w-9 h-5 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
+        'flex-shrink-0 w-9 h-5 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-neutral-500',
         checked
-          ? 'bg-blue-500 justify-end'
-          : 'bg-gray-300 dark:bg-gray-600 justify-start'
+          ? 'bg-neutral-800 dark:bg-[#ededed] justify-end'
+          : 'bg-gray-300 dark:bg-[#404040] justify-start'
       )}
       title={title}
     >

@@ -10,7 +10,7 @@
 
 @layer components {
   .form-input-base {
-    @apply w-full p-2 text-sm text-gray-900 placeholder-gray-400 bg-white rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors select-text dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-500;
+    @apply w-full p-2 text-sm text-gray-900 placeholder-gray-400 bg-white rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:border-transparent transition-colors select-text dark:bg-[#171717] dark:border-[#262626] dark:text-[#ededed] dark:placeholder-[#a3a3a3] dark:focus:ring-[#d4d4d4];
   }
 }
 
@@ -37,7 +37,7 @@ body,
   margin: 0;
   padding: 0;
   overflow: hidden;
-  @apply bg-gray-50 dark:bg-gray-800;
+  @apply bg-gray-50 dark:bg-[#0a0a0a];
 }
 
 body {
@@ -55,23 +55,27 @@ body {
 
 .thin-scrollbar::-webkit-scrollbar-thumb {
   /* biome-ignore lint/correctness/noUnknownFunction: Tailwind theme function */
-  background-color: theme("colors.gray.300");
+  background-color: #d4d4d4;
+  /* Neutral 300 */
   border-radius: 3px;
 }
 
 .thin-scrollbar::-webkit-scrollbar-thumb:hover {
   /* biome-ignore lint/correctness/noUnknownFunction: Tailwind theme function */
-  background-color: theme("colors.gray.400");
+  background-color: #a3a3a3;
+  /* Neutral 400 */
 }
 
 .dark .thin-scrollbar::-webkit-scrollbar-thumb {
   /* biome-ignore lint/correctness/noUnknownFunction: Tailwind theme function */
-  background-color: theme("colors.gray.600");
+  background-color: #404040;
+  /* Neutral 700 */
 }
 
 .dark .thin-scrollbar::-webkit-scrollbar-thumb:hover {
   /* biome-ignore lint/correctness/noUnknownFunction: Tailwind theme function */
-  background-color: theme("colors.gray.500");
+  background-color: #525252;
+  /* Neutral 600 */
 }
 
 .hide-scrollbar {

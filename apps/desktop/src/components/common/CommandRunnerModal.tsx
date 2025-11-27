@@ -93,11 +93,11 @@ export function CommandRunnerModal() {
           fontFamily: 'monospace',
           fontSize: 13,
           theme: {
-            background: '#1f2937', // bg-gray-800
-            foreground: '#d1d5db', // text-gray-300
+            background: '#171717', // neutral-900
+            foreground: '#d4d4d4', // neutral-300
             cursor: '#facc15', // yellow-400
-            selectionBackground: '#374151', // bg-gray-700
-            selectionForeground: '#f9fafb', // text-gray-50
+            selectionBackground: '#404040', // neutral-700
+            selectionForeground: '#ededed', // neutral-100
           },
         });
         const fitAddon = new FitAddon();
@@ -153,11 +153,11 @@ export function CommandRunnerModal() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2 }}
-            className="bg-gray-900 text-white rounded-lg shadow-xl w-full max-w-4xl h-[70vh] flex flex-col overflow-hidden"
+            className="bg-gray-900 dark:bg-[#171717] text-white rounded-lg shadow-xl w-full max-w-4xl h-[70vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
             onAnimationComplete={fitAndResizePty}
           >
-            <header className="flex-shrink-0 bg-gray-800 p-2 pl-4 flex items-center justify-between">
+            <header className="flex-shrink-0 bg-gray-800 dark:bg-[#262626] p-2 pl-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <p className="font-semibold">Terminal</p>
                 {isFinished && (
@@ -188,7 +188,7 @@ export function CommandRunnerModal() {
               ref={termContainerRef}
               className="flex-grow p-2 select-text"
               style={{
-                backgroundColor: '#1f2937',
+                backgroundColor: '#171717',
               }}
             />
           </motion.div>

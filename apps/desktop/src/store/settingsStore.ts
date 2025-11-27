@@ -26,6 +26,13 @@ const defaultSettings: AppSettings = {
   enableClipboardReview: true,
   showPasteResponseArea: true,
   theme: 'system',
+  autoContext: {
+    enabled: false,
+    provider: 'openai-compatible',
+    apiKey: '',
+    baseUrl: '',
+    model: '',
+  },
 };
 
 interface SettingsState extends AppSettings {
@@ -41,6 +48,7 @@ interface SettingsState extends AppSettings {
   setPromptHistoryLimit: (limit: number) => void;
   setEnableClipboardReview: (value: boolean) => void;
   setShowPasteResponseArea: (value: boolean) => void;
+  setAutoContext: (settings: Partial<AppSettings['autoContext']>) => void;
 
   // Internal
   _isInitialized: boolean;
@@ -77,6 +85,7 @@ export const useSettingsStore = create<SettingsState>()(
             enableClipboardReview: state.enableClipboardReview,
             showPasteResponseArea: state.showPasteResponseArea,
             theme: state.theme,
+            autoContext: state.autoContext,
           };
           const store = await getTauriStore();
           await store.set('state', stateToSave);
@@ -142,6 +151,10 @@ export const useSettingsStore = create<SettingsState>()(
         removeRecentProject: (path) =>
           set((state) => ({
             recentProjects: state.recentProjects.filter((p) => p !== path),
+          })),
+        setAutoContext: (settings) =>
+          set((state) => ({
+            autoContext: { ...state.autoContext, ...settings },
           })),
       };
     },

@@ -10,10 +10,10 @@ loader.init().then((monaco) => {
     inherit: true,
     rules: [],
     colors: {
-      'editor.background': '#1f2937', // theme.colors.gray[800]
-      'editor.foreground': '#d1d5db', // theme.colors.gray[300]
-      'editor.lineHighlightBackground': '#37415180', // theme.colors.gray[700] with opacity
-      'editorGutter.background': '#1f2937',
+      'editor.background': '#171717', // Neutral dark
+      'editor.foreground': '#d4d4d4', // Neutral text
+      'editor.lineHighlightBackground': '#262626', // Neutral highlight
+      'editorGutter.background': '#171717',
       'editorCursor.foreground': '#facc15', // theme.colors.yellow[400]
       'diffEditor.insertedTextBackground': '#05966933', // theme.colors.green[600] with 20% opacity
       'diffEditor.removedTextBackground': '#e11d4833', // theme.colors.red[600] with 20% opacity

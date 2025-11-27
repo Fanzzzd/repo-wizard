@@ -25,7 +25,7 @@ export function CodeEditor({ forceShowPath }: { forceShowPath?: string }) {
 
   if (!shouldShow || !pathToShow) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
+      <div className="flex items-center justify-center h-full text-gray-400 dark:text-[#737373]">
         Select a file to view its content.
       </div>
     );

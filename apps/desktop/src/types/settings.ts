@@ -14,4 +14,13 @@ export interface AppSettings {
   enableClipboardReview: boolean;
   showPasteResponseArea: boolean;
   theme: Theme;
+  autoContext: AutoContextSettings;
+}
+
+export interface AutoContextSettings {
+  enabled: boolean;
+  provider: 'openai' | 'openai-compatible';
+  apiKey: string;
+  baseUrl: string;
+  model: string;
 }
