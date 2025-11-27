@@ -73,7 +73,7 @@ export function FileViewer() {
 
   if (!activeFilePath) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
+      <div className="flex items-center justify-center h-full text-gray-400 dark:text-[#a3a3a3]">
         Select a file to view its content.
       </div>
     );
@@ -92,7 +92,7 @@ export function FileViewer() {
       return <FallbackViewer key={key} filePath={activeFilePath} />;
     case 'loading':
       return (
-        <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
+        <div className="flex items-center justify-center h-full text-gray-400 dark:text-[#a3a3a3]">
           <RefreshCw className="w-8 h-8 animate-spin" />
         </div>
       );

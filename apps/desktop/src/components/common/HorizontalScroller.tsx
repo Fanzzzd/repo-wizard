@@ -165,9 +165,9 @@ export function HorizontalScroller({ children }: HorizontalScrollerProps) {
           isOverflowing && showIndicator ? 'opacity-100' : 'opacity-0'
         )}
       >
-        <div className="relative h-full bg-blue-200/50 rounded-full">
+        <div className="relative h-full bg-blue-200/50 dark:bg-[#262626] rounded-full">
           <div
-            className="absolute h-full bg-blue-500/70 rounded-full"
+            className="absolute h-full bg-blue-500/70 dark:bg-[#404040] rounded-full"
             style={indicatorStyle}
           />
         </div>

@@ -2,7 +2,9 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["*"],
+  "windows": [
+    "*"
+  ],
   "permissions": [
     "core:default",
     "fs:default",
@@ -39,7 +41,10 @@
       "identifier": "http:default",
       "allow": [
         {
-          "url": "https://github.com/Fanzzzd/repo-wizard/releases/latest/download/latest.json"
+          "url": "http://*"
+        },
+        {
+          "url": "https://*"
         }
       ]
     }

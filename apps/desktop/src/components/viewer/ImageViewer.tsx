@@ -25,7 +25,7 @@ export function ImageViewer({ filePath }: { filePath: string }) {
   if (!src) return null;
 
   return (
-    <div className="flex items-center justify-center h-full w-full p-4 bg-gray-100 dark:bg-black/20">
+    <div className="flex items-center justify-center h-full w-full p-4 bg-gray-100 dark:bg-[#0a0a0a]">
       <img
         src={src}
         alt={filePath}

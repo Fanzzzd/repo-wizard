@@ -1,6 +1,7 @@
 import {
   AlertTriangle,
   BadgeCheck,
+  Brain,
   FolderTree,
   MessageSquare,
   Monitor,
@@ -118,7 +119,7 @@ function CliSettings() {
   return (
     <div>
       <div className="flex items-center gap-2">{renderStatus()}</div>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+      <p className="text-xs text-gray-500 dark:text-[#a3a3a3] mt-2">
         Install the `repowizard` command to open projects from your terminal.
       </p>
     </div>
@@ -148,6 +149,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setPromptHistoryLimit,
     setEnableClipboardReview,
     setShowPasteResponseArea,
+    autoContext,
+    setAutoContext,
   } = useSettingsStore();
 
   const categories = useMemo(
@@ -155,6 +158,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       { id: 'general', label: 'General', icon: Settings },
       { id: 'appearance', label: 'Appearance', icon: Palette },
       { id: 'fileTree', label: 'File Tree', icon: FolderTree },
+      { id: 'autoContext', label: 'Auto Context', icon: Brain },
       { id: 'prompting', label: 'Prompting & Review', icon: MessageSquare },
       { id: 'cli', label: 'Command Line', icon: Terminal },
     ],
@@ -297,24 +301,24 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden"
+            className="bg-white dark:bg-[#171717] rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <header className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+            <header className="p-4 border-b border-gray-200 dark:border-[#262626] flex items-center justify-between flex-shrink-0">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-[#f5f5f5]">
                 Settings
               </h2>
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 dark:hover:bg-[#262626] dark:hover:text-[#ededed]"
               >
                 <X size={20} />
               </button>
             </header>
 
-            <main className="flex-grow flex min-h-0 bg-gray-50 dark:bg-gray-900">
-              <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-800">
+            <main className="flex-grow flex min-h-0 bg-gray-50 dark:bg-[#0a0a0a]">
+              <div className="w-1/3 border-r border-gray-200 dark:border-[#262626] flex flex-col bg-white dark:bg-[#171717]">
                 <div className="p-2 space-y-1">
                   {categories.map((cat) => (
                     <button
@@ -324,16 +328,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       className={cn(
                         'w-full flex items-center gap-3 p-2 text-sm rounded-md text-left transition-colors',
                         activeCategory === cat.id
-                          ? 'bg-blue-100 text-blue-800 font-semibold dark:bg-blue-900/50 dark:text-blue-200'
-                          : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+                          ? 'bg-blue-100 text-blue-800 font-semibold dark:bg-[#262626] dark:text-[#ededed]'
+                          : 'text-gray-700 hover:bg-gray-100 dark:text-[#d4d4d4] dark:hover:bg-[#262626]/50'
                       )}
                     >
                       <cat.icon
                         size={16}
                         className={cn(
                           activeCategory === cat.id
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-gray-500 dark:text-gray-400'
+                            ? 'text-blue-600 dark:text-[#ededed]'
+                            : 'text-gray-500 dark:text-[#a3a3a3]'
                         )}
                       />
                       <span>{cat.label}</span>
@@ -343,7 +347,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
               <div
                 ref={scrollContainerRef}
-                className="w-2/3 p-6 bg-gray-100 dark:bg-gray-900 overflow-y-auto thin-scrollbar"
+                className="w-2/3 p-6 bg-gray-100 dark:bg-[#0a0a0a] overflow-y-auto thin-scrollbar"
               >
                 <div className="max-w-3xl mx-auto space-y-6">
                   <section
@@ -351,13 +355,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     ref={(el) => {
                       sectionRefs.current.general = el;
                     }}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                    className="bg-white dark:bg-[#171717] rounded-lg shadow-sm border border-gray-200 dark:border-[#262626]"
                   >
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+                    <div className="p-6 border-b border-gray-200 dark:border-[#262626]">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-[#f5f5f5] flex items-center gap-3">
                         <Settings size={20} /> General
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-[#a3a3a3]">
                         Configure core application behavior and preferences.
                       </p>
                     </div>
@@ -365,7 +369,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       <div>
                         <label
                           htmlFor="history-limit"
-                          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                          className="block text-sm font-medium text-gray-700 dark:text-[#d4d4d4] mb-1"
                         >
                           Prompt History Limit
                         </label>
@@ -383,7 +387,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             }
                           }}
                         />
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-[#a3a3a3] mt-1">
                           Max prompts to keep per project (1-200).
                         </p>
                       </div>
@@ -395,19 +399,19 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     ref={(el) => {
                       sectionRefs.current.appearance = el;
                     }}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                    className="bg-white dark:bg-[#171717] rounded-lg shadow-sm border border-gray-200 dark:border-[#262626]"
                   >
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+                    <div className="p-6 border-b border-gray-200 dark:border-[#262626]">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-[#f5f5f5] flex items-center gap-3">
                         <Palette size={20} /> Appearance
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-[#a3a3a3]">
                         Customize the look and feel of the application.
                       </p>
                     </div>
                     <div className="p-6 space-y-6">
                       <div>
-                        <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <div className="block text-sm font-medium text-gray-700 dark:text-[#d4d4d4] mb-2">
                           Theme
                         </div>
                         <SegmentedControl
@@ -425,13 +429,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     ref={(el) => {
                       sectionRefs.current.fileTree = el;
                     }}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                    className="bg-white dark:bg-[#171717] rounded-lg shadow-sm border border-gray-200 dark:border-[#262626]"
                   >
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+                    <div className="p-6 border-b border-gray-200 dark:border-[#262626]">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-[#f5f5f5] flex items-center gap-3">
                         <FolderTree size={20} /> File Tree
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-[#a3a3a3]">
                         Customize how files and directories are displayed and
                         ignored.
                       </p>
@@ -444,7 +448,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         Respect .gitignore
                       </Checkbox>
                       <div>
-                        <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <div className="block text-sm font-medium text-gray-700 dark:text-[#d4d4d4] mb-1">
                           Custom Ignore Patterns
                         </div>
                         <Textarea
@@ -463,24 +467,93 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </section>
 
                   <section
+                    id="autoContext"
+                    ref={(el) => {
+                      sectionRefs.current.autoContext = el;
+                    }}
+                    className="bg-white dark:bg-[#171717] rounded-lg shadow-sm border border-gray-200 dark:border-[#262626]"
+                  >
+                    <div className="p-6 border-b border-gray-200 dark:border-[#262626]">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-[#f5f5f5] flex items-center gap-3">
+                        <Brain size={20} /> Auto Context
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-500 dark:text-[#a3a3a3]">
+                        Configure AI-powered automatic context selection.
+                      </p>
+                    </div>
+                    <div className="p-6 space-y-6">
+                      <Checkbox
+                        checked={autoContext.enabled}
+                        onChange={(e) =>
+                          setAutoContext({ enabled: e.target.checked })
+                        }
+                      >
+                        Enable Auto Context
+                      </Checkbox>
+
+                      {autoContext.enabled && (
+                        <div className="space-y-4 pl-6 border-l-2 border-gray-200 dark:border-[#262626]">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-[#d4d4d4] mb-1">
+                              API Base URL
+                            </label>
+                            <Input
+                              placeholder="https://api.openai.com/v1"
+                              value={autoContext.baseUrl}
+                              onChange={(e) =>
+                                setAutoContext({ baseUrl: e.target.value })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-[#d4d4d4] mb-1">
+                              API Key
+                            </label>
+                            <Input
+                              type="password"
+                              placeholder="sk-..."
+                              value={autoContext.apiKey}
+                              onChange={(e) =>
+                                setAutoContext({ apiKey: e.target.value })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-[#d4d4d4] mb-1">
+                              Model Name
+                            </label>
+                            <Input
+                              placeholder="gpt-4o"
+                              value={autoContext.model}
+                              onChange={(e) =>
+                                setAutoContext({ model: e.target.value })
+                              }
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+
+                  <section
                     id="prompting"
                     ref={(el) => {
                       sectionRefs.current.prompting = el;
                     }}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                    className="bg-white dark:bg-[#171717] rounded-lg shadow-sm border border-gray-200 dark:border-[#262626]"
                   >
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+                    <div className="p-6 border-b border-gray-200 dark:border-[#262626]">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-[#f5f5f5] flex items-center gap-3">
                         <MessageSquare size={20} /> Prompting & Review
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-[#a3a3a3]">
                         Control how prompts are generated and how AI responses
                         are handled.
                       </p>
                     </div>
                     <div className="p-6 space-y-8">
                       <div>
-                        <h4 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                        <h4 className="text-base font-semibold text-gray-800 dark:text-[#ededed] mb-3">
                           Review Workflow
                         </h4>
                         <div className="space-y-3 pl-2">
@@ -517,10 +590,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                        <h4 className="text-base font-semibold text-gray-800 dark:text-[#ededed] mb-3">
                           Prompt Content
                         </h4>
-                        <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <div className="block text-sm font-medium text-gray-700 dark:text-[#d4d4d4] mb-1">
                           Custom System Prompt
                         </div>
                         <Textarea
@@ -541,13 +614,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     ref={(el) => {
                       sectionRefs.current.cli = el;
                     }}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                    className="bg-white dark:bg-[#171717] rounded-lg shadow-sm border border-gray-200 dark:border-[#262626]"
                   >
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+                    <div className="p-6 border-b border-gray-200 dark:border-[#262626]">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-[#f5f5f5] flex items-center gap-3">
                         <Terminal size={20} /> Command Line
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-[#a3a3a3]">
                         Integrate Repo Wizard with your terminal.
                       </p>
                     </div>

@@ -14,7 +14,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
       <label
         title={title}
         className={cn(
-          'flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 select-none',
+          'flex items-center gap-2 text-sm text-gray-700 dark:text-[#ededed] select-none',
           className
         )}
       >
@@ -27,10 +27,10 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
         />
         <div
           className={cn(
-            'relative h-[14px] w-[14px] flex-shrink-0 rounded border transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-blue-500 peer-disabled:opacity-50',
+            'relative h-[14px] w-[14px] flex-shrink-0 rounded border transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-blue-500 dark:peer-focus-visible:ring-neutral-500 peer-disabled:opacity-50',
             checked || isIndeterminate
-              ? 'border-blue-400 bg-blue-400'
-              : 'border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800'
+              ? 'border-neutral-600 bg-neutral-600 dark:border-neutral-500 dark:bg-neutral-500'
+              : 'border-gray-300 bg-white dark:border-[#262626] dark:bg-[#171717]'
           )}
         >
           <Check

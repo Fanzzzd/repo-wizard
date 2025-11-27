@@ -24,7 +24,7 @@ const ChangeTypeBadge = ({ type }: { type: 'A' | 'P' | 'O' | 'D' | 'R' }) => {
     },
     P: {
       char: 'P',
-      className: 'bg-blue-500 text-white',
+      className: 'bg-blue-500 text-white dark:bg-[#404040] dark:text-[#ededed]',
       title: 'Patched',
     },
     O: {
@@ -129,7 +129,7 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
           icon: <CircleDot size={14} />,
           text: countText,
           style:
-            'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600',
+            'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-[#262626] dark:text-[#d4d4d4] dark:hover:bg-[#404040]',
         };
     }
   };
@@ -178,9 +178,9 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
             <ChangeTypeBadge type="R" />
             <ShortenedPath
               path={operation.fromPath}
-              className="truncate min-w-0 text-gray-500 dark:text-gray-400"
+              className="truncate min-w-0 text-gray-500 dark:text-[#a3a3a3]"
             />
-            <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+            <span className="text-gray-500 dark:text-[#a3a3a3] flex-shrink-0">
               →
             </span>
             <ShortenedPath
@@ -198,8 +198,8 @@ const ChangeItem = ({ change }: { change: ReviewChange }) => {
       onClick={() => setActiveChangeId(change.id)}
       className={`w-full flex items-center justify-between gap-2 px-2 py-1 rounded text-sm cursor-default ${
         isActive
-          ? 'bg-blue-100 text-blue-900 dark:bg-blue-500/30 dark:text-blue-100'
-          : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+          ? 'bg-blue-100 text-blue-900 dark:bg-[#262626] dark:text-[#ededed]'
+          : 'text-gray-600 hover:bg-gray-100 dark:text-[#d4d4d4] dark:hover:bg-[#262626]'
       }`}
     >
       <div className="flex items-center gap-2 overflow-hidden">
@@ -248,7 +248,7 @@ export function ChangeList() {
   };
 
   return (
-    <div className="p-4 flex flex-col h-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+    <div className="p-4 flex flex-col h-full bg-gray-50 dark:bg-[#171717] text-gray-800 dark:text-[#ededed]">
       <div className="flex justify-between items-center mb-2 flex-shrink-0">
         <h2 className="font-bold text-base">Changes ({changes.length})</h2>
         <div className="flex items-center gap-1">
@@ -266,7 +266,7 @@ export function ChangeList() {
             onClick={revertAll}
             variant="ghost"
             size="sm"
-            className="text-gray-600 hover:text-gray-700 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700/50"
+            className="text-gray-600 hover:text-gray-700 hover:bg-gray-200 dark:text-[#a3a3a3] dark:hover:bg-[#262626]/50"
             title="Revert all applied changes"
             leftIcon={<Undo size={14} />}
           >

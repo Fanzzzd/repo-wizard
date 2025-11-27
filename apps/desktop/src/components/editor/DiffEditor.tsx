@@ -78,7 +78,7 @@ export function DiffEditor() {
 
   if (!activeChange) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
+      <div className="flex items-center justify-center h-full text-gray-400 dark:text-[#737373]">
         Select a change to review.
       </div>
     );
@@ -86,7 +86,7 @@ export function DiffEditor() {
 
   if (message) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400 p-4 whitespace-pre-wrap select-text dark:text-gray-500">
+      <div className="flex items-center justify-center h-full text-gray-400 p-4 whitespace-pre-wrap select-text dark:text-[#737373]">
         {message}
       </div>
     );

@@ -65,23 +65,23 @@ export function RecentProjectsModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl h-[70vh] flex flex-col overflow-hidden"
+            className="bg-white dark:bg-[#171717] rounded-lg shadow-xl w-full max-w-2xl h-[70vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <header className="p-4 border-b dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+            <header className="p-4 border-b dark:border-[#262626] flex items-center justify-between flex-shrink-0">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-[#f5f5f5]">
                 Open Project
               </h2>
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                className="p-1 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 dark:hover:bg-[#262626] dark:hover:text-[#ededed]"
               >
                 <X size={20} />
               </button>
             </header>
 
-            <div className="p-4 flex-shrink-0 border-b dark:border-gray-700">
+            <div className="p-4 flex-shrink-0 border-b dark:border-[#262626]">
               <div className="relative">
                 <Input
                   ref={inputRef}
@@ -93,21 +93,21 @@ export function RecentProjectsModal({
                 />
                 <Search
                   size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#737373]"
                 />
               </div>
             </div>
 
-            <main className="flex-grow flex flex-col min-h-0 bg-gray-50 dark:bg-gray-900 overflow-y-auto thin-scrollbar">
+            <main className="flex-grow flex flex-col min-h-0 bg-gray-50 dark:bg-[#0a0a0a] overflow-y-auto thin-scrollbar">
               {filteredProjects.length > 0 ? (
                 <ul className="p-2 space-y-1">
                   {filteredProjects.map((path) => (
                     <li key={path}>
-                      <div className="group w-full flex items-center gap-3 p-2 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-colors">
+                      <div className="group w-full flex items-center gap-3 p-2 rounded-md hover:bg-blue-50 dark:hover:bg-[#262626] transition-colors">
                         <button
                           type="button"
                           onClick={() => handleSelect(path)}
-                          className="flex-grow flex items-center gap-3 overflow-hidden text-left text-gray-800 dark:text-gray-200 hover:text-blue-900 dark:hover:text-blue-200"
+                          className="flex-grow flex items-center gap-3 overflow-hidden text-left text-gray-800 dark:text-[#ededed] hover:text-blue-900 dark:hover:text-[#ededed]"
                         >
                           <Folder
                             size={18}
@@ -117,7 +117,7 @@ export function RecentProjectsModal({
                             <div className="font-semibold text-sm truncate">
                               {path.split(/[\\/]/).pop()}
                             </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                            <div className="text-xs text-gray-600 dark:text-[#a3a3a3] truncate">
                               {path}
                             </div>
                           </div>
@@ -128,7 +128,7 @@ export function RecentProjectsModal({
                             e.stopPropagation();
                             removeRecentProject(path);
                           }}
-                          className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 p-1 rounded-full flex-shrink-0 transition-opacity"
+                          className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600 dark:text-[#a3a3a3] dark:hover:text-red-400 p-1 rounded-full flex-shrink-0 transition-opacity"
                           title={`Remove from recent projects`}
                         >
                           <X size={14} />
@@ -138,7 +138,7 @@ export function RecentProjectsModal({
                   ))}
                 </ul>
               ) : (
-                <div className="flex-grow flex items-center justify-center text-gray-500 dark:text-gray-400 text-center">
+                <div className="flex-grow flex items-center justify-center text-gray-500 dark:text-[#a3a3a3] text-center">
                   <div>
                     <p>No projects found.</p>
                     <p className="text-sm">Try a different search term.</p>
@@ -147,7 +147,7 @@ export function RecentProjectsModal({
               )}
             </main>
 
-            <footer className="bg-gray-100 dark:bg-gray-900/50 px-4 py-3 flex justify-between items-center border-t dark:border-gray-700 flex-shrink-0">
+            <footer className="bg-gray-100 dark:bg-[#0a0a0a]/50 px-4 py-3 flex justify-between items-center border-t dark:border-[#262626] flex-shrink-0">
               <Button onClick={onOpenAnother} variant="secondary" size="md">
                 Open from Disk...
               </Button>

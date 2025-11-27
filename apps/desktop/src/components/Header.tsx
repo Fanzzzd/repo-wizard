@@ -22,13 +22,13 @@ function VersionStatus() {
       icon: <RefreshCw size={14} />,
       text: `v${__APP_VERSION__}`,
       style:
-        'text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700',
+        'text-gray-600 hover:bg-gray-200 dark:text-[#a3a3a3] dark:hover:bg-[#262626]',
       title: 'Check for updates',
     },
     pending: {
       icon: <RefreshCw size={14} className="animate-spin" />,
       text: 'Checking...',
-      style: 'text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-400',
+      style: 'text-gray-500 bg-gray-100 dark:bg-[#262626] dark:text-[#a3a3a3]',
       title: 'Checking for updates...',
     },
     'up-to-date': {
@@ -42,7 +42,7 @@ function VersionStatus() {
       icon: <DownloadCloud size={14} />,
       text: 'Downloading...',
       style:
-        'text-blue-700 bg-blue-100 animate-pulse dark:bg-blue-900/50 dark:text-blue-300',
+        'text-blue-700 bg-blue-100 animate-pulse dark:bg-[#262626] dark:text-[#ededed]',
       title: 'Downloading update...',
     },
     ready: {
@@ -83,8 +83,8 @@ export function Header() {
 
   return (
     <>
-      <header className="flex items-center justify-between p-2 border-b border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700 flex-shrink-0">
-        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+      <header className="flex items-center justify-between p-2 border-b border-gray-200 bg-white dark:bg-[#0a0a0a] dark:border-[#262626] flex-shrink-0">
+        <h1 className="text-lg font-semibold text-gray-800 dark:text-[#ededed]">
           Repo Wizard
         </h1>
         <div className="flex items-center gap-2">
@@ -92,7 +92,7 @@ export function Header() {
           <button
             type="button"
             onClick={() => setIsSettingsModalOpen(true)}
-            className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 dark:hover:bg-gray-700 dark:text-gray-400 dark:hover:text-gray-100"
+            className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 dark:hover:bg-[#262626] dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5]"
             title="Settings"
           >
             <Settings size={20} />

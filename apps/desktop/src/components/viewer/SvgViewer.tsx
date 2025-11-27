@@ -49,7 +49,7 @@ export function SvgViewer({ filePath }: { filePath: string }) {
 
   return (
     <div className="h-full w-full flex flex-col">
-      <div className="flex-shrink-0 p-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex justify-end">
+      <div className="flex-shrink-0 p-2 bg-gray-50 dark:bg-[#171717] border-b border-gray-200 dark:border-[#262626] flex justify-end">
         <SegmentedControl
           options={options}
           value={viewMode}
@@ -59,7 +59,7 @@ export function SvgViewer({ filePath }: { filePath: string }) {
       </div>
       <div className="flex-grow min-h-0">
         {viewMode === 'preview' ? (
-          <div className="flex items-center justify-center h-full w-full p-4 bg-gray-100 dark:bg-gray-900">
+          <div className="flex items-center justify-center h-full w-full p-4 bg-gray-100 dark:bg-[#0a0a0a]">
             {src ? (
               <img
                 src={src}

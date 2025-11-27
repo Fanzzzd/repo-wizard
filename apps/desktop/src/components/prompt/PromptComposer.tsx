@@ -62,10 +62,16 @@ export function PromptComposer() {
     setEditFormat,
     autoReviewOnPaste,
     showPasteResponseArea,
+    autoContext,
   } = useSettingsStore();
 
-  const { estimatedTokens, generateAndCopyPrompt, isCopied, isGenerating } =
-    usePromptGenerator();
+  const {
+    estimatedTokens,
+    generateAndCopyPrompt,
+    isCopied,
+    isGenerating,
+    isGatheringContext,
+  } = usePromptGenerator();
   const {
     startReview,
     reenterReview,
@@ -120,7 +126,7 @@ export function PromptComposer() {
       props = {
         onClick: reenterReview,
         className:
-          'bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30',
+          'bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-[#262626] dark:text-[#ededed] dark:hover:bg-[#404040]',
         title: 'Go back to last review',
         icon: <History size={iconSize} />,
         text: 'Review',
@@ -129,7 +135,7 @@ export function PromptComposer() {
       props = {
         onClick: startReview,
         className:
-          'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+          'bg-gray-200 text-gray-800 dark:bg-[#262626] dark:text-[#d4d4d4]',
         title: 'Start a new review',
         icon: <FileSearch2 size={iconSize} />,
         text: 'Review',
@@ -153,6 +159,12 @@ export function PromptComposer() {
   };
 
   const renderGenerateButtonContent = () => {
+    if (isGatheringContext) {
+      return {
+        icon: <RefreshCw size={16} className="animate-spin" />,
+        text: 'Gathering Context...',
+      };
+    }
     if (isGenerating) {
       return {
         icon: <RefreshCw size={16} className="animate-spin" />,
@@ -170,12 +182,12 @@ export function PromptComposer() {
   const shouldShowReviewSection = composerMode === 'edit';
 
   return (
-    <div className="p-4 flex flex-col h-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-y-auto">
+    <div className="p-4 flex flex-col h-full bg-gray-50 dark:bg-[#171717] text-gray-800 dark:text-[#ededed] overflow-y-auto">
       <div className="flex-grow flex flex-col min-h-0">
         <h2 className="font-bold mb-2">Compose Prompt</h2>
 
         <div className="mb-4">
-          <div className="text-sm font-semibold mb-1 block dark:text-gray-300">
+          <div className="text-sm font-semibold mb-1 block dark:text-[#d4d4d4]">
             Mode
           </div>
           <SegmentedControl
@@ -188,7 +200,7 @@ export function PromptComposer() {
 
         {composerMode === 'edit' && (
           <div className="mb-4">
-            <div className="text-sm font-semibold mb-1 block dark:text-gray-300">
+            <div className="text-sm font-semibold mb-1 block dark:text-[#d4d4d4]">
               Edit Format
             </div>
             <SegmentedControl
@@ -197,7 +209,7 @@ export function PromptComposer() {
               onChange={setEditFormat}
               layoutId="edit-format-slider"
             />
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <div className="text-xs text-gray-500 dark:text-[#a3a3a3] mt-1">
               {editFormat === 'whole' && (
                 <>
                   <span className="font-semibold text-green-700 dark:text-green-400">
@@ -220,14 +232,14 @@ export function PromptComposer() {
 
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-semibold dark:text-gray-300">
+            <div className="text-sm font-semibold dark:text-[#d4d4d4]">
               Meta Prompts
             </div>
             <Button
               onClick={() => setIsMetaPromptsManagerOpen(true)}
               variant="ghost"
               size="sm"
-              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              className="text-blue-600 hover:text-blue-800 dark:text-[#ededed] dark:hover:text-white"
               title="Manage Meta Prompts"
               leftIcon={<SlidersHorizontal size={14} />}
             >
@@ -249,7 +261,7 @@ export function PromptComposer() {
           onUndo={undoInstructions}
           onRedo={redoInstructions}
         />
-        <div className="text-right text-xs text-gray-500 dark:text-gray-400 mb-2">
+        <div className="text-right text-xs text-gray-500 dark:text-[#a3a3a3] mb-2">
           Estimated Tokens: ~{formatTokenCount(estimatedTokens)}
         </div>
         <Button
@@ -258,7 +270,9 @@ export function PromptComposer() {
           size="md"
           className="bg-indigo-600 hover:bg-indigo-500"
           disabled={
-            selectedFilePaths.length === 0 || !instructions || isGenerating
+            (selectedFilePaths.length === 0 && !autoContext.enabled) ||
+            !instructions ||
+            isGenerating
           }
           leftIcon={generateIcon}
         >
@@ -271,7 +285,7 @@ export function PromptComposer() {
           className={cn(
             'flex flex-col space-y-2',
             showPasteResponseArea
-              ? 'mt-4 pt-4 border-t border-gray-200 dark:border-gray-700'
+              ? 'mt-4 pt-4 border-t border-gray-200 dark:border-[#262626]'
               : 'mt-4'
           )}
         >
