@@ -35,7 +35,7 @@ export const MAGIC_PROMPT_DEFAULTS: Record<
     mode: 'universal',
     promptType: 'magic',
     magicType: 'git-diff',
-    gitDiffConfig: { type: 'unstaged' },
+    gitDiffConfig: { type: 'workspace' },
   },
   'terminal-command': {
     name: 'Terminal Output',

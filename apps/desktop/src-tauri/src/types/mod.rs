@@ -53,8 +53,7 @@ pub struct Commit {
 #[derive(Debug, Serialize, Deserialize, Type, Clone)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum DiffOption {
-    Staged,
-    Unstaged,
+    Workspace,
     Commit { hash: String },
 }
 

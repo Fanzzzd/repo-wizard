@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
-import type { Commit, GitStatus } from '../../bindings';
+import type { Commit } from '../../bindings';
 import { useMetaPromptManager } from '../../hooks/useMetaPromptManager';
 import { cn } from '../../lib/utils';
 import * as tauriApi from '../../services/tauriApi';
@@ -388,10 +388,9 @@ function GitDiffConfigEditor({
   onUpdate: (update: Partial<Omit<MetaPrompt, 'id'>>) => void;
   rootPath: string | null;
 }) {
-  // Default to unstaged if undefined
-  const config: GitDiffConfig = prompt.gitDiffConfig ?? { type: 'unstaged' };
+  // Default to workspace if undefined
+  const config: GitDiffConfig = prompt.gitDiffConfig ?? { type: 'workspace' };
   const [isRepo, setIsRepo] = useState(false);
-  const [status, setStatus] = useState<GitStatus | null>(null);
   const [commits, setCommits] = useState<Commit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -405,11 +404,7 @@ function GitDiffConfigEditor({
       const repo = await tauriApi.isGitRepository(rootPath);
       setIsRepo(repo);
       if (repo) {
-        const [gitStatus, recentCommits] = await Promise.all([
-          tauriApi.getGitStatus(rootPath),
-          tauriApi.getRecentCommits(rootPath, 20),
-        ]);
-        setStatus(gitStatus);
+        const recentCommits = await tauriApi.getRecentCommits(rootPath, 20);
         setCommits(recentCommits);
       }
       setIsLoading(false);
@@ -428,8 +423,7 @@ function GitDiffConfigEditor({
     value: GitDiffConfig['type'];
     label: string;
   }[] = [
-    { value: 'unstaged', label: 'Unstaged' },
-    { value: 'staged', label: 'Staged' },
+    { value: 'workspace', label: 'Workspace' },
     { value: 'commit', label: 'Commit' },
   ];
 
@@ -464,18 +458,14 @@ function GitDiffConfigEditor({
             if (type === 'commit') {
               handleConfigChange({ type: 'commit', hash: '' });
             } else {
-              handleConfigChange({ type: type as 'staged' | 'unstaged' });
+              handleConfigChange({ type: 'workspace' });
             }
           }}
           layoutId="gitdiff-type-slider"
         />
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {config.type === 'unstaged' &&
-            `Includes ${
-              status?.hasUnstagedChanges ? '' : 'no'
-            } unstaged changes.`}
-          {config.type === 'staged' &&
-            `Includes ${status?.hasStagedChanges ? '' : 'no'} staged changes.`}
+          {config.type === 'workspace' &&
+            'Includes all uncommitted changes (staged + unstaged).'}
           {config.type === 'commit' && 'Shows changes from a specific commit.'}
         </p>
       </div>
