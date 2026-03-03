@@ -103,7 +103,7 @@ export function usePromptGenerator() {
           rawGitDiffType &&
           rawGitDiffType !== 'workspace' &&
           rawGitDiffType !== 'commit'
-            ? { type: 'workspace' }
+            ? { type: 'workspace' as const }
             : (prompt.gitDiffConfig ?? null);
 
         return {
@@ -194,6 +194,9 @@ export function usePromptGenerator() {
         rootPath
       );
 
+      const fileTree = needsFileTree
+        ? useWorkspaceStore.getState().fileTree
+        : null;
       const { fullPrompt, terminalCommandToRun } = await buildPrompt({
         files,
         instructions: finalInstructions,
