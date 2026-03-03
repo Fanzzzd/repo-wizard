@@ -4,14 +4,14 @@
       "release-type": "node",
       "package-name": "@repo-wizard/desktop",
       "draft": true,
-      "force-tag": true,
+      "force-tag-creation": true,
       "extra-files": ["src-tauri/Cargo.toml", "src-tauri/Cargo.lock"]
     },
     "apps/web": {
       "release-type": "node",
       "package-name": "@repo-wizard/web",
       "draft": true,
-      "force-tag": true
+      "force-tag-creation": true
     }
   },
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"

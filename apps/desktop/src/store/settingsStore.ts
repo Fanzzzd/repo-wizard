@@ -114,17 +114,19 @@ export const useSettingsStore = create<SettingsState>()(
             'state'
           )) as Partial<AppSettings> | null;
 
-      const stateToLoad: AppSettings = {
-        ...defaultSettings,
-        ...(rawState || {}),
-      };
+          const stateToLoad: AppSettings = {
+            ...defaultSettings,
+            ...(rawState || {}),
+          };
 
-      // Ensure metaPrompts is an array if corrupted
-      if (!Array.isArray(stateToLoad.metaPrompts)) {
-        stateToLoad.metaPrompts = [];
-      } else {
-        stateToLoad.metaPrompts = normalizeMetaPrompts(stateToLoad.metaPrompts);
-      }
+          // Ensure metaPrompts is an array if corrupted
+          if (!Array.isArray(stateToLoad.metaPrompts)) {
+            stateToLoad.metaPrompts = [];
+          } else {
+            stateToLoad.metaPrompts = normalizeMetaPrompts(
+              stateToLoad.metaPrompts
+            );
+          }
 
           set({ ...stateToLoad, _isInitialized: true, _hasHydrated: true });
 

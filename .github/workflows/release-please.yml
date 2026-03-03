@@ -17,7 +17,7 @@ jobs:
       desktop--release_id: ${{ steps.release.outputs['apps/desktop--id'] }}
       desktop--tag_name: ${{ steps.release.outputs['apps/desktop--tag_name'] }}
     steps:
-      - uses: Fanzzzd/release-please-action@release-with-force-tag
+      - uses: googleapis/release-please-action@v4
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

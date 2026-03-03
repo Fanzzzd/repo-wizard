@@ -95,22 +95,25 @@ export function usePromptGenerator() {
         return;
       }
 
-    const normalizedMetaPrompts = metaPrompts.map((prompt) => {
-      const rawGitDiffType = (prompt.gitDiffConfig as { type?: string } | null)
-        ?.type;
-      const gitDiffConfig =
-        rawGitDiffType && rawGitDiffType !== 'workspace' && rawGitDiffType !== 'commit'
-          ? { type: 'workspace' }
-          : prompt.gitDiffConfig ?? null;
+      const normalizedMetaPrompts = metaPrompts.map((prompt) => {
+        const rawGitDiffType = (
+          prompt.gitDiffConfig as { type?: string } | null
+        )?.type;
+        const gitDiffConfig =
+          rawGitDiffType &&
+          rawGitDiffType !== 'workspace' &&
+          rawGitDiffType !== 'commit'
+            ? { type: 'workspace' }
+            : (prompt.gitDiffConfig ?? null);
 
-      return {
-        ...prompt,
-        magicType: prompt.magicType ?? null,
-        fileTreeConfig: prompt.fileTreeConfig ?? null,
-        gitDiffConfig,
-        terminalCommandConfig: prompt.terminalCommandConfig ?? null,
-      };
-    });
+        return {
+          ...prompt,
+          magicType: prompt.magicType ?? null,
+          fileTreeConfig: prompt.fileTreeConfig ?? null,
+          gitDiffConfig,
+          terminalCommandConfig: prompt.terminalCommandConfig ?? null,
+        };
+      });
       try {
         const fileTree = needsFileTree
           ? useWorkspaceStore.getState().fileTree
