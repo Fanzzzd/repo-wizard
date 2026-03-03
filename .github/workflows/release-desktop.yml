@@ -76,5 +76,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           releaseId: ${{ inputs.release_id }}
+          tagName: ${{ inputs.tag_name }}
+          releaseDraft: true
           projectPath: apps/desktop
           args: ${{ matrix.args }}
