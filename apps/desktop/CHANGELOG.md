@@ -14,6 +14,30 @@
 * remove redundant tag_name in cicd. ([709c955](https://github.com/Fanzzzd/repo-wizard/commit/709c955e0d08624c24bf60694dbe4ef68e0df960))
 * trigger pr for desktop ([016fd95](https://github.com/Fanzzzd/repo-wizard/commit/016fd959d11068236b59b2c0950e7c805baaf622))
 
+## [1.17.0](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.16.0...desktop-v1.17.0) (2026-03-03)
+
+
+### Features
+
+* Add comprehensive tests for patch application, update release-please workflow, and enhance review service with patch progress tracking. ([f3debc2](https://github.com/Fanzzzd/repo-wizard/commit/f3debc24678f81f3cf06b3b984d2ba826b4daba1))
+* **desktop:** add undo/redo support for meta prompts manager ([5f1d1a9](https://github.com/Fanzzzd/repo-wizard/commit/5f1d1a90aba50e243d4099c76247ddaf63e5c2ab))
+* **desktop:** integrate token counting functionality and enhance file handling ([d63e667](https://github.com/Fanzzzd/repo-wizard/commit/d63e6674e3c03f37266e41c75d30fb47a49b59fa))
+* Establish monorepo with web and desktop applications, utilizing pnpm, Turbo, and Release Please for CI/CD. ([7829a2a](https://github.com/Fanzzzd/repo-wizard/commit/7829a2a49734a026909436eee0f99d307ec01257))
+* **magic-prompt:** simplify git diff to Workspace/Commit modes ([b3a94f2](https://github.com/Fanzzzd/repo-wizard/commit/b3a94f29973c13e398b075aecd53223175c9f862))
+
+
+### Bug Fixes
+
+* changee workflow input from `release_id` to `tag_name` and update usage. ([5259703](https://github.com/Fanzzzd/repo-wizard/commit/5259703300acc7ed02dc50bc5778c766f9819965))
+* delete custom release-please GitHub Action implementation. ([4df4623](https://github.com/Fanzzzd/repo-wizard/commit/4df462351b68d8070ea41b11698a9282902d31dd))
+* fix release cicd ([4c0068a](https://github.com/Fanzzzd/repo-wizard/commit/4c0068a35522ad8d8bb72db496c70b16d56c4e7f))
+* remove explicit pnpm version from CI and release workflow configurations ([472bf30](https://github.com/Fanzzzd/repo-wizard/commit/472bf30074301fabefeaa12a733ba8a4ae523729))
+* Remove numerous icon assets to clean up codebase. ([3fcd47e](https://github.com/Fanzzzd/repo-wizard/commit/3fcd47ea4bb556ca81bd7c374b2ce24f8f2c0429))
+* remove redundant tag_name in cicd. ([709c955](https://github.com/Fanzzzd/repo-wizard/commit/709c955e0d08624c24bf60694dbe4ef68e0df960))
+* trigger pr for desktop ([016fd95](https://github.com/Fanzzzd/repo-wizard/commit/016fd959d11068236b59b2c0950e7c805baaf622))
+* update type assertion in usePromptGenerator and add fileTree handling ([47f58f8](https://github.com/Fanzzzd/repo-wizard/commit/47f58f8ea1a8770265b4b1b87d56308ee72380af))
+* update web app package name and release-please configuration. ([5dbec3f](https://github.com/Fanzzzd/repo-wizard/commit/5dbec3f2f577a29f6ae0a522de250c6a53e83955))
+
 ## [1.16.0](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.15.0...desktop-v1.16.0) (2026-03-03)
 
 
