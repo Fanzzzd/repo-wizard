@@ -14,6 +14,13 @@
 * remove redundant tag_name in cicd. ([709c955](https://github.com/Fanzzzd/repo-wizard/commit/709c955e0d08624c24bf60694dbe4ef68e0df960))
 * trigger pr for desktop ([016fd95](https://github.com/Fanzzzd/repo-wizard/commit/016fd959d11068236b59b2c0950e7c805baaf622))
 
+## [1.15.0](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.14.0...desktop-v1.15.0) (2026-03-03)
+
+
+### Features
+
+* **desktop:** integrate token counting functionality and enhance file handling ([d63e667](https://github.com/Fanzzzd/repo-wizard/commit/d63e6674e3c03f37266e41c75d30fb47a49b59fa))
+
 ## [1.14.0](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.13.0...desktop-v1.14.0) (2026-01-14)
 
 
