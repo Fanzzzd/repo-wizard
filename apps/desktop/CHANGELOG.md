@@ -14,6 +14,16 @@
 * remove redundant tag_name in cicd. ([709c955](https://github.com/Fanzzzd/repo-wizard/commit/709c955e0d08624c24bf60694dbe4ef68e0df960))
 * trigger pr for desktop ([016fd95](https://github.com/Fanzzzd/repo-wizard/commit/016fd959d11068236b59b2c0950e7c805baaf622))
 
+## [1.16.2](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.16.1...desktop-v1.16.2) (2026-03-03)
+
+
+### Bug Fixes
+
+* **desktop:** add release pipeline smoke marker cycle 2 ([8d559fc](https://github.com/Fanzzzd/repo-wizard/commit/8d559fcdd3a511b5294669a8db910c908aeb6159))
+* **desktop:** add release pipeline smoke marker cycle 3 ([2d88ace](https://github.com/Fanzzzd/repo-wizard/commit/2d88ace6b8de0c317e02fe7046b8895fe9dadfa5))
+* **desktop:** add release pipeline smoke marker cycle 3 ([2d88ace](https://github.com/Fanzzzd/repo-wizard/commit/2d88ace6b8de0c317e02fe7046b8895fe9dadfa5))
+* **desktop:** add release pipeline smoke marker cycle 3 ([a91ea6f](https://github.com/Fanzzzd/repo-wizard/commit/a91ea6f0e76eb87352eb24053e0db6ce75e2951a))
+
 ## [1.16.1](https://github.com/Fanzzzd/repo-wizard/compare/desktop-v1.16.0...desktop-v1.16.1) (2026-03-03)
 
 
