@@ -19,12 +19,15 @@ export class AppError extends Error {
  */
 export function isFileNotFoundError(error: unknown): boolean {
   if (!error) return false;
-  // The error from Tauri is often a string. For AppError, check the original error.
-  const errorMessage = String(
-    error instanceof AppError ? error.originalError : error
-  ).toLowerCase();
+  // The error from Tauri is often a string. For AppError, check original error first,
+  // then fall back to the message if no original error is present.
+  const rawMessage =
+    error instanceof AppError ? (error.originalError ?? error.message) : error;
+  const errorMessage = String(rawMessage).toLowerCase();
   return (
     errorMessage.includes('no such file or directory') ||
-    errorMessage.includes('the system cannot find the file specified')
+    errorMessage.includes('the system cannot find the file specified') ||
+    errorMessage.includes('cannot find the file specified') ||
+    errorMessage.includes('file not found')
   );
 }

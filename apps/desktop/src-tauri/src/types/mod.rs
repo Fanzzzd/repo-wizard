@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
-#[derive(Debug, Serialize, Clone, Type)]
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct FileNode {
     pub path: String,
@@ -87,7 +87,7 @@ pub enum CommandStreamEvent {
     Finish(String),
 }
 
-#[derive(Debug, Deserialize, Clone, Type)]
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct IgnoreSettings {
     pub respect_gitignore: bool,
@@ -103,4 +103,107 @@ pub struct SearchResult {
     pub parent_dir: String,
     pub score: i32,
     pub is_directory: bool,
+}
+
+#[derive(Debug, Serialize, Clone, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct FileTokenInfo {
+    pub path: String,
+    pub exists: bool,
+    pub is_binary: bool,
+    pub tokens: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum PromptMode {
+    Universal,
+    Edit,
+    Qa,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum ComposerMode {
+    Edit,
+    Qa,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum EditFormat {
+    Diff,
+    Whole,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum PromptType {
+    Meta,
+    Magic,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
+#[serde(rename_all = "kebab-case")]
+pub enum MagicPromptType {
+    FileTree,
+    GitDiff,
+    TerminalCommand,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum FileTreeScope {
+    All,
+    Selected,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct FileTreeConfig {
+    pub scope: FileTreeScope,
+    pub max_files_per_directory: Option<i32>,
+    pub ignore_patterns: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct TerminalCommandConfig {
+    pub command: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MetaPrompt {
+    pub id: String,
+    pub name: String,
+    pub content: String,
+    pub mode: PromptMode,
+    pub prompt_type: PromptType,
+    pub magic_type: Option<MagicPromptType>,
+    pub file_tree_config: Option<FileTreeConfig>,
+    pub git_diff_config: Option<DiffOption>,
+    pub terminal_command_config: Option<TerminalCommandConfig>,
+    pub enabled: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PromptEstimateInput {
+    pub selected_file_paths: Vec<String>,
+    pub instructions: String,
+    pub custom_system_prompt: String,
+    pub edit_format: EditFormat,
+    pub composer_mode: ComposerMode,
+    pub meta_prompts: Vec<MetaPrompt>,
+    pub root_path: Option<String>,
+    pub file_tree: Option<FileNode>,
+    pub ignore_settings: Option<IgnoreSettings>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PromptEstimateResult {
+    pub total_tokens: u32,
+    pub missing_paths: Vec<String>,
 }

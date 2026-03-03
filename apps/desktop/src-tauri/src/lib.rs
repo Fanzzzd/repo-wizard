@@ -29,6 +29,9 @@ pub fn run() {
                 commands::get_relative_path,
                 commands::read_file_content,
                 commands::read_file_as_base64,
+                commands::count_tokens,
+                commands::count_tokens_for_files,
+                commands::estimate_prompt_tokens,
                 commands::is_binary_file,
                 commands::file_exists,
                 commands::write_file_content,
@@ -136,12 +139,14 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(
             LogBuilder::new()
-                .level(if cfg!(debug_assertions) {
-                    // In dev, allow verbose logs; actual level controlled by RUST_LOG if set
-                    log::LevelFilter::Trace
-                } else {
-                    log::LevelFilter::Info
-                })
+                .level(log::LevelFilter::Info)
+                .level_for("repo_wizard", log::LevelFilter::Debug)
+                .level_for("notify", log::LevelFilter::Warn)
+                .level_for("notify_debouncer_full", log::LevelFilter::Warn)
+                .level_for("ignore", log::LevelFilter::Warn)
+                .level_for("globset", log::LevelFilter::Warn)
+                .level_for("tao", log::LevelFilter::Warn)
+                .level_for("wry", log::LevelFilter::Warn)
                 .targets([
                     Target::new(tauri_plugin_log::TargetKind::LogDir { file_name: None }),
                     Target::new(tauri_plugin_log::TargetKind::Stdout),

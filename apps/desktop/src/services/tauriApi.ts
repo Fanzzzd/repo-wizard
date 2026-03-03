@@ -8,8 +8,11 @@ import {
   commands,
   type DiffOption,
   type FileNode,
+  type FileTokenInfo,
   type GitStatus,
   type IgnoreSettings,
+  type PromptEstimateInput,
+  type PromptEstimateResult,
   type Result,
   type SearchResult,
 } from '../bindings';
@@ -21,7 +24,7 @@ async function unwrap<T, E>(promise: Promise<Result<T, E>>): Promise<T> {
   if (result.status === 'ok') {
     return result.data;
   } else {
-    throw new AppError(String(result.error), null);
+    throw new AppError(String(result.error), result.error);
   }
 }
 
@@ -38,6 +41,22 @@ export const readFileAsBase64 = async (path: string): Promise<string> => {
 
 export const readFileContent = async (path: string): Promise<string> => {
   return unwrap(commands.readFileContent(path));
+};
+
+export const countTokens = async (text: string): Promise<number> => {
+  return unwrap(commands.countTokens(text));
+};
+
+export const countTokensForFiles = async (
+  paths: string[]
+): Promise<FileTokenInfo[]> => {
+  return unwrap(commands.countTokensForFiles(paths));
+};
+
+export const estimatePromptTokens = async (
+  input: PromptEstimateInput
+): Promise<PromptEstimateResult> => {
+  return unwrap(commands.estimatePromptTokens(input));
 };
 
 export const isBinaryFile = async (path: string): Promise<boolean> => {

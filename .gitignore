@@ -24,3 +24,6 @@ dist-ssr
 
 # Turbo
 .turbo
+
+# pnpm store
+.pnpm-store

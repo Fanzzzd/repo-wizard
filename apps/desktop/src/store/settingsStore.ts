@@ -16,7 +16,7 @@ If the request is ambiguous, ask questions.
 
 const defaultSettings: AppSettings = {
   respectGitignore: true,
-  customIgnorePatterns: '.git',
+  customIgnorePatterns: '.git\n.jj',
   customSystemPrompt: defaultSystemPrompt,
   editFormat: 'whole',
   metaPrompts: [],
@@ -26,6 +26,23 @@ const defaultSettings: AppSettings = {
   enableClipboardReview: true,
   showPasteResponseArea: true,
   theme: 'system',
+};
+
+const normalizeMetaPrompts = (
+  prompts: MetaPromptDefinition[]
+): MetaPromptDefinition[] => {
+  return prompts.map((prompt) => {
+    if (prompt.gitDiffConfig) {
+      const type = (prompt.gitDiffConfig as { type?: string }).type;
+      if (type && type !== 'workspace' && type !== 'commit') {
+        return {
+          ...prompt,
+          gitDiffConfig: { type: 'workspace' },
+        };
+      }
+    }
+    return prompt;
+  });
 };
 
 interface SettingsState extends AppSettings {
@@ -97,15 +114,17 @@ export const useSettingsStore = create<SettingsState>()(
             'state'
           )) as Partial<AppSettings> | null;
 
-          const stateToLoad: AppSettings = {
-            ...defaultSettings,
-            ...(rawState || {}),
-          };
+      const stateToLoad: AppSettings = {
+        ...defaultSettings,
+        ...(rawState || {}),
+      };
 
-          // Ensure metaPrompts is an array if corrupted
-          if (!Array.isArray(stateToLoad.metaPrompts)) {
-            stateToLoad.metaPrompts = [];
-          }
+      // Ensure metaPrompts is an array if corrupted
+      if (!Array.isArray(stateToLoad.metaPrompts)) {
+        stateToLoad.metaPrompts = [];
+      } else {
+        stateToLoad.metaPrompts = normalizeMetaPrompts(stateToLoad.metaPrompts);
+      }
 
           set({ ...stateToLoad, _isInitialized: true, _hasHydrated: true });
 

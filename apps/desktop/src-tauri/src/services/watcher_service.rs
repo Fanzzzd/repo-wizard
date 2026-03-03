@@ -38,10 +38,20 @@ pub fn start_watching(
 
     let event_handler = move |result: DebounceEventResult| match result {
         Ok(events) => {
-            let has_unignored_change = events.iter().any(|event| {
-                event.paths.iter().any(|p| {
+            let mut has_unignored_change = false;
+
+            'events: for event in &events {
+                for p in &event.paths {
+                    let candidate = if p.exists() {
+                        p.to_path_buf()
+                    } else {
+                        p.parent()
+                            .map(|parent| parent.to_path_buf())
+                            .unwrap_or_else(|| event_handler_root_path.clone())
+                    };
+
                     let mut builder = WalkBuilder::new(&event_handler_root_path);
-                    builder.add(p);
+                    builder.add(&candidate);
                     builder
                         .hidden(false)
                         .git_ignore(event_handler_settings.respect_gitignore)
@@ -55,9 +65,20 @@ pub fn start_watching(
                         }
                     }
 
-                    builder.build().next().is_some()
-                })
-            });
+                    let mut path_is_unignored = false;
+                    for entry in builder.build().flatten() {
+                        if entry.path() == candidate {
+                            path_is_unignored = true;
+                            break;
+                        }
+                    }
+
+                    if path_is_unignored {
+                        has_unignored_change = true;
+                        break 'events;
+                    }
+                }
+            }
 
             if has_unignored_change {
                 if let Err(e) = event_handler_app_handle

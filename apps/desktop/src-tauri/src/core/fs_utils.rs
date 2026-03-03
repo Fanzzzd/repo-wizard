@@ -1,3 +1,4 @@
+use crate::core::binary_utils;
 use crate::types::{FileNode, IgnoreSettings};
 use anyhow::{anyhow, Result};
 use ignore::{DirEntry, WalkBuilder};
@@ -189,7 +190,7 @@ pub async fn is_binary(path: &Path) -> Result<bool> {
     let mut buffer = [0; 8000];
     let n = file.read(&mut buffer).await?;
 
-    Ok(buffer[..n].contains(&0))
+    Ok(binary_utils::is_binary_bytes(&buffer[..n]))
 }
 
 fn get_backup_root_dir() -> PathBuf {

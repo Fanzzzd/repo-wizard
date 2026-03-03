@@ -3,8 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppError, isFileNotFoundError } from '../lib/error';
 import { showErrorDialog } from '../lib/errorHandler';
 import { buildPrompt } from '../lib/prompt_builder';
-import { estimateTokens } from '../lib/token_estimator';
 import {
+  estimatePromptTokens,
   getRelativePath,
   isBinaryFile,
   readFileContent,
@@ -20,7 +20,7 @@ import { useWorkspaceStore } from '../store/workspaceStore';
 import type { MetaPrompt } from '../types/prompt';
 
 export function usePromptGenerator() {
-  const { selectedFilePaths, rootPath, removeSelectedFilePath, fileTree } =
+  const { selectedFilePaths, rootPath, removeSelectedFilePath } =
     useWorkspaceStore();
   const { instructions, composerMode, enabledMetaPromptIds } =
     useComposerStore();
@@ -29,11 +29,14 @@ export function usePromptGenerator() {
     customSystemPrompt,
     editFormat,
     metaPrompts: promptDefs,
+    respectGitignore,
+    customIgnorePatterns,
   } = useSettingsStore();
 
   const [isCopied, setIsCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [estimatedTokens, setEstimatedTokens] = useState(0);
+  const shouldLogEstimate = import.meta.env.DEV;
 
   const metaPrompts = useMemo<MetaPrompt[]>(() => {
     return promptDefs.map((def) => ({
@@ -41,6 +44,16 @@ export function usePromptGenerator() {
       enabled: enabledMetaPromptIds.includes(def.id),
     }));
   }, [promptDefs, enabledMetaPromptIds]);
+  const needsFileTree = useMemo(
+    () =>
+      metaPrompts.some(
+        (prompt) =>
+          prompt.enabled &&
+          prompt.promptType === 'magic' &&
+          prompt.magicType === 'file-tree'
+      ),
+    [metaPrompts]
+  );
 
   const getFilesWithRelativePaths = useCallback(
     async (paths: string[], root: string) => {
@@ -74,25 +87,82 @@ export function usePromptGenerator() {
   );
 
   useEffect(() => {
+    let cancelled = false;
     const calculate = async () => {
-      const files = rootPath
-        ? await getFilesWithRelativePaths(selectedFilePaths, rootPath)
-        : [];
-      const { fullPrompt } = await buildPrompt({
-        files,
-        instructions,
-        customSystemPrompt,
-        editFormat,
-        metaPrompts,
-        composerMode,
-        fileTree,
-        rootPath,
-        options: { dryRun: true },
-      });
-      setEstimatedTokens(estimateTokens(fullPrompt));
+      const startTime = performance.now();
+      if (!rootPath || selectedFilePaths.length === 0) {
+        setEstimatedTokens(0);
+        return;
+      }
+
+    const normalizedMetaPrompts = metaPrompts.map((prompt) => {
+      const rawGitDiffType = (prompt.gitDiffConfig as { type?: string } | null)
+        ?.type;
+      const gitDiffConfig =
+        rawGitDiffType && rawGitDiffType !== 'workspace' && rawGitDiffType !== 'commit'
+          ? { type: 'workspace' }
+          : prompt.gitDiffConfig ?? null;
+
+      return {
+        ...prompt,
+        magicType: prompt.magicType ?? null,
+        fileTreeConfig: prompt.fileTreeConfig ?? null,
+        gitDiffConfig,
+        terminalCommandConfig: prompt.terminalCommandConfig ?? null,
+      };
+    });
+      try {
+        const fileTree = needsFileTree
+          ? useWorkspaceStore.getState().fileTree
+          : null;
+        const { totalTokens, missingPaths } = await estimatePromptTokens({
+          selectedFilePaths,
+          instructions,
+          customSystemPrompt,
+          editFormat,
+          metaPrompts: normalizedMetaPrompts,
+          composerMode,
+          fileTree,
+          rootPath,
+          ignoreSettings: {
+            respectGitignore,
+            customIgnorePatterns,
+          },
+        });
+
+        if (!cancelled && missingPaths.length > 0) {
+          missingPaths.forEach((path) => {
+            console.warn(`File not found, removing from selection: ${path}`);
+            removeSelectedFilePath(path);
+          });
+        }
+
+        if (!cancelled) {
+          setEstimatedTokens(totalTokens);
+        }
+
+        if (shouldLogEstimate) {
+          const durationMs =
+            Math.round((performance.now() - startTime) * 100) / 100;
+          console.debug('[prompt-estimate]', {
+            totalMs: durationMs,
+            selectedCount: selectedFilePaths.length,
+            missingCount: missingPaths.length,
+            totalTokens,
+          });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setEstimatedTokens(0);
+        }
+        console.error('[prompt-estimate] failed', error);
+      }
     };
     const handler = setTimeout(calculate, 300);
-    return () => clearTimeout(handler);
+    return () => {
+      cancelled = true;
+      clearTimeout(handler);
+    };
   }, [
     selectedFilePaths,
     instructions,
@@ -101,8 +171,10 @@ export function usePromptGenerator() {
     rootPath,
     metaPrompts,
     composerMode,
-    getFilesWithRelativePaths,
-    fileTree,
+    removeSelectedFilePath,
+    respectGitignore,
+    customIgnorePatterns,
+    needsFileTree,
   ]);
 
   const generateAndCopyPrompt = async (

@@ -69,6 +69,30 @@ async readFileAsBase64(path: string) : Promise<Result<string, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+async countTokens(text: string) : Promise<Result<number, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("count_tokens", { text }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async countTokensForFiles(paths: string[]) : Promise<Result<FileTokenInfo[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("count_tokens_for_files", { paths }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async estimatePromptTokens(input: PromptEstimateInput) : Promise<Result<PromptEstimateResult, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("estimate_prompt_tokens", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async isBinaryFile(path: string) : Promise<Result<boolean, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("is_binary_file", { path }) };
@@ -279,11 +303,23 @@ export type CliStatus = "installed" | "not_installed" | "error"
 export type CliStatusResult = { status: CliStatus; error: string | null }
 export type CommandStreamEvent = { type: "stdout"; data: number[] } | { type: "stderr"; data: number[] } | { type: "error"; data: string } | { type: "finish"; data: string }
 export type Commit = { hash: string; message: string; author: string; date: string }
+export type ComposerMode = "edit" | "qa"
 export type DiffOption = { type: "workspace" } | { type: "commit"; hash: string }
+export type EditFormat = "diff" | "whole"
 export type FileNode = { path: string; name: string; children?: FileNode[] | null; isDirectory: boolean }
+export type FileTokenInfo = { path: string; exists: boolean; isBinary: boolean; tokens: number }
+export type FileTreeConfig = { scope: FileTreeScope; maxFilesPerDirectory: number | null; ignorePatterns: string }
+export type FileTreeScope = "all" | "selected"
 export type GitStatus = { hasStagedChanges: boolean; hasUnstagedChanges: boolean }
 export type IgnoreSettings = { respectGitignore: boolean; customIgnorePatterns: string }
+export type MagicPromptType = "file-tree" | "git-diff" | "terminal-command"
+export type MetaPrompt = { id: string; name: string; content: string; mode: PromptMode; promptType: PromptType; magicType: MagicPromptType | null; fileTreeConfig: FileTreeConfig | null; gitDiffConfig: DiffOption | null; terminalCommandConfig: TerminalCommandConfig | null; enabled: boolean }
+export type PromptEstimateInput = { selectedFilePaths: string[]; instructions: string; customSystemPrompt: string; editFormat: EditFormat; composerMode: ComposerMode; metaPrompts: MetaPrompt[]; rootPath: string | null; fileTree: FileNode | null; ignoreSettings: IgnoreSettings | null }
+export type PromptEstimateResult = { totalTokens: number; missingPaths: string[] }
+export type PromptMode = "universal" | "edit" | "qa"
+export type PromptType = "meta" | "magic"
 export type SearchResult = { path: string; relativePath: string; name: string; parentDir: string; score: number; isDirectory: boolean }
+export type TerminalCommandConfig = { command: string }
 
 /** tauri-specta globals **/
 

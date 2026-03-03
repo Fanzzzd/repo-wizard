@@ -1,7 +1,7 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import { ChevronDown, ChevronRight, Folder, FolderOpen, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FileNode } from '../../bindings';
 import { showErrorDialog } from '../../lib/errorHandler';
 import { cn } from '../../lib/utils';
@@ -11,19 +11,6 @@ import { Button } from '../common/Button';
 import { Checkbox } from '../common/Checkbox';
 import { FileTypeIcon } from './FileTypeIcon';
 import { RecentProjectsModal } from './RecentProjectsModal';
-
-function collectFilePaths(node: FileNode): string[] {
-  if (!node.isDirectory) {
-    return [node.path];
-  }
-  const paths: string[] = [];
-  if (node.children) {
-    for (const child of node.children) {
-      paths.push(...collectFilePaths(child));
-    }
-  }
-  return paths;
-}
 
 function FileNodeComponent({
   node,
@@ -35,56 +22,50 @@ function FileNodeComponent({
   initialOpen?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(initialOpen);
-  const {
-    activeFilePath,
-    setActiveFilePath,
-    selectedFilePaths,
-    addSelectedFilePath,
-    removeSelectedFilePath,
-    setSelectedFilePaths,
-  } = useWorkspaceStore();
+  const activeFilePath = useWorkspaceStore((state) => state.activeFilePath);
+  const setActiveFilePath = useWorkspaceStore(
+    (state) => state.setActiveFilePath
+  );
+  const addSelectedFilePath = useWorkspaceStore(
+    (state) => state.addSelectedFilePath
+  );
+  const removeSelectedFilePath = useWorkspaceStore(
+    (state) => state.removeSelectedFilePath
+  );
+  const toggleDirectorySelection = useWorkspaceStore(
+    (state) => state.toggleDirectorySelection
+  );
+  const totalLeaves = useWorkspaceStore(
+    (state) => state.fileIndex?.totalLeavesByPath.get(node.path) ?? 0
+  );
+  const selectedCount = useWorkspaceStore(
+    (state) => state.selectedCountByPath.get(node.path) ?? 0
+  );
+  const isSelected = useWorkspaceStore((state) => {
+    if (node.isDirectory) {
+      return totalLeaves > 0 && selectedCount === totalLeaves;
+    }
+    return state.selectedFilePathSet.has(node.path);
+  });
   const checkboxRef = useRef<HTMLInputElement>(null);
 
   const isDirectory = node.isDirectory;
 
-  const descendantFilePaths = useMemo(
-    () => (isDirectory ? collectFilePaths(node) : [node.path]),
-    [node, isDirectory]
-  );
-
-  const selectedDescendantCount = useMemo(() => {
-    if (descendantFilePaths.length === 0) return 0;
-    const descendantSet = new Set(descendantFilePaths);
-    return selectedFilePaths.filter((p) => descendantSet.has(p)).length;
-  }, [descendantFilePaths, selectedFilePaths]);
-
-  const isSelected = !isDirectory
-    ? selectedFilePaths.includes(node.path)
-    : selectedDescendantCount > 0 &&
-      selectedDescendantCount === descendantFilePaths.length;
-
   const isIndeterminate =
-    isDirectory &&
-    selectedDescendantCount > 0 &&
-    selectedDescendantCount < descendantFilePaths.length;
+    isDirectory && selectedCount > 0 && selectedCount < totalLeaves;
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
 
     if (isDirectory) {
-      const descendantSet = new Set(descendantFilePaths);
-      const otherPaths = selectedFilePaths.filter((p) => !descendantSet.has(p));
-      if (isChecked) {
-        setSelectedFilePaths([...otherPaths, ...descendantFilePaths]);
-      } else {
-        setSelectedFilePaths(otherPaths);
-      }
+      toggleDirectorySelection(node.path, isChecked);
+      return;
+    }
+
+    if (isChecked) {
+      addSelectedFilePath(node.path);
     } else {
-      if (isChecked) {
-        addSelectedFilePath(node.path);
-      } else {
-        removeSelectedFilePath(node.path);
-      }
+      removeSelectedFilePath(node.path);
     }
   };
 
@@ -188,8 +169,11 @@ function FileNodeComponent({
 }
 
 export function FileTree() {
-  const { rootPath, fileTree, refreshCounter, closeProject, loadFileTree } =
-    useWorkspaceStore();
+  const rootPath = useWorkspaceStore((state) => state.rootPath);
+  const fileTree = useWorkspaceStore((state) => state.fileTree);
+  const refreshCounter = useWorkspaceStore((state) => state.refreshCounter);
+  const closeProject = useWorkspaceStore((state) => state.closeProject);
+  const loadFileTree = useWorkspaceStore((state) => state.loadFileTree);
   const {
     respectGitignore,
     customIgnorePatterns,

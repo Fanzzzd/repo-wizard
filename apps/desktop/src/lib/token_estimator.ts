@@ -1,12 +1,13 @@
+import { countTokens } from '../services/tauriApi';
+
 /**
- * Estimates the number of tokens in a given text.
- * A common approximation is that 1 token is about 4 characters.
+ * Counts the number of tokens in a given text using the Rust tokenizer.
  * @param text The input string.
- * @returns The estimated number of tokens.
+ * @returns A promise of the token count.
  */
-export const estimateTokens = (text: string): number => {
+export const estimateTokens = async (text: string): Promise<number> => {
   if (!text) return 0;
-  return Math.ceil(text.length / 4);
+  return countTokens(text);
 };
 
 /**

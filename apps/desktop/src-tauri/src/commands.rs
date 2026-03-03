@@ -6,7 +6,8 @@ use crate::services::{
 };
 use crate::types::{
     ChangeOperation, CliInstallResult, CliStatusResult, CommandStreamEvent, Commit, DiffOption,
-    FileNode, GitStatus, IgnoreSettings, SearchResult,
+    FileNode, FileTokenInfo, GitStatus, IgnoreSettings, PromptEstimateInput, PromptEstimateResult,
+    SearchResult,
 };
 use base64::{engine::general_purpose, Engine as _};
 use log::debug;
@@ -149,6 +150,24 @@ pub async fn read_file_as_base64(path: String) -> Result<String> {
 #[specta::specta]
 pub async fn read_file_content(path: String) -> Result<String> {
     Ok(project_service::read_file_content(&PathBuf::from(path)).await?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn count_tokens(text: String) -> Result<u32> {
+    Ok(crate::core::token_counter::count_tokens(&text) as u32)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn count_tokens_for_files(paths: Vec<String>) -> Result<Vec<FileTokenInfo>> {
+    Ok(crate::core::token_counter::count_tokens_for_paths(paths).await?)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn estimate_prompt_tokens(input: PromptEstimateInput) -> Result<PromptEstimateResult> {
+    Ok(crate::core::prompt_estimator::estimate_prompt_tokens(input).await?)
 }
 
 #[tauri::command]

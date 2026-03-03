@@ -10,6 +10,7 @@
     "web:dev": "vite",
     "web:build": "pnpm check:web && vite build",
     "web:serve": "vite preview",
+    "test": "vitest run",
     "check": "run-s -c check:web check:rust",
     "check:web": "run-s -c check:web:biome check:web:tsc",
     "check:web:biome": "biome check --write src/",
@@ -71,6 +72,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "cross-env": "^7.0.3",
     "npm-run-all": "^4.1.5",
+    "vitest": "^1.6.0",
     "typescript": "catalog:",
     "vite": "^5.4.19"
   }

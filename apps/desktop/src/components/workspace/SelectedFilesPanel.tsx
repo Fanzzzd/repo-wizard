@@ -1,15 +1,8 @@
 import { ArrowDown10, ArrowDownAZ, Trash2, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { AppError, isFileNotFoundError } from '../../lib/error';
-import { showErrorDialog } from '../../lib/errorHandler';
-import { estimateTokens, formatTokenCount } from '../../lib/token_estimator';
+import { useMemo, useState } from 'react';
+import { useSelectedFileDetails } from '../../hooks/useSelectedFileDetails';
+import { formatTokenCount } from '../../lib/token_estimator';
 import { cn } from '../../lib/utils';
-import {
-  fileExists,
-  getRelativePath,
-  isBinaryFile,
-  readFileContent,
-} from '../../services/tauriApi';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { ShortenedPath } from '../common/ShortenedPath';
 
@@ -21,94 +14,15 @@ export function SelectedFilesPanel() {
     setActiveFilePath,
     refreshCounter,
     setSelectedFilePaths,
+    activeFilePath,
   } = useWorkspaceStore();
-  const [fileDetails, setFileDetails] = useState<
-    { path: string; shortPath: string; tokens: number; isBinary: boolean }[]
-  >([]);
   const [sortBy, setSortBy] = useState<'name' | 'tokens'>('name');
-
-  useEffect(() => {
-    if (!rootPath || selectedFilePaths.length === 0) {
-      setFileDetails([]);
-      return;
-    }
-
-    const fetchDetails = async () => {
-      const details = await Promise.all(
-        selectedFilePaths.map(async (path) => {
-          try {
-            const shortPath = await getRelativePath(path, rootPath);
-            // 1) Existence check first
-            const exists = await fileExists(path);
-            if (!exists) {
-              console.warn(`File not found, removing from selection: ${path}`);
-              removeSelectedFilePath(path);
-              return null;
-            }
-            // 2) Binary check next - do not read binary files
-            const binary = await isBinaryFile(path);
-            if (binary) {
-              return { path, shortPath, tokens: 0, isBinary: true };
-            }
-            // 3) Safe to read text content for tokens
-            try {
-              const content = await readFileContent(path);
-              const tokens = estimateTokens(content);
-              return { path, shortPath, tokens, isBinary: false };
-            } catch (readErr) {
-              if (isFileNotFoundError(readErr)) {
-                console.warn(
-                  `File not found, removing from selection: ${path}`
-                );
-                removeSelectedFilePath(path);
-                return null;
-              }
-              showErrorDialog(
-                new AppError(
-                  `Failed to read file for token count: ${path}`,
-                  readErr
-                )
-              );
-              return null;
-            }
-          } catch (error) {
-            if (isFileNotFoundError(error)) {
-              console.warn(`File not found, removing from selection: ${path}`);
-              removeSelectedFilePath(path);
-              return null;
-            }
-            showErrorDialog(
-              new AppError(
-                `Failed to read file for token count: ${path}`,
-                error
-              )
-            );
-            return null;
-          }
-        })
-      );
-      setFileDetails(
-        details.filter(
-          (
-            d
-          ): d is {
-            path: string;
-            shortPath: string;
-            tokens: number;
-            isBinary: boolean;
-          } => d !== null
-        )
-      );
-    };
-
-    fetchDetails();
-    void refreshCounter;
-  }, [selectedFilePaths, rootPath, removeSelectedFilePath, refreshCounter]);
-
-  const totalTokens = useMemo(
-    () => fileDetails.reduce((sum, file) => sum + file.tokens, 0),
-    [fileDetails]
-  );
+  const { details: fileDetails, totalTokens } = useSelectedFileDetails({
+    selectedFilePaths,
+    rootPath,
+    refreshCounter,
+    onMissingPath: removeSelectedFilePath,
+  });
 
   const sortedFiles = useMemo(() => {
     const filesWithDetails = [...fileDetails];
@@ -177,14 +91,13 @@ export function SelectedFilesPanel() {
       <div className="bg-white dark:bg-gray-900 rounded-md p-1 text-xs flex-grow overflow-y-auto border border-gray-200 dark:border-gray-700 min-h-0">
         {sortedFiles.length > 0 ? (
           <ul className="flex flex-col gap-0.5">
-            {sortedFiles.map(({ path, shortPath, isBinary }) => {
+            {sortedFiles.map(({ path, shortPath, isBinary, tokens }) => {
               return (
                 <li
                   key={path}
                   className={cn(
                     'flex items-center p-1.5 rounded group select-none',
-                    !isBinary &&
-                      path === useWorkspaceStore.getState().activeFilePath
+                    !isBinary && path === activeFilePath
                       ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/50 dark:text-blue-100'
                       : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'
                   )}
@@ -208,7 +121,7 @@ export function SelectedFilesPanel() {
                     <span className="text-gray-500 dark:text-gray-400 w-20 text-right flex-shrink-0 ml-2">
                       {isBinary
                         ? 'Binary File'
-                        : `${formatTokenCount(fileDetails.find((f) => f.path === path)?.tokens || 0)} tokens`}
+                        : `${formatTokenCount(tokens)} tokens`}
                     </span>
                   </button>
                   <button
