@@ -23,6 +23,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          skip-github-pull-request: ${{ startsWith(github.event.head_commit.message, 'chore: release') }}
 
   desktop-release:
     needs: release-please
