@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
   pull-requests: write
 
 name: release-please
@@ -14,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       desktop--release_created: ${{ steps.release.outputs['apps/desktop--release_created'] }}
-      desktop--release_id: ${{ steps.release.outputs['apps/desktop--id'] }}
       desktop--tag_name: ${{ steps.release.outputs['apps/desktop--tag_name'] }}
     steps:
       - uses: googleapis/release-please-action@v4
@@ -30,5 +30,4 @@ jobs:
     uses: ./.github/workflows/release-desktop.yml
     with:
       tag_name: ${{ needs.release-please.outputs.desktop--tag_name }}
-      release_id: ${{ needs.release-please.outputs.desktop--release_id }}
     secrets: inherit
